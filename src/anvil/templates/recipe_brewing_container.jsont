@@ -1,9 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:recipe_brewing_container": {
-        "description": {
-            "identifier": "{{ identifier }}"
-        },
-        "tags": {{ tags }}
-    }
-}

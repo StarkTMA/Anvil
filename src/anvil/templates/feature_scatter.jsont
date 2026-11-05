@@ -1,9 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:scatter_feature": {
-        "description": {
-            "identifier": "{{ identifier }}"
-        },
-        "distribution": {}
-    }
-}

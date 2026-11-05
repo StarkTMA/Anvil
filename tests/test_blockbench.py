@@ -1,20 +1,9 @@
-import os
-import tempfile
 import base64
-from unittest.mock import MagicMock
-from PIL import Image
 import io
+import tempfile
+from pathlib import Path
 
-# Setup mock CONFIG in config module, schemas, etc.
-mock_config = MagicMock()
-mock_config.BP_PATH = "dummy_bp_path"
-mock_config.RP_PATH = "dummy_rp_path"
-mock_config.NAMESPACE = "testns"
-mock_config.PROJECT_NAME = "test_project"
-
-import anvil.lib.config
-
-anvil.lib.config.CONFIG = mock_config
+from PIL import Image
 
 from anvil.lib.blockbench import _TexturesManager
 
@@ -94,8 +83,8 @@ def test_texture_layer_blending():
         manager.__export__()
 
         # Verify that grass_side.tga was created in tmpdir
-        tga_path = os.path.join(tmpdir, "grass_side.tga")
-        assert os.path.exists(tga_path)
+        tga_path = Path(tmpdir, "grass_side.tga")
+        assert tga_path.exists()
 
         # Load the TGA and verify pixels match expected
         img = Image.open(tga_path).convert("RGBA")

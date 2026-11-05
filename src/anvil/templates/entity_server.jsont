@@ -1,9 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:entity": {
-        "description": {},
-        "component_groups": {},
-        "components": {},
-        "events": {}
-    }
-}

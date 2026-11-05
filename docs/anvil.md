@@ -13,7 +13,7 @@ A typical Bedrock project involves hundreds of JSON fragments that must all line
 ## Zero‑to‑Pack Workflow
 
 1. **`anvil init <namespace> <project_name>`** (or `anvil create`) scaffolds a project folder, generates all required UUIDs, and writes `anvilconfig.json`.
-2. Drop assets, Blockbench models, textures, mcstructure files, sounds into the `assets` tree. Put gameplay Python and Typescript in `assets/`.
+2. Drop assets, Blockbench models, textures, mcstructure files, sounds into the `assets` tree. Put gameplay Python in `scripts/python/` and TypeScript in `scripts/javascript/`.
 3. **`anvil build`** compiles Python ➞ JSON, optionally compiles TypeScript ➞ JavaScript, validates everything, and exports your chosen package format.
 
 ---
@@ -60,7 +60,7 @@ The command options used by `anvil init` / `anvil create`, `anvil build`, and th
 
 ### TypeScript
 
-When `scriptapi=true` (or `--scriptapi`) Anvil generates `package.json` and `tsconfig.json`, `esbuild.js` for you. Drop TypeScript files into `assets/scripts/javascript/` and import them freely. Anvil runs `esbuild` to bundle. Or you can use your own javascript bundler; just set `js_bundle_script` in `anvilconfig.json` to your entrypoint.
+When `scriptapi=true` (or `--scriptapi`) Anvil generates `package.json` and `tsconfig.json`, `esbuild.js` for you. Drop TypeScript files into `scripts/javascript/` and import them freely. Anvil runs `esbuild` to bundle. Or you can use your own javascript bundler; just set `js_bundle_script` in `anvilconfig.json` to your entrypoint.
 
 ### Localization
 
@@ -102,7 +102,7 @@ Icon/Marketing requirements differ per target; Anvil refuses to package until ma
 
 ## Version Support & Performance
 
-- **Python ≥ 3.13** on **Windows**, **Linux**, or **macOS**.
+- **Python ≥ 3.15** on **Windows**, **Linux**, or **macOS**.
 - Always tracks the **latest Bedrock release**; back‑targets are intentionally unsupported.
 
 ---

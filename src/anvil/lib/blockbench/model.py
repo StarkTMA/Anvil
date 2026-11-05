@@ -1,20 +1,92 @@
 """Converts Blockbench models into geometries, voxel shapes and block culling rules."""
 
-import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Annotated, ClassVar
 
-from anvil.api.core.enums import BlockFaceValues
-from anvil.api.core.types import Vector2D, Vector3D
 from anvil.api.logic.molang import Molang
-from anvil.api.models.geometry import Geometry, _Bone, _Cube
+from anvil.api.models.geometry import (
+    Geometry,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
+    ItemDisplayTransforms,
+    _Bone,
+    _Cube,
+    _CubeFace,
+    _CubeFaces,
+)
 from anvil.api.models.voxel_shape import VoxelShape, _VoxelGroup
 from anvil.lib.blockbench.common import _blockbench_geometry_name, _BlockBenchSource
 from anvil.lib.blockbench.mesh import _Mesh
-from anvil.lib.config import CONFIG
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.config import Pack
+from anvil.lib.format_versions import BLOCK_CULLING_VERSION
+from anvil.lib.jsonmodel import (
+    Identifier,
+    JsonFile,
+    JsonObject,
+    Wrapped,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import BlockFaceValues
+from anvil.lib.jsonmodel.types import Vector2D, Vector3D
 
 
-class _BlockCulling(AddonObject):
+class _CullingGeometryPart(JsonObject):
+    """The part of the geometry a culling rule hides: a bone, or one face of one of its
+    cubes."""
+
+    bone: str = json_field()
+    face: BlockFaceValues | None = None
+    cube: int | None = None
+
+
+class _CullingRule(JsonObject):
+    """Hides a geometry part when the neighbour in `direction` covers it."""
+
+    direction: BlockFaceValues = json_field()
+    geometry_part: _CullingGeometryPart = json_field()
+
+
+class _BlockCullingRules(JsonObject):
+    """The `minecraft:block_culling_rules` object."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("description", "rules")
+
+    description: Annotated[Identifier, Wrapped("identifier")] | None = None
+    rules: list[_CullingRule] = json_field(default_factory=list)
+
+    def set_description(self, identifier: Identifier) -> None:
+        """Sets the identifier written as `description.identifier`.
+
+        Args:
+            identifier (Identifier): The file's identifier, already parsed by the file.
+        """
+        self.description = identifier
+
+    def add_rule(self, rule: _CullingRule) -> None:
+        """Adds a rule, unless the same rule is already there. Geometries can be shared by
+        many blocks, each adding the same rule, and the game rejects a repeated rule."""
+        if all(existing.__json__() != rule.__json__() for existing in self.rules):
+            self.rules.append(rule)
+
+    def __validate__(self) -> None:
+        if self.description is None:
+            raise ValueError("The block culling rules have no identifier.")
+
+
+class _BlockCullingFile(JsonObject):
+    """The content of a `block_culling/*.json` file."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "minecraft:block_culling_rules",
+    )
+
+    format_version: str = json_field(default=BLOCK_CULLING_VERSION, init=False)
+    rules: _BlockCullingRules = json_field(
+        key="minecraft:block_culling_rules", default_factory=_BlockCullingRules
+    )
+
+
+class _BlockCulling(JsonFile[_BlockCullingFile]):
     """Block culling rules for a block's geometry.
 
     Rules are validated against the bones and cubes of the exported
@@ -22,12 +94,14 @@ class _BlockCulling(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "block_culling")
+    _pack = Pack.RP
+    _folder = "block_culling"
+    _object_type = "Block Culling Rules"
 
     def __init__(self, name: str, geometry: Geometry) -> None:
         super().__init__(name)
         self._geometry = geometry
-        self._rules: List[dict] = []
+        self._document.rules.set_description(self.identifier)
 
     def add_rule(
         self,
@@ -42,7 +116,7 @@ class _BlockCulling(AddonObject):
                 f"Bone '{bone}' not found in geometry '{self._geometry.name}'."
             )
         if cube_index is not None:
-            cube_count = len(geometry_bone.compile()["cubes"])
+            cube_count = len(geometry_bone.cubes)
             if cube_index < 0 or cube_index >= cube_count:
                 raise ValueError(
                     f"Cube index '{cube_index}' out of range for bone '{bone}' in geometry '{self._geometry.name}' ({cube_count} cubes)."
@@ -61,33 +135,16 @@ class _BlockCulling(AddonObject):
                 "Face specified without cube_index. Please specify cube_index when using face."
             )
 
-        rule = {
-            "direction": direction.value,
-            "geometry_part": {
-                "bone": bone,
-            },
-        }
-        if face:
-            rule["geometry_part"]["face"] = face.value
-        if cube_index is not None:
-            rule["geometry_part"]["cube"] = cube_index
-        # Geometries can be shared by many blocks, each adding the same rule, and
-        # Minecraft rejects a rule that matches an earlier one
-        if rule not in self._rules:
-            self._rules.append(rule)
-
-    def compile(self) -> dict:
-        content = JsonSchemes.block_culling_rules(self.identifier)
-        content["minecraft:block_culling_rules"]["rules"] = list(self._rules)
-        return content
-
-    def __export__(self) -> None:
-        self.content(self.compile())
-        super().__export__()
+        rule = _CullingRule(
+            direction=direction,
+            geometry_part=_CullingGeometryPart(
+                bone=bone, face=face or None, cube=cube_index
+            ),
+        )
+        self._document.rules.add_rule(rule)
 
 
-# Culling rules of geometries built in code, one per geometry name
-_geometry_cullings: Dict[str, _BlockCulling] = {}
+_geometry_cullings: dict[str, _BlockCulling] = {}
 
 
 def _geometry_block_culling(geometry: Geometry) -> _BlockCulling:
@@ -106,9 +163,9 @@ def _geometry_block_culling(geometry: Geometry) -> _BlockCulling:
     return culling
 
 
-def _process_uv(data: dict, box_uv: bool) -> Union[List[float], Dict[str, Any]]:
+def _process_uv(data: dict, box_uv: bool) -> tuple[float, float] | _CubeFaces:
     if box_uv:
-        return data.get("uv_offset", [0, 0])
+        return tuple(data.get("uv_offset", [0, 0]))
 
     uvs = {}
     for face, face_data in data.get("faces", {}).items():
@@ -117,7 +174,7 @@ def _process_uv(data: dict, box_uv: bool) -> Union[List[float], Dict[str, Any]]:
 
         uv_map = face_data.get("uv", [])
         rotation = face_data.get("rotation", 0)
-        material_instance = face_data.get("material_name", {})
+        material_instance = face_data.get("material_name") or None
 
         if face in ("up", "down"):
             uv_map = [uv_map[2], uv_map[3], uv_map[0], uv_map[1]]
@@ -128,15 +185,13 @@ def _process_uv(data: dict, box_uv: bool) -> Union[List[float], Dict[str, Any]]:
         ]
 
         if uv_size[0] != 0 and uv_size[1] != 0:
-            face_uv = {
-                "uv": [uv_map[0], uv_map[1]],
-                "uv_size": uv_size,
-                "material_instance": material_instance,
-            }
-            if rotation != 0:
-                face_uv["uv_rotation"] = rotation
-            uvs[face] = face_uv
-    return uvs
+            uvs[face] = _CubeFace(
+                uv=(uv_map[0], uv_map[1]),
+                uv_size=tuple(uv_size),
+                uv_rotation=rotation or None,
+                material_instance=material_instance,
+            )
+    return _CubeFaces(**uvs)
 
 
 def _add_bb_cube(bone: _Bone, data: dict) -> None:
@@ -153,15 +208,13 @@ def _add_bb_cube(bone: _Bone, data: dict) -> None:
     origin = list(original_origin)
     origin[0] = round(-(origin[0] + size[0]), 2)
 
-    # Built directly rather than through `cube()`: Blockbench cubes can have no
-    # visible face (an empty per-face UV), which the public API does not offer.
     bone._add_cube(
         _Cube(
-            origin,
-            size,
-            _process_uv(data, data.get("box_uv", False)),
-            pivot=pivot,
-            rotation=rot,
+            origin=tuple(origin),
+            size=tuple(size),
+            uv=_process_uv(data, data.get("box_uv", False)),
+            pivot=tuple(pivot),
+            rotation=tuple(rot),
             inflate=data.get("inflate", 0),
             mirror=data.get("mirror_uv", False),
         )
@@ -171,11 +224,13 @@ def _add_bb_cube(bone: _Bone, data: dict) -> None:
 def _add_bb_locator(bone: _Bone, data: dict) -> None:
     position = list(data["position"])
     position[0] *= -1
+    rotation = [-x for x in data.get("rotation", [0, 0, 0])]
+    ignore_inherited_scale = data.get("ignore_inherited_scale", False)
     bone.locator(
         data["name"],
         position,
-        rotation=[-x for x in data.get("rotation", [0, 0, 0])],
-        ignore_inherited_scale=data.get("ignore_inherited_scale", False),
+        rotation=rotation if any(rotation) or ignore_inherited_scale else None,
+        ignore_inherited_scale=ignore_inherited_scale,
     )
 
 
@@ -209,7 +264,7 @@ class _ModelManager:
     def __init__(self, filename, source: str, bbmodel: dict) -> None:
         """Handles loading and managing Blockbench models.
 
-        Parameters:
+        Args:
             filename (str): The name of the model file (without extension).
             source (str): The source of the model. Defaults to "actors".
             bbmodel (dict): The Blockbench model data.
@@ -222,21 +277,21 @@ class _ModelManager:
         self._is_wavefront = self._bbmodel["meta"]["model_format"] == "free"
         self.bounding_box: Vector2D | None = None
         self._model_center_offset: Vector3D | None = None
-        self._cullings: Dict[str, _BlockCulling] = {}
+        self._cullings: dict[str, _BlockCulling] = {}
         self._prepared = False
         self._cubes = {}
         self._groups = {}
-        self._outliner_nodes: Dict[str, dict] = {}
-        self._outliner_parents: Dict[str, Optional[str]] = {}
-        self._geometries: Dict[str, Geometry] = {}
-        self._queued_geometries: Dict[str, Geometry] = {}
-        self._voxel_shapes: Dict[str, VoxelShape] = {}
-        self._queued_voxel_shapes: Dict[str, VoxelShape] = {}
-        self._collection_aliases: Dict[str, str] = {}
+        self._outliner_nodes: dict[str, dict] = {}
+        self._outliner_parents: dict[str, str | None] = {}
+        self._geometries: dict[str, Geometry] = {}
+        self._queued_geometries: dict[str, Geometry] = {}
+        self._voxel_shapes: dict[str, VoxelShape] = {}
+        self._queued_voxel_shapes: dict[str, VoxelShape] = {}
+        self._collection_aliases: dict[str, str] = {}
         self._collections = self._index_collections()
 
-    def _index_collections(self) -> Dict[str, dict]:
-        collections: Dict[str, dict] = {}
+    def _index_collections(self) -> dict[str, dict]:
+        collections: dict[str, dict] = {}
         export_names: set[str] = set()
 
         for collection in self._bbmodel.get("collections", []):
@@ -291,7 +346,6 @@ class _ModelManager:
 
         all_vertices = []
 
-        # Collect all vertices from all mesh elements
         for element in self._bbmodel["elements"]:
             if element["type"] == "mesh":
                 vertices = element.get("vertices", {})
@@ -301,16 +355,13 @@ class _ModelManager:
         if not all_vertices:
             return
 
-        # Calculate overall bounding box
         min_x = min(v[0] for v in all_vertices)
         min_y = min(v[1] for v in all_vertices)
         min_z = min(v[2] for v in all_vertices)
 
         max_x = max(v[0] for v in all_vertices)
-        max_y = max(v[1] for v in all_vertices)
         max_z = max(v[2] for v in all_vertices)
 
-        # Calculate center offset - center X and Z, but put bottom at Y=0
         center_x = (min_x + max_x) / 2
         center_z = (min_z + max_z) / 2
 
@@ -331,7 +382,7 @@ class _ModelManager:
         self._prepared = True
 
     def _index_outliner(
-        self, nodes: List[Union[str, dict]], parent: Optional[str] = None
+        self, nodes: list[str | dict], parent: str | None = None
     ) -> None:
         """Index the outliner tree so groups can be resolved by UUID with their
         full (nested) children, regardless of where they are referenced from."""
@@ -346,9 +397,7 @@ class _ModelManager:
             else:
                 self._outliner_parents[node] = parent
 
-    def _collection_roots(
-        self, children: List[Union[str, dict]]
-    ) -> List[Union[str, dict]]:
+    def _collection_roots(self, children: list[str | dict]) -> list[str | dict]:
         """Collections reference nodes by UUID. Drop any node whose ancestor is
         also in the collection, since it is reached through that ancestor."""
         members = {c if isinstance(c, str) else c.get("uuid") for c in children}
@@ -366,7 +415,7 @@ class _ModelManager:
                 roots.append(child)
         return roots
 
-    def _resolve_tree_node(self, node: Union[str, dict]) -> Union[str, dict]:
+    def _resolve_tree_node(self, node: str | dict) -> str | dict:
         if isinstance(node, dict):
             return node
         if node in self._groups:
@@ -384,7 +433,7 @@ class _ModelManager:
             f"Unknown Blockbench node '{node}' found in model '{self._name}'."
         )
 
-    def _root_bone(self, geometry: Geometry, implicit_root: List[_Bone]) -> _Bone:
+    def _root_bone(self, geometry: Geometry, implicit_root: list[_Bone]) -> _Bone:
         """Bare cubes/locators at the top level go into an implicit 'root' bone."""
         if implicit_root:
             return implicit_root[0]
@@ -395,9 +444,9 @@ class _ModelManager:
     def _populate_geometry(
         self,
         geometry: Geometry,
-        nodes: List[Union[str, dict]],
-        parent: Optional[_Bone],
-        implicit_root: List[_Bone],
+        nodes: list[str | dict],
+        parent: _Bone | None,
+        implicit_root: list[_Bone],
     ) -> None:
         for node in nodes:
             resolved_node = self._resolve_tree_node(node)
@@ -427,12 +476,11 @@ class _ModelManager:
             args = _bb_bone_args(bone_group)
             name = bone_group["name"]
             if parent is None and implicit_root and implicit_root[0].name == name:
-                # A real group named 'root' takes over the implicit one.
                 bone = implicit_root[0]
-                bone.pivot = args["pivot"]
-                bone.rotation = args["rotation"]
-                bone.mirror = args["mirror"]
-                bone.binding = args["binding"]
+                bone.set_pivot(*args["pivot"]).set_rotation(*args["rotation"])
+                bone.set_mirror(args["mirror"])
+                if args["binding"] is not None:
+                    bone.set_binding(args["binding"])
                 implicit_root.clear()
             elif parent is None:
                 bone = geometry.bone(name, **args)
@@ -444,7 +492,7 @@ class _ModelManager:
             )
 
     def _root_group(
-        self, shape: VoxelShape, implicit_root: List[_VoxelGroup]
+        self, shape: VoxelShape, implicit_root: list[_VoxelGroup]
     ) -> _VoxelGroup:
         """Bare bounding boxes at the top level go into an implicit 'root' group."""
         if implicit_root:
@@ -456,9 +504,9 @@ class _ModelManager:
     def _populate_voxel_shape(
         self,
         shape: VoxelShape,
-        nodes: List[Union[str, dict]],
-        parent: Optional[_VoxelGroup],
-        implicit_root: List[_VoxelGroup],
+        nodes: list[str | dict],
+        parent: _VoxelGroup | None,
+        implicit_root: list[_VoxelGroup],
     ) -> None:
         """Mirrors the model's groups into the shape, like `_populate_geometry` does with bones."""
         for node in nodes:
@@ -483,7 +531,6 @@ class _ModelManager:
 
             name = bone_group["name"]
             if parent is None and implicit_root and implicit_root[0].name == name:
-                # A real group named 'root' takes over the implicit one.
                 group = implicit_root[0]
                 implicit_root.clear()
             elif parent is None:
@@ -496,8 +543,8 @@ class _ModelManager:
             )
 
     def _resolve_export(
-        self, collection: Optional[str], check_identifier: bool = False
-    ) -> tuple[str, List[Union[str, dict]]]:
+        self, collection: str | None, check_identifier: bool = False
+    ) -> tuple[str, list[str | dict]]:
         """Export name and root nodes for the whole model or a collection."""
         if collection is None:
             return self._bbmodel["model_identifier"], self._bbmodel["outliner"]
@@ -533,27 +580,33 @@ class _ModelManager:
         display_data: dict[str, dict[str, list[str | float | Molang]]] = (
             self._bbmodel.get("display", {})
         )
-        transforms = geometry.item_display_transforms
-        if transforms is None:
-            transforms = geometry.item_display_transforms = {}
-        if display_data:
-            for display, transform in display_data.items():
-                if any(
-                    [
-                        transform.get("rotation") != zero,
-                        transform.get("translation") != zero,
-                        transform.get("scale") != unit,
-                        transform.get("rotation_pivot") != zero,
-                        transform.get("scale_pivot") != zero,
-                    ]
-                ):
-                    # Minecraft will not accept fit_to_frame=False from "1.21.130" onwards
-                    # transforms[display] = {**transform, "fit_to_frame": {}} Works now I guess
-                    transforms[display] = transform
+        slots = {}
+        for display, transform in display_data.items():
+            if any(
+                [
+                    transform.get("rotation") != zero,
+                    transform.get("translation") != zero,
+                    transform.get("scale") != unit,
+                    transform.get("rotation_pivot") != zero,
+                    transform.get("scale_pivot") != zero,
+                ]
+            ):
+                kind = (
+                    ItemDisplayGuiTransform
+                    if display == "gui"
+                    else ItemDisplayTransform
+                )
+                slots[display] = kind(
+                    **{
+                        key: tuple(value) if isinstance(value, list) else value
+                        for key, value in transform.items()
+                        if key in kind.__dataclass_fields__
+                    }
+                )
+        if slots:
+            geometry.set_item_display_transforms(ItemDisplayTransforms(**slots))
 
-    def _build_geometry(
-        self, model_name: str, nodes: List[Union[str, dict]]
-    ) -> Geometry:
+    def _build_geometry(self, model_name: str, nodes: list[str | dict]) -> Geometry:
         width = self._bbmodel["resolution"]["width"]
         height = self._bbmodel["resolution"]["height"]
 
@@ -570,7 +623,7 @@ class _ModelManager:
         )
         offset = [0, self._bbmodel["visible_box"][2], 0]
 
-        geometry = Geometry(model_name, size, bounding_box, offset)
+        geometry = Geometry(model_name, size, bounding_box[:2], offset)
         self._populate_geometry(geometry, nodes, None, [])
 
         if self._source == _BlockBenchSource.BLOCK:
@@ -578,24 +631,23 @@ class _ModelManager:
 
         return geometry
 
-    def _get_geometry(self, collection: Optional[str]) -> tuple[str, Geometry]:
+    def _get_geometry(self, collection: str | None) -> tuple[str, Geometry]:
         self._prepare_model()
         name, nodes = self._resolve_export(collection, check_identifier=True)
         if name not in self._geometries:
             self._geometries[name] = self._build_geometry(name, nodes)
         return name, self._geometries[name]
 
-    def _get_voxel_shape(self, collection: Optional[str]) -> tuple[str, VoxelShape]:
+    def _get_voxel_shape(self, collection: str | None) -> tuple[str, VoxelShape]:
         self._prepare_model()
         name, nodes = self._resolve_export(collection)
         if name not in self._voxel_shapes:
-            # The culling shape is referenced as '<name>_culling_shape'.
             shape = VoxelShape(name, f"{name}_culling_shape")
             self._populate_voxel_shape(shape, nodes, None, [])
             self._voxel_shapes[name] = shape
         return name, self._voxel_shapes[name]
 
-    def geometry(self, collection: Optional[str] = None) -> Geometry:
+    def geometry(self, collection: str | None = None) -> Geometry:
         """Builds (once) and returns the Geometry for the whole model or a collection.
 
         The returned object can be modified before the model is exported, e.g.
@@ -604,12 +656,12 @@ class _ModelManager:
         """
         return self._get_geometry(collection)[1]
 
-    def queue_model(self, collection: Optional[str] = None) -> Geometry:
+    def queue_model(self, collection: str | None = None) -> Geometry:
         name, geometry = self._get_geometry(collection)
         self._queued_geometries[name] = geometry
         return geometry
 
-    def voxel_shape(self, collection: Optional[str] = None) -> VoxelShape:
+    def voxel_shape(self, collection: str | None = None) -> VoxelShape:
         """Builds (once) and returns the VoxelShape for the whole model or a collection.
 
         The returned object can be modified before the model is exported. Use
@@ -617,7 +669,7 @@ class _ModelManager:
         """
         return self._get_voxel_shape(collection)[1]
 
-    def queue_voxel_shape(self, collection: Optional[str] = None) -> VoxelShape:
+    def queue_voxel_shape(self, collection: str | None = None) -> VoxelShape:
         name, shape = self._get_voxel_shape(collection)
         if not shape.boxes:
             raise ValueError(
@@ -630,9 +682,9 @@ class _ModelManager:
         """Overrides the visible bounds of every geometry of this model, built or not."""
         self.bounding_box = bounding_box
         for geometry in self._geometries.values():
-            geometry.visible_bounds = list(bounding_box)
+            geometry.set_visible_bounds(*bounding_box[:2])
 
-    def block_culling(self, collection: Optional[str] = None) -> _BlockCulling:
+    def block_culling(self, collection: str | None = None) -> _BlockCulling:
         """Culling rules of the model's geometry, or of one of its collections.
 
         Every exported geometry has its own rules file, named after the geometry

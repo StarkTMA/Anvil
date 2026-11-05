@@ -1,7 +1,7 @@
-import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -82,7 +82,6 @@ class ReportRow:
 
 class ReportCollector:
     def __init__(self) -> None:
-        # ReportType -> row name -> ReportRow
         self.dict: defaultdict[ReportType, dict[str, ReportRow]] = defaultdict(dict)
 
         self.styles = getSampleStyleSheet()
@@ -197,8 +196,6 @@ class ReportCollector:
         if not rows:
             return []
 
-        # Keep the header row (added by add_headers) first, then sort the
-        # remaining rows alphabetically by their display name.
         header_row, *data_rows = rows.values()
         data_rows.sort(key=lambda row: row.name.casefold())
         ordered_rows = [header_row, *data_rows]
@@ -253,7 +250,7 @@ class ReportCollector:
         from anvil.lib.config import CONFIG
 
         self.doc = SimpleDocTemplate(
-            os.path.join("output", "technical_notes.pdf"),
+            str(Path("output", "technical_notes.pdf")),
             pagesize=A4,
             leftMargin=1 * cm,
             rightMargin=1 * cm,

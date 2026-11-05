@@ -1,9 +1,7 @@
 from enum import StrEnum
-from unittest.mock import MagicMock
 
 import pytest
 
-from anvil.api.core.enums import InputModes, Slots
 from anvil.api.logic.molang import (
     Context,
     Math,
@@ -16,18 +14,9 @@ from anvil.api.logic.molang import (
     _TRSStruct,
     _UVStruct,
     _Vec3Struct,
-    arrow_operator,
-    molang_conditions,
 )
-
-
-@pytest.fixture(autouse=True)
-def mock_config(monkeypatch):
-    cfg = MagicMock()
-    cfg.NAMESPACE = "test"
-    monkeypatch.setattr("anvil.api.logic.molang.CONFIG", cfg)
-    return cfg
-
+from anvil.lib import config
+from anvil.lib.jsonmodel.enums import InputModes, Slots
 
 # ---------------------------------------------------------------------------
 # Molang
@@ -177,8 +166,27 @@ class TestMolang:
 
     # --- type / inheritance ---
 
+    def test_pos(self):
+        assert str(+Molang("v.x")) == "v.x"
+
+    def test_reflected_logic(self):
+        assert str(1 & Molang("v.x")) == "(1 && v.x)"
+        assert str(1 | Molang("v.x")) == "(1 || v.x)"
+        assert str(0 ^ Molang("v.x")) == "(0 ?? v.x)"
+
+    def test_shifts(self):
+        assert str(Molang("v.x") << 2) == "(v.x * 4)"
+        assert str(Molang("v.x") >> 3) == "math.floor((v.x / 8))"
+        assert str(Molang("v.x") << Molang("v.n")) == "(v.x * math.pow(2, v.n))"
+        assert str(1 << Molang("v.n")) == "(1 * math.pow(2, v.n))"
+        assert str(16 >> Molang("v.n")) == "math.floor((16 / math.pow(2, v.n)))"
+
     def test_is_str_subclass(self):
         assert isinstance(Molang("q.health"), str)
+
+    def test_is_hashable(self):
+        assert {Molang("q.health"): 1}[Molang("q.health")] == 1
+        assert hash(Molang("q.health")) == hash("q.health")
 
     def test_prefixes(self):
         assert Molang.prefixes == (
@@ -519,7 +527,7 @@ class TestQuery:
             ("ModelScale", "q.model_scale"),
             ("ModifiedDistanceMoved", "q.modified_distance_moved"),
             ("ModifiedMoveSpeed", "q.modified_move_speed"),
-            ("ModifierSwingDuration", "q.modifier_swing_duration"),
+            ("ModifiedSwingDuration", "q.modified_swing_duration"),
             ("MoonBrightness", "q.moon_brightness"),
             ("MoonPhase", "q.moon_phase"),
             ("Noise", "q.noise"),
@@ -576,14 +584,7 @@ class TestQuery:
             ("ClientMaxRenderDistance", "q.client_max_render_distance"),
             ("TouchOnlyAffectsHotbar", "q.touch_only_affects_hotbar"),
             ("StateTime", "q.state_time"),
-            ("get_level_seed_based_fraction", "q.get_level_seed_based_fraction"),
-            ("GetKineticItemDelay", "q.get_kinetic_item_delay"),
-            ("GetKineticItemDamageDuration", "q.get_kinetic_item_damage_duration"),
-            (
-                "GetKineticItemKnockbackDuration",
-                "q.get_kinetic_item_knockback_duration",
-            ),
-            ("GetKineticItemDismountDuration", "q.get_kinetic_item_dismount_duration"),
+            ("GetLevelSeedBasedFraction", "q.get_level_seed_based_fraction"),
             ("KineticWeaponDelay", "q.kinetic_weapon_delay"),
             ("KineticWeaponDamageDuration", "q.kinetic_weapon_damage_duration"),
             ("KineticWeaponKnockbackDuration", "q.kinetic_weapon_knockback_duration"),
@@ -615,25 +616,47 @@ class TestQuery:
     def test_AllTags(self):
         assert str(Query.AllTags(["mob", "animal"])) == "q.all_tags('mob', 'animal')"
 
-    def test_AllTags_rejects_a_bare_string(self):
-        with pytest.raises(TypeError):
-            Query.AllTags("mob")
+    @pytest.mark.parametrize(
+        "query, args",
+        [
+            (Query.AllTags, ()),
+            (Query.AnyTag, ()),
+            (Query.EquippedItemAllTags, (Slots.Mainhand,)),
+            (Query.BlockHasAnyTag, (0, 0, 0)),
+            (Query.EntityBiomeHasAllTags, ()),
+        ],
+    )
+    def test_tag_queries_reject_a_bare_string(self, query, args):
+        with pytest.raises(TypeError, match="takes a list of tags"):
+            query(*args, "mob")
+
+    @pytest.mark.parametrize(
+        "query", [Query.GetName, Query.OwnerIdentifier, Query.OverlayAlpha]
+    )
+    def test_deprecated_queries_warn(self, query):
+        with pytest.deprecated_call():
+            query()
 
     def test_Any(self):
         assert (
-            str(Query.Any(Molang("q.variant"), [Molang("q.skin_id")]))
-            == "q.any(q.variant, q.skin_id)"
+            str(Query.Any(Molang("q.variant"), [Molang("q.skin_id"), 2]))
+            == "q.any(q.variant, q.skin_id, 2)"
         )
 
+    def test_Any_raises_with_too_few_args(self):
+        with pytest.raises(ValueError):
+            Query.Any(Molang("q.variant"), [Molang("q.skin_id")])
+
     def test_AnyTag(self):
-        assert str(Query.AnyTag("mob")) == "q.any_tag('mob')"
+        assert str(Query.AnyTag(["mob"])) == "q.any_tag('mob')"
 
     def test_ApproxEq(self):
         assert str(Query.ApproxEq(1, 2, 3)) == "q.approx_eq(1, 2, 3)"
 
-    def test_ArmorColorSlot_clamps(self):
+    def test_ArmorColorSlot_range(self):
         assert str(Query.ArmorColorSlot(0, 0)) == "q.armor_color_slot(0, 0)"
-        assert str(Query.ArmorColorSlot(5, 5)) == "q.armor_color_slot(3, 3)"
+        with pytest.raises(ValueError):
+            Query.ArmorColorSlot(5, 0)
 
     def test_ArmorMaterialSlot(self):
         assert str(Query.ArmorMaterialSlot(1)) == "q.armor_material_slot(1)"
@@ -644,12 +667,13 @@ class TestQuery:
     def test_AverageFrameTime_default(self):
         assert str(Query.AverageFrameTime()) == "q.average_frame_time(0)"
 
-    def test_AverageFrameTime_clamped(self):
-        assert str(Query.AverageFrameTime(50)) == "q.average_frame_time(30)"
+    def test_AverageFrameTime_range(self):
+        with pytest.raises(ValueError):
+            Query.AverageFrameTime(50)
 
-    def test_BlockState_plain_string(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.BlockState("open")) == "q.block_state('myns:open')"
+    def test_BlockState_plain_string(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.BlockState("open")) == "q.block_state('myns:open')"
 
     def test_BlockState_str_enum(self):
         class MyState(StrEnum):
@@ -657,17 +681,17 @@ class TestQuery:
 
         assert str(Query.BlockState(MyState.Open)) == "q.block_state('open')"
 
-    def test_Property(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.Property("stage")) == "q.property('myns:stage')"
+    def test_Property(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.Property("stage")) == "q.property('myns:stage')"
 
-    def test_HasProperty(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.HasProperty("stage")) == "q.has_property('myns:stage')"
+    def test_HasProperty(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.HasProperty("stage")) == "q.has_property('myns:stage')"
 
-    def test_has_block_state(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.has_block_state("open")) == "q.has_block_state('myns:open')"
+    def test_has_block_state(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.HasBlockState("open")) == "q.has_block_state('myns:open')"
 
     def test_BoneRotation_returns_Vec3Struct(self):
         result = Query.BoneRotation("rightarm")
@@ -701,36 +725,37 @@ class TestQuery:
             == "q.camera_distance_range_lerp(10, 20)"
         )
 
-    def test_CameraRotation_clamped(self):
+    def test_CameraRotation_range(self):
         assert str(Query.CameraRotation(1)) == "q.camera_rotation(1)"
-        assert str(Query.CameraRotation(5)) == "q.camera_rotation(1)"
+        with pytest.raises(ValueError):
+            Query.CameraRotation(5)
 
     def test_Count(self):
         assert str(Query.Count(Molang("q.health"))) == "q.count(q.health)"
 
     def test_EquippedItemAllTags(self):
         assert (
-            str(Query.EquippedItemAllTags(Slots.Mainhand, "sword"))
+            str(Query.EquippedItemAllTags(Slots.Mainhand, ["sword"]))
             == "q.equipped_item_all_tags('slot.weapon.mainhand', 'sword')"
         )
 
     def test_EquippedItemAnyTag(self):
         assert (
-            str(Query.EquippedItemAnyTag(Slots.Offhand, "tool"))
+            str(Query.EquippedItemAnyTag(Slots.Offhand, ["tool"]))
             == "q.equipped_item_any_tag('slot.weapon.offhand', 'tool')"
         )
 
-    def test_EquippedItemIsAttachable_clamped(self):
+    def test_EquippedItemIsAttachable_range(self):
         assert (
             str(Query.EquippedItemIsAttachable()) == "q.equipped_item_is_attachable(0)"
         )
-        assert (
-            str(Query.EquippedItemIsAttachable(5)) == "q.equipped_item_is_attachable(1)"
-        )
+        with pytest.raises(ValueError):
+            Query.EquippedItemIsAttachable(5)
 
-    def test_GetEquippedItemName_clamped(self):
+    def test_GetEquippedItemName_range(self):
         assert str(Query.GetEquippedItemName(0)) == "q.get_equipped_item_name(0, 0)"
-        assert str(Query.GetEquippedItemName(5)) == "q.get_equipped_item_name(1, 0)"
+        with pytest.raises(ValueError):
+            Query.GetEquippedItemName(5)
 
     def test_HadComponentGroup(self):
         assert str(Query.HadComponentGroup("adult")) == "q.had_component_group('adult')"
@@ -761,9 +786,10 @@ class TestQuery:
     def test_InRange(self):
         assert str(Query.InRange(5.0, 0.0, 10.0)) == "q.in_range(5.0, 0.0, 10.0)"
 
-    def test_IsItemEquipped_clamped(self):
+    def test_IsItemEquipped_range(self):
         assert str(Query.IsItemEquipped()) == "q.is_item_equipped(0)"
-        assert str(Query.IsItemEquipped(9)) == "q.is_item_equipped(1)"
+        with pytest.raises(ValueError):
+            Query.IsItemEquipped(9)
 
     def test_IsItemNameAny(self):
         result = Query.IsItemNameAny(Slots.Mainhand, 0, ["minecraft:sword"])
@@ -784,7 +810,7 @@ class TestQuery:
     def test_ItemInUseDuration(self):
         assert str(Query.ItemInUseDuration()) == "(q.item_in_use_duration / 200)"
 
-    def test_ItemIsCharged_clamped(self):
+    def test_ItemIsCharged_range(self):
         assert str(Query.ItemIsCharged()) == "q.item_is_charged(0)"
 
     def test_ItemMaxUseDuration(self):
@@ -801,9 +827,10 @@ class TestQuery:
             == "q.item_slot_to_bone_name('slot.weapon.mainhand')"
         )
 
-    def test_LastFrameTime_clamped(self):
+    def test_LastFrameTime_range(self):
         assert str(Query.LastFrameTime()) == "q.last_frame_time(0)"
-        assert str(Query.LastFrameTime(100)) == "q.last_frame_time(30)"
+        with pytest.raises(ValueError):
+            Query.LastFrameTime(100)
 
     def test_LodIndex(self):
         assert str(Query.LodIndex(10, 20, 30)) == "q.lod_index(10, 20, 30)"
@@ -811,9 +838,10 @@ class TestQuery:
     def test_Log(self):
         assert str(Query.Log(Molang("q.health"))) == "q.log(q.health)"
 
-    def test_MaximumFrameTime_clamped(self):
+    def test_MaximumFrameTime_range(self):
         assert str(Query.MaximumFrameTime()) == "q.maximum_frame_time(0)"
-        assert str(Query.MaximumFrameTime(99)) == "q.maximum_frame_time(30)"
+        with pytest.raises(ValueError):
+            Query.MaximumFrameTime(99)
 
     def test_MinimumFrameTime_default(self):
         assert str(Query.MinimumFrameTime()) == "q.minimum_frame_time(0)"
@@ -821,16 +849,19 @@ class TestQuery:
     def test_MovementDirection(self):
         assert str(Query.MovementDirection(1)) == "q.movement_direction(1)"
 
-    def test_Position_clamped(self):
+    def test_Position_range(self):
         assert str(Query.Position(2)) == "q.position(2)"
-        assert str(Query.Position(5)) == "q.position(2)"
+        assert str(Query.Position(Molang("v.axis"))) == "q.position(v.axis)"
+        with pytest.raises(ValueError):
+            Query.Position(5)
 
     def test_PositionDelta(self):
         assert str(Query.PositionDelta(1)) == "q.position_delta(1)"
 
-    def test_RotationToCamera_clamped(self):
+    def test_RotationToCamera_range(self):
         assert str(Query.RotationToCamera(0)) == "q.rotation_to_camera(0)"
-        assert str(Query.RotationToCamera(9)) == "q.rotation_to_camera(1)"
+        with pytest.raises(ValueError):
+            Query.RotationToCamera(9)
 
     def test_Scoreboard(self):
         assert str(Query.Scoreboard("kills")) == "q.scoreboard('kills')"
@@ -864,11 +895,47 @@ class TestQuery:
     def test_RiderHeadYRotation_default(self):
         assert str(Query.RiderHeadYRotation()) == "q.rider_head_y_rotation(0, 0)"
 
-    def test_ArmorSlotDamage(self):
+    def test_ArmorDamageSlot(self):
+        assert str(Query.ArmorDamageSlot(4)) == "q.armor_damage_slot(4)"
+        with pytest.raises(ValueError):
+            Query.ArmorDamageSlot(5)
+
+    @pytest.mark.parametrize(
+        "method, expected",
+        [
+            ("CanDash", "q.can_dash"),
+            ("HasDashCooldown", "q.has_dash_cooldown"),
+            ("HasHeadGear", "q.has_head_gear"),
+            ("HeadIsInWater", "q.head_is_in_water"),
+            ("IsCrawling", "q.is_crawling"),
+            ("IsInLava", "q.is_in_lava"),
+            ("IsSearching", "q.is_searching"),
+            ("LeashedEntityCount", "q.leashed_entity_count"),
+        ],
+    )
+    def test_added_queries(self, method, expected):
+        assert str(getattr(Query, method)()) == expected
+
+    def test_added_list_queries(self):
         assert (
-            str(Query.ArmorSlotDamage(Slots.Head))
-            == "q.armor_slot_damage('slot.armor.head', 0)"
+            str(Query.GraphicsModeIsAny(["fancy", "deferred"]))
+            == "q.graphics_mode_is_any('fancy', 'deferred')"
         )
+        assert (
+            str(Query.IsRidingAnyEntityOfType(["minecraft:horse"]))
+            == "q.is_riding_any_entity_of_type('minecraft:horse')"
+        )
+        assert (
+            str(Query.HasAnyLeashedEntityOfType(["minecraft:wolf"]))
+            == "q.has_any_leashed_entity_of_type('minecraft:wolf')"
+        )
+        assert (
+            str(Query.HasAllBiomeTags(["ocean", "cold"]))
+            == "q.has_all_biome_tags('ocean', 'cold')"
+        )
+        assert str(Query.HasAnyBiomeTags(["ocean"])) == "q.has_any_biome_tags('ocean')"
+        with pytest.raises(TypeError, match="list of entity types"):
+            Query.IsRidingAnyEntityOfType("minecraft:horse")
 
     def test_LastInputModeIsAny(self):
         assert (
@@ -902,49 +969,49 @@ class TestQuery:
 
     def test_RelativeBlockHasAnyTags(self):
         assert (
-            str(Query.RelativeBlockHasAnyTags(0, -1, 0, "stone"))
-            == "q.relative_block_has_any_tags(0, -1, 0, 'stone')"
+            str(Query.RelativeBlockHasAnyTag(0, -1, 0, ["stone"]))
+            == "q.relative_block_has_any_tag(0, -1, 0, 'stone')"
         )
 
     def test_RelativeBlockHasAllTags(self):
         assert (
-            str(Query.RelativeBlockHasAllTags(1, 0, 0, "wood", "plank"))
+            str(Query.RelativeBlockHasAllTags(1, 0, 0, ["wood", "plank"]))
             == "q.relative_block_has_all_tags(1, 0, 0, 'wood', 'plank')"
         )
 
     def test_BlockNeighborHasAnyTags(self):
         assert (
-            str(Query.BlockNeighborHasAnyTags(0, 1, 0, "solid"))
-            == "q.block_neighbor_has_any_tags(0, 1, 0, 'solid')"
+            str(Query.BlockNeighborHasAnyTag(0, 1, 0, ["solid"]))
+            == "q.block_neighbor_has_any_tag(0, 1, 0, 'solid')"
         )
 
     def test_BlockNeighborHasAllTags(self):
         assert (
-            str(Query.BlockNeighborHasAllTags(0, 0, 1, "stone", "solid"))
+            str(Query.BlockNeighborHasAllTags(0, 0, 1, ["stone", "solid"]))
             == "q.block_neighbor_has_all_tags(0, 0, 1, 'stone', 'solid')"
         )
 
     def test_BlockHasAllTags(self):
         assert (
-            str(Query.BlockHasAllTags(10, 64, -5, "dirt"))
+            str(Query.BlockHasAllTags(10, 64, -5, ["dirt"]))
             == "q.block_has_all_tags(10, 64, -5, 'dirt')"
         )
 
     def test_BlockHasAnyTags(self):
         assert (
-            str(Query.BlockHasAnyTags(0, 0, 0, "lava", "fire"))
-            == "q.block_has_any_tags(0, 0, 0, 'lava', 'fire')"
+            str(Query.BlockHasAnyTag(0, 0, 0, ["lava", "fire"]))
+            == "q.block_has_any_tag(0, 0, 0, 'lava', 'fire')"
         )
 
     def test_EntityBiomeHasAllTags(self):
         assert (
-            str(Query.EntityBiomeHasAllTags(("ocean", "deep")))
+            str(Query.EntityBiomeHasAllTags(["ocean", "deep"]))
             == "q.entity_biome_has_all_tags('ocean', 'deep')"
         )
 
     def test_EntityBiomeHasAnyTags(self):
         assert (
-            str(Query.EntityBiomeHasAnyTags(("forest",)))
+            str(Query.EntityBiomeHasAnyTags(["forest"]))
             == "q.entity_biome_has_any_tags('forest')"
         )
 
@@ -952,6 +1019,42 @@ class TestQuery:
 # ---------------------------------------------------------------------------
 # Context
 # ---------------------------------------------------------------------------
+
+
+class TestPackSettings:
+    @pytest.fixture(autouse=True)
+    def manifest(self, monkeypatch):
+        from anvil.api.core.manifest import ManifestRP
+
+        monkeypatch.setattr(ManifestRP, "_instance", None)
+        ManifestRP().settings.slider("volume", "Volume", 0, 1, 0.1, 0.5).toggle(
+            "shadows", "Shadows"
+        ).dropdown("quality", "Quality", [("low", "Low"), ("high", "High")], "low")
+
+    def test_GetPackSetting(self):
+        assert (
+            str(Query.GetPackSetting("volume")) == "q.get_pack_setting('test:volume')"
+        )
+        with pytest.raises(ValueError):
+            Query.GetPackSetting("shadows")
+
+    def test_IsPackSettingEnabled(self):
+        assert (
+            str(Query.IsPackSettingEnabled("shadows"))
+            == "q.is_pack_setting_enabled('test:shadows')"
+        )
+        with pytest.raises(ValueError):
+            Query.IsPackSettingEnabled("volume")
+
+    def test_IsPackSettingSelected(self):
+        assert (
+            str(Query.IsPackSettingSelected("quality", "high"))
+            == "q.is_pack_setting_selected('test:quality', 'high')"
+        )
+        with pytest.raises(ValueError):
+            Query.IsPackSettingSelected("quality", "ultra")
+        with pytest.raises(ValueError):
+            Query.IsPackSettingSelected("volume", "low")
 
 
 class TestContext:
@@ -1048,6 +1151,7 @@ class TestMath:
             ("atan", (Molang("q.health"),), "math.atan(q.health)"),
             ("atan2", (Molang("q.y"), Molang("q.x")), "math.atan2(q.y, q.x)"),
             ("ceil", (Molang("q.health"),), "math.ceil(q.health)"),
+            ("copy_sign", (5, Molang("v.x")), "math.copy_sign(5, v.x)"),
             ("clamp", (Molang("q.health"), 0, 20), "math.clamp(q.health, 0, 20)"),
             ("cos", (Molang("q.anim_time"),), "math.cos(q.anim_time)"),
             ("die_roll", (3, 1, 6), "math.die_roll(3, 1, 6)"),
@@ -1069,6 +1173,7 @@ class TestMath:
             ("random", (0, 1), "math.random(0, 1)"),
             ("random_integer", (1, 6), "math.random_integer(1, 6)"),
             ("round", (Molang("q.health"),), "math.round(q.health)"),
+            ("sign", (Molang("v.x"),), "math.sign(v.x)"),
             ("sin", (Molang("q.anim_time"),), "math.sin(q.anim_time)"),
             ("sqrt", (Molang("q.health"),), "math.sqrt(q.health)"),
             ("trunc", (Molang("q.health"),), "math.trunc(q.health)"),
@@ -1234,8 +1339,9 @@ class TestMath:
         assert str(result) == expected
         assert isinstance(result, Molang)
 
-    def test_lerp_clamps_float_factor(self):
-        assert str(Math.lerp(0, 100, 1.5)) == "math.lerp(0, 100, 1)"
+    def test_lerp_refuses_a_factor_outside_0_to_1(self):
+        with pytest.raises(ValueError):
+            Math.lerp(0, 100, 1.5)
 
     def test_lerp_passes_molang_factor_unchanged(self):
         assert (
@@ -1243,8 +1349,9 @@ class TestMath:
             == "math.lerp(0, 100, q.anim_time)"
         )
 
-    def test_lerprotate_clamps_float_factor(self):
-        assert str(Math.lerprotate(0, 360, -0.5)) == "math.lerprotate(0, 360, 0)"
+    def test_lerprotate_refuses_a_factor_outside_0_to_1(self):
+        with pytest.raises(ValueError):
+            Math.lerprotate(0, 360, -0.5)
 
     def test_lerprotate_passes_molang_factor_unchanged(self):
         assert (

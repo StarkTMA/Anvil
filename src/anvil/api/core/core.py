@@ -1,55 +1,51 @@
 import base64
 import io
 import math
-import os
 import shutil
 import sys
-import traceback as tb
+import uuid
 import zipfile
-from os import path
-from typing import Optional
+from pathlib import Path
 
 import click
+from PIL import Image
+
 from anvil.api.actors.materials import MaterialsObject
-from anvil.api.core.sounds import (
-    BlocksJSONObject,
+from anvil.api.blocks.blocks_json import BlocksJSONObject
+from anvil.api.core.manifest import (
+    ManifestBP,
+    ManifestRP,
+    world_packs,
+    world_template_manifest,
+)
+from anvil.api.sounds import (
     MusicDefinition,
     ServerSoundDefinition,
     SoundDefinition,
     SoundEvent,
 )
-from anvil.api.core.textures import (
+from anvil.api.textures import (
     FlipBookTexturesObject,
     ItemTexturesObject,
     TerrainTexturesObject,
 )
 from anvil.api.world.particles import Particle
+from anvil.lib import scaffold
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import (
     CONFIG,
+    AnvilConfig,
     ConfigPackageTarget,
-    _AnvilConfig,
 )
-from anvil.lib.format_versions import (
-    MANIFEST_VERSION,
-    MODULE_MINECRAFT_SERVER,
-    MODULE_MINECRAFT_SERVER_PREVIEW,
-    MODULE_MINECRAFT_SERVER_UI,
-    MODULE_MINECRAFT_SERVER_UI_PREVIEW,
-)
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.lib import (
+    OUTPUT,
     AnvilArchive,
     AnvilIO,
-    AnvilValidator,
     Directory,
     process_subcommand,
 )
-from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
-from PIL import Image
-
-from ...__version__ import __version__
 
 
 def resize(
@@ -69,23 +65,24 @@ def resize(
 
     Directory.create(output)
     resized.convert("RGB").save(
-        os.path.join(output, name),
+        Path(output) / name,
         dpi=(dpi, dpi),
         quality=quality,
     )
 
 
-def development_pack_size(path: str) -> int:
+def development_pack_size(path: str | Path) -> int:
     """Returns the total uncompressed size of a development pack directory."""
     total_size = 0
+    pack = Path(path)
 
-    if not os.path.isdir(path):
+    if not pack.is_dir():
         return total_size
 
-    for root, _, files in os.walk(path):
+    for root, _, files in pack.walk():
         for filename in files:
             try:
-                total_size += os.path.getsize(os.path.join(root, filename))
+                total_size += (root / filename).stat().st_size
             except OSError:
                 continue
 
@@ -107,14 +104,14 @@ def format_bytes(size_bytes: int) -> str:
     return f"{size_bytes} B"
 
 
-def output_development_pack_sizes(config: _AnvilConfig) -> None:
+def output_development_pack_sizes(config: AnvilConfig) -> None:
     """Outputs the uncompressed size of the generated development packs."""
     behavior_pack_size = development_pack_size(config.BP_PATH)
     resource_pack_size = development_pack_size(config.RP_PATH)
     total_pack_size = behavior_pack_size + resource_pack_size
 
-    behavior_pack_name = os.path.basename(os.path.normpath(config.BP_PATH))
-    resource_pack_name = os.path.basename(os.path.normpath(config.RP_PATH))
+    behavior_pack_name = config.BP_PATH.name
+    resource_pack_name = config.RP_PATH.name
 
     click.echo(
         click.style("\r[INFO]: Development pack sizes (uncompressed)", fg="yellow")
@@ -140,36 +137,35 @@ def extract_world_pack(extract_world: str | None = None):
     if not isinstance(extract_world, str):
         return
 
-    if not path.exists(os.path.join("world", f"{extract_world}.mcworld")):
+    world_file = Path("world") / f"{extract_world}.mcworld"
+    if not world_file.exists():
         raise FileNotFoundError(
             f"'{extract_world}.mcworld' not found. Please ensure the mcworld exists in the world directory."
         )
 
     shutil.rmtree(CONFIG._WORLD_PATH, ignore_errors=True)
     Directory.create(CONFIG._WORLD_PATH)
-    with zipfile.ZipFile(
-        os.path.join("world", f"{extract_world}.mcworld"), "r"
-    ) as zip_ref:
+    with zipfile.ZipFile(world_file, "r") as zip_ref:
         zip_ref.extractall(CONFIG._WORLD_PATH)
 
 
 def manifests():
-    release_list = [int(i) for i in CONFIG._RELEASE.split(".")]
+    version = tuple(int(i) for i in CONFIG._RELEASE.split("."))
     AnvilIO.file(
         "manifest.json",
-        JsonSchemes.manifest_world(release_list),
+        world_template_manifest(version, str(uuid.uuid4())),
         CONFIG._WORLD_PATH,
         "w",
     )
     AnvilIO.file(
         "world_resource_packs.json",
-        JsonSchemes.world_packs(release_list, CONFIG._RP_UUID),
+        world_packs(version, CONFIG._RP_UUID),
         CONFIG._WORLD_PATH,
         "w",
     )
     AnvilIO.file(
         "world_behavior_packs.json",
-        JsonSchemes.world_packs(release_list, CONFIG._BP_UUID),
+        world_packs(version, CONFIG._BP_UUID),
         CONFIG._WORLD_PATH,
         "w",
     )
@@ -177,27 +173,27 @@ def manifests():
 
 def scriptapi():
     if any([CONFIG._SCRIPT_API, CONFIG._SCRIPT_UI]):
-        if not os.path.exists("tsconfig.json"):
+        if not Path("tsconfig.json").exists():
             AnvilIO.file(
                 "tsconfig.json",
-                JsonSchemes.tsconfig(CONFIG.BP_PATH),
+                scaffold.tsconfig(CONFIG.BP_PATH),
                 "",
                 "w",
             )
         if (
-            not os.path.exists("esbuild.js")
+            not Path("esbuild.js").exists()
             and "esbuild" in CONFIG._SCRIPT_BUNDLE_SCRIPT
         ):
             AnvilIO.file(
                 "esbuild.js",
-                JsonSchemes.esbuild_config_js(CONFIG.BP_PATH, CONFIG._MINIFY),
+                scaffold.esbuild_js(),
                 "",
                 "w",
             )
-        if not os.path.exists("package.json"):
+        if not Path("package.json").exists():
             AnvilIO.file(
                 "package.json",
-                JsonSchemes.package_json(
+                scaffold.package_json(
                     CONFIG.PROJECT_NAME,
                     CONFIG._RELEASE,
                     CONFIG.PROJECT_DESCRIPTION,
@@ -208,14 +204,11 @@ def scriptapi():
             )
 
 
-def addon_object_exception(object: AddonObject, e: Exception):
-    full_traceback = tb.format_exc()
+def addon_object_exception(object: JsonFile, e: Exception):
     creation_info = f"<{object.__class__.__name__} created from:\n{''.join(getattr(object, "_created_from", None))}>"
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
-    click.echo(click.style(f"\r\nCreation Context:", fg="cyan"), err=True)
+    click.echo(click.style("\r\nCreation Context:", fg="cyan"), err=True)
     click.echo(click.style(f"\r{creation_info}", fg="white"), err=True)
-    # click.echo(click.style(f"\r\nFull Traceback:", fg="cyan"), err=True)
-    # click.echo(click.style(f"\r{full_traceback}", fg="white"), err=True)
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
     click.echo(
         click.style(
@@ -240,24 +233,24 @@ def addon_object_exception(object: AddonObject, e: Exception):
         err=True,
     )
     click.echo(
-        click.style(f"\rObject Content: {object._content}", fg="yellow"), err=True
+        click.style(f"\rObject Content: {object._document}", fg="yellow"), err=True
     )
     click.echo(click.style(f"\rError Message: {str(e)}", fg="red"), err=True)
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
 
 
 def pack_art(apply_overlay: bool = False):
-    source = os.path.join("marketing")
+    source = Path("marketing")
     pack_icon_size = (256, 256)
-    if os.path.exists(os.path.join(source, "pack_icon.png")):
-        original = Image.open(os.path.join(source, "pack_icon.png"))
+    if (source / "pack_icon.png").exists():
+        original = Image.open(source / "pack_icon.png")
         resize(original, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(original, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
 
     else:
         click.echo(
             click.style(
-                f"\r[INFO]: pack_icon.png not found in marketing directory. Using placeholder pack icon.",
+                "\r[INFO]: pack_icon.png not found in marketing directory. Using placeholder pack icon.",
                 fg="yellow",
             )
         )
@@ -269,14 +262,12 @@ def pack_art(apply_overlay: bool = False):
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
 
     if CONFIG._TARGET == ConfigPackageTarget.WORLD:
-        if os.path.exists(os.path.join(source, "keyart.png")):
-            original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
+        if (source / "keyart.png").exists():
+            original = Image.open(source / "keyart.png").convert("RGB")
             overlay = None
 
-            if apply_overlay and os.path.exists(
-                os.path.join(source, "keyart_overlay.png")
-            ):
-                overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
+            if apply_overlay and (source / "keyart_overlay.png").exists():
+                overlay = Image.open(source / "keyart_overlay.png")
 
             store_screenshot_size = (800, 450)
             resize(
@@ -291,40 +282,40 @@ def pack_art(apply_overlay: bool = False):
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: keyart.png not found in marketing directory. Cannot compile world icon.",
+                    "\r[INFO]: keyart.png not found in marketing directory. Cannot compile world icon.",
                     fg="yellow",
                 )
             )
 
 
 def process_art(
-    config: _AnvilConfig,
+    config: AnvilConfig,
     apply_overlay: bool = False,
     zip: bool = True,
 ):
     """Process marketing art for packaging."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Processing Art...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Processing Art...", fg="cyan"))
 
     pack_icon_size = (256, 256)
     store_screenshot_size = (800, 450)
     marketing_screenshot_size = (1920, 1080)
 
-    source = os.path.join("marketing")
-    output_store = os.path.join("output", "Store Art")
-    output_marketing = os.path.join("output", "Marketing Art")
+    source = Path("marketing")
+    output_store = OUTPUT / "Store Art"
+    output_marketing = OUTPUT / "Marketing Art"
 
     if zip:
         Directory.create(output_store)
         Directory.create(output_marketing)
 
-        if os.path.exists(os.path.join(source, "keyart.png")):
-            original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
+        if (source / "keyart.png").exists():
+            original = Image.open(source / "keyart.png").convert("RGB")
             overlay = None
 
             if apply_overlay:
-                overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
+                overlay = Image.open(source / "keyart_overlay.png")
 
             if config._TARGET == ConfigPackageTarget.WORLD:
                 resize(
@@ -360,11 +351,11 @@ def process_art(
                 "keyart.png not found in marketing directory. Please ensure the file exists."
             )
 
-        if os.path.exists(os.path.join(source, "panorama.png")):
-            original = Image.open(os.path.join(source, "panorama.png"))
+        if (source / "panorama.png").exists():
+            original = Image.open(source / "panorama.png")
             scale_factor = 450 / original.size[1]
             if (round(original.size[0] * scale_factor)) > 4000:
-                raise RuntimeError(
+                raise ValueError(
                     f"panorama.png width exceeds 4000 pixels when resized to 450 pixels in height. Please use a smaller image. The recommended original size for this image would be {math.floor(4000 / scale_factor)}x450 pixels."
                 )
 
@@ -380,20 +371,20 @@ def process_art(
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: panorama.png does not exist. It is optional but might have been left out unintentionally.",
+                    "\r[INFO]: panorama.png does not exist. It is optional but might have been left out unintentionally.",
                     fg="yellow",
                 )
             )
 
         for i in range(999):
-            if not os.path.exists(os.path.join(source, f"{i}.png")):
+            if not (source / f"{i}.png").exists():
                 if i < 5:
                     raise FileNotFoundError(
                         f"{i}.png not found in marketing directory. Please ensure the file exists."
                     )
                 break
             else:
-                original = Image.open(os.path.join(source, f"{i}.png"))
+                original = Image.open(source / f"{i}.png")
                 resize(
                     original,
                     f"{config.PROJECT_NAME}_screenshot_{i}.jpg",
@@ -411,8 +402,8 @@ def process_art(
                     300,
                 )
 
-        if os.path.exists(os.path.join(source, "partner_art.png")):
-            original = Image.open(os.path.join(source, "partner_art.png"))
+        if (source / "partner_art.png").exists():
+            original = Image.open(source / "partner_art.png")
 
             resize(
                 original,
@@ -428,8 +419,8 @@ def process_art(
                 "partner_art.png not found in marketing directory. Please ensure the file exists."
             )
 
-        if os.path.exists(os.path.join(source, "pack_icon.png")):
-            original = Image.open(os.path.join(source, "pack_icon.png"))
+        if (source / "pack_icon.png").exists():
+            original = Image.open(source / "pack_icon.png")
             resize(
                 original,
                 f"{config.PROJECT_NAME}_packicon_0.jpg",
@@ -443,7 +434,7 @@ def process_art(
 
 
 def package_zip_core(
-    config: _AnvilConfig,
+    config: AnvilConfig,
     apply_overlay: bool = False,
 ):
     """Core logic for packaging the project into a zip file for Marketplace."""
@@ -451,29 +442,29 @@ def package_zip_core(
 
     process_art(config, apply_overlay)
 
-    click.echo(click.style(f"\r[INFO]: Packaging ZIP...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Packaging ZIP...", fg="cyan"))
 
     AnvilArchive.marketplace_zip()
 
-    shutil.rmtree(os.path.join("output", "Store Art"))
-    shutil.rmtree(os.path.join("output", "Marketing Art"))
+    shutil.rmtree(OUTPUT / "Store Art")
+    shutil.rmtree(OUTPUT / "Marketing Art")
 
 
 def mcaddon_core(config):
     """Core logic for packaging the project into a .mcaddon file."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Packaging mcaddon...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Packaging mcaddon...", fg="cyan"))
 
     AnvilArchive.mcaddon()
     output_development_pack_sizes(CONFIG)
 
 
-def mcworld_core(config: _AnvilConfig):
+def mcworld_core(config: AnvilConfig):
     """Core logic for packaging the project into a .mcworld file."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Packaging mcworld...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Packaging mcworld...", fg="cyan"))
 
     AnvilArchive.mcworld()
 
@@ -489,7 +480,7 @@ def compile_objects(
     import click
 
     if not js_only and not no_compile:
-        click.echo(click.style(f"\r[INFO]: Compiling projects...", fg="cyan"))
+        click.echo(click.style("\r[INFO]: Compiling projects...", fg="cyan"))
 
     extract_world_pack(extract_world)
     scriptapi()
@@ -503,7 +494,7 @@ def compile_objects(
     if CONFIG._SCRIPT_API:
         args = [
             CONFIG._SCRIPT_BUNDLE_SCRIPT,
-            f'--outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
+            f'--outdir="{(CONFIG.BP_PATH / "scripts").as_posix()}"',
         ]
         if "--minify" in sys.argv:
             args.append("--minify")
@@ -541,24 +532,22 @@ def compile_objects(
     if workflow:
         AnvilIO.file(
             "release.yml",
-            JsonSchemes.github_release_workflow(
-                CONFIG.PROJECT_NAME, CONFIG.DISPLAY_NAME
-            ),
-            os.path.join(".github", "workflows"),
+            scaffold.github_release_workflow(CONFIG.PROJECT_NAME),
+            Path(".github", "workflows"),
             "w",
         )
 
-    from anvil.api.blocks.blocks import PermutationGroup
+    from anvil.api.core.components import Permutation
 
-    if PermutationGroup._count > 10000:
+    if Permutation._count > 10000:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            raise RuntimeError(
-                f"\rTotal Block permutations exceeded 10000 ({PermutationGroup._count}). Addons must not exceed this limit."
+            raise ValueError(
+                f"\rTotal Block permutations exceeded 10000 ({Permutation._count}). Addons must not exceed this limit."
             )
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: Total Block permutations exceeded 10000 ({PermutationGroup._count}). This may cause issues when submitting to the Marketplace.",
+                    f"\r[INFO]: Total Block permutations exceeded 10000 ({Permutation._count}). This may cause issues when submitting to the Marketplace.",
                     fg="yellow",
                 )
             )
@@ -583,32 +572,32 @@ def compile_objects(
 
     if CONFIG._TARGET == ConfigPackageTarget.ADDON:
         if len(CONFIG._RP_UUID) > 1:
-            raise RuntimeError(
+            raise ValueError(
                 "Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack."
             )
         if len(CONFIG._BP_UUID) > 1:
-            raise RuntimeError(
+            raise ValueError(
                 "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
             )
 
 
-def translate(languages: Optional[list[str]] = None) -> None:
+def translate(languages: list[str] | None = None) -> None:
     """Translates the project."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Translating in progress...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Translating in progress...", fg="cyan"))
 
     AnvilTranslator().auto_translate_all(languages)
 
 
-def clean_old_dev(config: _AnvilConfig):
+def clean_old_dev(config: AnvilConfig):
     pack_paths = [
         config.RP_PATH,
         config.BP_PATH,
     ]
 
     for pack_path in pack_paths:
-        if os.path.exists(pack_path):
+        if pack_path.exists():
             shutil.rmtree(pack_path)
     click.echo(
         click.style(
@@ -618,258 +607,16 @@ def clean_old_dev(config: _AnvilConfig):
     )
 
 
-class ManifestRP(AddonObject):
-    _instance = None
-    _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH)
-    _setting_ids: set[str] = set()
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ManifestRP, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
-        """Initializes a ManifestRP instance."""
-        if not hasattr(self, "_initialized"):
-            super().__init__("manifest")
-            self.content(JsonSchemes.manifest_rp(version=CONFIG._RELEASE))
-            self._initialized = True
-
-    @property
-    def settings(self) -> "_ManifestSettings":
-        """Returns a Manifest Settings object to add settings to the manifest."""
-        return _ManifestSettings(self)
-
-    def queue(self) -> "ManifestRP":
-        if self._queued:
-            return
-        if CONFIG.PBR:
-            self._content.update({"capabilities": ["pbr"]})
-
-        if CONFIG._TARGET == "addon":
-            self._content["header"]["pack_scope"] = "world"
-            self._content["metadata"]["product_type"] = "addon"
-
-        return super().queue()
-
-
-class ManifestBP(AddonObject):
-    _instance = None
-    _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH)
-    _setting_ids: set[str] = set()
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ManifestBP, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
-        """Initializes a ManifestBP instance."""
-        if not hasattr(self, "_initialized"):
-            super().__init__("manifest")
-            self.content(JsonSchemes.manifest_bp(version=CONFIG._RELEASE))
-            self._initialized = True
-
-    @property
-    def settings(self) -> "_ManifestSettings":
-        """Returns a Manifest Settings object to add settings to the manifest."""
-        return _ManifestSettings(self)
-
-    def queue(self) -> "ManifestBP":
-        if self._queued:
-            return
-        if CONFIG._SCRIPT_API:
-            self._content["modules"].append(
-                {
-                    "uuid": CONFIG._SCRIPT_MODULE_UUID,
-                    "version": CONFIG._RELEASE,
-                    "type": "script",
-                    "language": "javascript",
-                    "entry": "scripts/main.js",
-                }
-            )
-            self._content["dependencies"].append(
-                {
-                    "module_name": "@minecraft/server",
-                    "version": (
-                        MODULE_MINECRAFT_SERVER
-                        if not (CONFIG._PREVIEW and CONFIG._EXPERIMENTAL)
-                        else MODULE_MINECRAFT_SERVER_PREVIEW
-                    ),
-                }
-            )
-            if CONFIG._SCRIPT_UI:
-                self._content["dependencies"].append(
-                    {
-                        "module_name": "@minecraft/server-ui",
-                        "version": (
-                            MODULE_MINECRAFT_SERVER_UI
-                            if not (CONFIG._PREVIEW and CONFIG._EXPERIMENTAL)
-                            else MODULE_MINECRAFT_SERVER_UI_PREVIEW
-                        ),
-                    }
-                )
-
-        if CONFIG._TARGET == "addon":
-            self._content["header"]["pack_scope"] = "world"
-            self._content["metadata"]["product_type"] = "addon"
-
-        return super().queue()
-
-
-class _ManifestSettings:
-    def __init__(self, manifest: ManifestRP | ManifestBP):
-        if MANIFEST_VERSION < 3:
-            raise RuntimeError(
-                "Settings labels are only supported in manifest version 3 and above."
-            )
-        self.manifest = manifest
-
-        # Initialize settings in _content if not present
-        if "settings" not in self.manifest._content:
-            self.manifest._content["settings"] = []
-
-        self.labels = 0
-        self.toggles = 0
-        self.sliders = 0
-        self.dropdowns = 0
-
-    def label(self, label: str):
-        key = f"pack.manifest.setting.label_{self.labels}"
-        AnvilTranslator().add_localization_entry(key, label)
-        self.manifest._content["settings"].append({"type": "label", "text": key})
-
-        self.labels += 1
-        return self
-
-    def toggle(self, id: str, text: str, default: bool = True):
-        if id in self.manifest._setting_ids:
-            raise ValueError(f"Setting ID '{id}' is already used.")
-
-        key = f"pack.manifest.setting.toggle_{self.toggles}"
-        AnvilTranslator().add_localization_entry(key, text)
-
-        self.manifest._setting_ids.add(id)
-        self.manifest._content["settings"].append(
-            {
-                "type": "toggle",
-                "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": key,
-                "default": default,
-            }
-        )
-
-        self.toggles += 1
-        return self
-
-    def slider(self, id: str, text: str, min: int, max: int, step: int, default: int):
-        if min >= max:
-            raise ValueError(f"Min value '{min}' must be less than max '{max}'.")
-
-        if step <= 0:
-            raise ValueError(f"Step value '{step}' must be greater than 0.")
-
-        if not (min <= default <= max):
-            raise ValueError(
-                f"Default value '{default}' must be between min '{min}' and max '{max}'."
-            )
-
-        if id in self.manifest._setting_ids:
-            raise ValueError(f"Setting ID '{id}' is already used.")
-
-        self.manifest._setting_ids.add(id)
-
-        key = f"pack.manifest.setting.slider_{self.sliders}"
-        AnvilTranslator().add_localization_entry(key, text)
-
-        self.manifest._content["settings"].append(
-            {
-                "type": "slider",
-                "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": key,
-                "min": min,
-                "max": max,
-                "step": step,
-                "default": default,
-            }
-        )
-        self.sliders += 1
-        return self
-
-    def _dropdown_options(self, options: dict[str, str]) -> list[dict[str, str]]:
-        o = []
-
-        for i, (k, v) in enumerate(options.items()):
-
-            translation_key = (
-                f"pack.manifest.setting.dropdown_{self.dropdowns}.option_{i}"
-            )
-            AnvilTranslator().add_localization_entry(translation_key, v)
-
-            o.append({"name": k, "text": translation_key})
-
-        return o
-
-    def dropdown(self, id: str, text: str, options: dict[str, str], default: str):
-        if not isinstance(options, dict) or len(options.items()) == 0:
-            raise ValueError("Options must be a non-empty list of dictionaries.")
-
-        if default not in options.keys():
-            raise ValueError(f"Default value '{default}' is not in the options list.")
-
-        if id in self.manifest._setting_ids:
-            raise ValueError(f"Setting ID '{id}' is already used.")
-
-        key = f"pack.manifest.setting.dropdown_{self.dropdowns}"
-        AnvilTranslator().add_localization_entry(key, text)
-
-        self.manifest._setting_ids.add(id)
-        self.manifest._content["settings"].append(
-            {
-                "type": "dropdown",
-                "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": key,
-                "options": self._dropdown_options(options),
-                "default": default,
-            }
-        )
-        self.dropdowns += 1
-        return self
-
-    # def multiselect(self, id: str, text: str, options: list[str]):
-    #    if not isinstance(options, list) or len(options) == 0:
-    #        raise ValueError("Options must be a non-empty list.")
-    #
-    #    for option in options:
-    #        if not isinstance(option, str):
-    #            raise ValueError("Options must be a list of strings.")
-    #
-    #    if id in self.manifest._setting_ids:
-    #        raise ValueError(f"Setting ID '{id}' is already used.")
-    #
-    #    self.manifest._setting_ids.add(id)
-    #    self.manifest._content["settings"].append(
-    #        {
-    #            "type": "multiselect",
-    #            "name": f"{CONFIG.NAMESPACE}:{id}",
-    #            "text": text,
-    #            "options": options
-    #        }
-    #    )
-
-
 class _Anvil:
     """A class representing an Anvil instance."""
 
     _instance = None
-    _objects_list: list[AddonObject | object] = []
+    _objects_list: list[JsonFile | object] = []
 
     def __init__(self):
         """Initializes an Anvil instance.
 
-        Parameters:
+        Args:
             config (_Config): The config of the Anvil instance.
         """
         if _Anvil._instance is None:
@@ -878,14 +625,8 @@ class _Anvil:
             raise Exception("Anvil instance already exists.")
 
         self.config = CONFIG
-        AnvilValidator.validate_namespace_project_name(
-            CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
-        )
 
-        if "--clean" in sys.argv:
-            clean_old_dev(CONFIG)
-
-    def translate(self, languages: Optional[list[str]] = None) -> None:
+    def translate(self, languages: list[str] | None = None) -> None:
         """Translates the project."""
         translate(languages)
 
@@ -928,7 +669,7 @@ class _Anvil:
 
         if generate_technical_notes:
             click.echo(
-                click.style(f"\r[INFO]: Generating technical notes...", fg="cyan")
+                click.style("\r[INFO]: Generating technical notes...", fg="cyan")
             )
             self.config.Report.generate_report()
 

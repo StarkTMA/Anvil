@@ -1,778 +1,265 @@
-import os
-from typing import Union, overload
+from __future__ import annotations
 
-from anvil.api.core.enums import ExplorationMapDestinations, LootPoolType
-from anvil.api.core.types import Identifier
-from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
-from anvil.api.world.structures import JigsawStructureSet
-from anvil.lib.config import CONFIG
-from anvil.lib.lib import clamp
-from anvil.lib.schemas import (
-    AddonObject,
-    JsonSchemes,
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
+from pathlib import Path, PurePosixPath
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
+
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.items.items import Item
+from anvil.lib.config import CONFIG, Pack
+from anvil.lib.jsonmodel import (
+    AtLeastOne,
+    Bounds,
+    Chance,
+    InRange,
+    JsonFile,
+    JsonObject,
+    JsonValue,
+    Length,
+    MinMax,
+    NonNegative,
+    RangeMinMax,
+    json_field,
 )
+from anvil.lib.jsonmodel.enums import ExplorationMapDestinations, LootPoolType
+
+if TYPE_CHECKING:
+    from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
+    from anvil.api.world.structures import JigsawStructureSet
 
 __all__ = ["LootTable", "LootConditions"]
 
 
-class _LootPoolEntryFunctions:
-    """Provides function modifiers that can be applied to loot table entries to customize their behavior.
+# region Conditions
 
-    This class contains methods for applying various functions to loot table entries, including
-    enchantment functions, item modification functions, and miscellaneous utility functions.
-    All functions return self to enable method chaining.
-    """
 
-    def __init__(self):
-        """Initialize the functions list."""
-        self._function = []
+class _RandomChance(JsonObject):
+    condition: Literal["random_chance"] = json_field(
+        default="random_chance", init=False
+    )
+    chance: Annotated[float, Chance] = json_field()
 
-    # Enchantment Functions
-    def EnchantBookForTrading(
-        self,
-        base_cost: int,
-        base_random_cost: int,
-        per_level_random_cost: int,
-        per_level_cost: int,
-    ):
-        """Enchants a book using the algorithm for enchanting items sold by villagers.
 
-        Only works in trade tables. The total cost is calculated as:
-        base_cost + (base_random_cost + enchantmentLevel * per_level_random_cost) + enchantmentLevel * per_level_cost
+class _RandomChanceWithLooting(JsonObject):
+    condition: Literal["random_chance_with_looting"] = json_field(
+        default="random_chance_with_looting", init=False
+    )
+    chance: Annotated[float, Chance] = json_field()
+    looting_multiplier: float = json_field()
 
-        Parameters:
-            base_cost (int): The base cost of the enchantment.
-            base_random_cost (int): The base random cost component.
-            per_level_random_cost (int): Random cost multiplied by enchantment level.
-            per_level_cost (int): Fixed cost multiplied by enchantment level.
 
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
+class _RandomDifficultyChance(JsonObject):
+    condition: Literal["random_difficulty_chance"] = json_field(
+        default="random_difficulty_chance", init=False
+    )
+    default_chance: Annotated[float, Chance] = json_field()
+    peaceful: Annotated[float, Chance] | None = None
+    easy: Annotated[float, Chance] | None = None
+    normal: Annotated[float, Chance] | None = None
+    hard: Annotated[float, Chance] | None = None
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_book_for_trading-trade-table-only)
-        """
-        self._function.append(
-            {
-                "function": "enchant_book_for_trading",
-                "base_cost": base_cost,
-                "base_random_cost": base_random_cost,
-                "per_level_random_cost": per_level_random_cost,
-                "per_level_cost": per_level_cost,
-            }
+
+class _RandomRegionalDifficultyChance(JsonObject):
+    condition: Literal["random_regional_difficulty_chance"] = json_field(
+        default="random_regional_difficulty_chance", init=False
+    )
+    max_chance: Annotated[float, Chance] = json_field()
+
+
+class _KilledByPlayer(JsonObject):
+    condition: Literal["killed_by_player"] = json_field(
+        default="killed_by_player", init=False
+    )
+
+
+class _KilledByPlayerOrPets(JsonObject):
+    condition: Literal["killed_by_player_or_pets"] = json_field(
+        default="killed_by_player_or_pets", init=False
+    )
+
+
+class _KilledByEntity(JsonObject):
+    condition: Literal["killed_by_entity"] = json_field(
+        default="killed_by_entity", init=False
+    )
+    entity_type: str = json_field()
+
+
+class _EntityKilled(JsonObject):
+    condition: Literal["entity_killed"] = json_field(
+        default="entity_killed", init=False
+    )
+    entity_type: str = json_field()
+
+
+class _HasVariant(JsonObject):
+    condition: Literal["has_variant"] = json_field(default="has_variant", init=False)
+    value: int = json_field()
+
+
+class _HasMarkVariant(JsonObject):
+    condition: Literal["has_mark_variant"] = json_field(
+        default="has_mark_variant", init=False
+    )
+    value: int = json_field()
+
+
+class _EntityPropertyValues(JsonObject):
+    """The entity properties to match."""
+
+    on_fire: bool | None = None
+
+    def set_on_fire(self, on_fire: bool | None) -> None:
+        """Sets whether the entity is on fire."""
+        self.on_fire = on_fire
+
+
+class _EntityProperties(JsonObject):
+    condition: Literal["entity_properties"] = json_field(
+        default="entity_properties", init=False
+    )
+    entity: str = json_field()
+    properties: _EntityPropertyValues = json_field(
+        default_factory=_EntityPropertyValues
+    )
+
+
+class _ToolRange(JsonObject):
+    """A tool value range: `range_min`, `range_max` or both."""
+
+    range_min: int | None = None
+    range_max: int | None = None
+
+
+class _ToolEnchantment(JsonObject):
+    """An enchantment the tool must have, with its level range."""
+
+    enchantment: str = json_field()
+    levels: _ToolRange = json_field(default_factory=_ToolRange)
+
+
+class _MatchTool(JsonObject):
+    condition: Literal["match_tool"] = json_field(default="match_tool", init=False)
+    item: str | None = None
+    count: Annotated[int | tuple[int, int], RangeMinMax] | None = None
+    durability: _ToolRange | None = None
+    enchantments: list[_ToolEnchantment] | None = None
+    filter_any: list[str] | None = json_field(
+        key="minecraft:match_tool_filter_any", default=None
+    )
+    filter_all: list[str] | None = json_field(
+        key="minecraft:match_tool_filter_all", default=None
+    )
+    filter_none: list[str] | None = json_field(
+        key="minecraft:match_tool_filter_none", default=None
+    )
+
+    def set_durability(self, range_min: int, range_max: int | None = None) -> None:
+        """Sets the tool's minimum durability, and its maximum."""
+        self.durability = _ToolRange(range_min=range_min, range_max=range_max)
+
+    def add_enchantment(self, enchantment: str, min_level: int) -> None:
+        """Adds an enchantment the tool must have, at least at this level."""
+        if self.enchantments is None:
+            self.enchantments = []
+        levels = _ToolRange(range_min=min_level)
+        self.enchantments.append(
+            _ToolEnchantment(enchantment=enchantment, levels=levels)
         )
-        return self
 
-    def EnchantRandomGear(self, chance: float):
-        """Enchants an item using the same algorithm used for vanilla mob equipment.
 
-        The chance is modified based on difficulty: 0% on Peaceful/Easy, ~67% of specified chance
-        on Normal, and 100% of specified chance on Hard difficulty. Values > 1.0 can bypass
-        Normal difficulty reduction.
-
-        Parameters:
-            chance (float): Enchantment chance modifier (0.0-1.0, values >1.0 allowed for difficulty bypass).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_random_gear)
-        """
-        self._function.append(
-            {
-                "function": "enchant_random_gear",
-                "chance": clamp(chance, 0.0, 1.0),
-            }
-        )
-        return self
-
-    def EnchantRandomly(self, treasure: bool = False):
-        """Generates a random enchantment compatible with the item.
-
-        Parameters:
-            treasure (bool, optional): Allow treasure enchantments (Frost Walker, Mending,
-                Soul Speed, Curse of Binding, Curse of Vanishing). Defaults to False.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_randomly)
-        """
-        self._function.append({"function": "enchant_randomly", "treasure": treasure})
-        return self
-
-    def EnchantWithLevels(self, levels: tuple[int, int], treasure: bool = False):
-        """Applies enchantments as if using an enchanting table with specified XP levels.
-
-        Parameters:
-            levels (tuple[int, int]): Minimum and maximum XP levels for enchanting.
-            treasure (bool, optional): Allow treasure-only enchantments. Defaults to False.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_with_levels)
-        """
-        self._function.append(
-            {
-                "function": "enchant_with_levels",
-                "levels": {"min": min(levels), "max": max(levels)},
-                "treasure": treasure,
-            }
-        )
-        return self
-
-    def SetPotion(self, id: MinecraftPotionEffectTypes):
-        """Sets the potion type of compatible items (potions, splash potions, lingering potions).
-
-        Parameters:
-            id (MinecraftPotionEffectTypes): The potion effect identifier.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#set_potion)
-        """
-        self._function.append({"function": "set_potion", "id": id})
-        return self
-
-    @overload
-    def SpecificEnchants(self, enchants: tuple[str, ...]) -> "_LootPoolEntryFunctions":
-        """Apply specific enchantments to an item by name only (default levels).
-
-        Parameters:
-            enchants (tuple[str, ...]): Tuple of enchantment names.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-        """
-        ...
-
-    @overload
-    def SpecificEnchants(
-        self, enchants: tuple[tuple[str, int], ...]
-    ) -> "_LootPoolEntryFunctions":
-        """Apply specific enchantments to an item with custom levels.
-
-        Note: Maximum enchantment levels are hard-coded and cannot be overridden.
-        Can apply enchantments to items that wouldn't normally be enchantable.
-
-        Parameters:
-            enchants (tuple[tuple[str, int], ...]): Tuple of (enchantment_name, level) pairs.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants)
-        """
-        ...
-
-    def SpecificEnchants(
-        self, enchants: Union[tuple[str, ...], tuple[tuple[str, int], ...]]
-    ) -> "_LootPoolEntryFunctions":
-        """Apply specific enchantments to an item.
-
-        Parameters:
-            enchants (tuple[str, ...] | tuple[tuple[str, int], ...]): Either a tuple of enchantment names
-                for default levels, or a tuple of (enchantment_name, level) pairs for custom levels.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants)
-        """
-        if enchants and isinstance(enchants[0], str):
-            # Simple enchantment names only
-            self._function.append(
-                {
-                    "function": "specific_enchants",
-                    "enchants": enchants,
-                }
-            )
-        else:
-            # Enchantment name and level pairs
-            self._function.append(
-                {
-                    "function": "specific_enchants",
-                    "enchants": [
-                        {"id": enchant[0], "level": enchant[1]} for enchant in enchants
-                    ],
-                }
-            )
-        return self
-
-    # Item Mod Functions
-    def LootingEnchant(self, levels: tuple[int, int]):
-        """Modifies the count of items returned when an entity is killed by a looting-enchanted weapon.
-
-        Note: Only works with loot tables called by entity death, not in villager trades or chests.
-
-        Parameters:
-            levels (tuple[int, int]): Min and max additional items per looting level.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#looting_enchant-loot-table-only)
-        """
-        self._function.append(
-            {
-                "function": "looting_enchant",
-                "levels": {"min": min(levels), "max": max(levels)},
-            }
-        )
-        return self
-
-    def RandomAuxValue(self, range: tuple[int, int]):
-        """Picks a random auxiliary value for an item (e.g., for randomly colored dyes).
-
-        Parameters:
-            range (tuple[int, int]): Min and max values for the auxiliary data.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_aux_value)
-        """
-        self._function.append(
-            {
-                "function": "random_aux_value",
-                "range": {"min": min(range), "max": max(range)},
-            }
-        )
-        return self
-
-    def RandomBlockState(self, range: tuple[int, int]):
-        """Randomizes the block state of the resulting item (e.g., for colored wool from shepherd trades).
-
-        Parameters:
-            range (tuple[int, int]): Min and max values for the block state.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_block_state)
-        """
-        self._function.append(
-            {
-                "function": "random_block_state",
-                "range": {"min": min(range), "max": max(range)},
-            }
-        )
-        return self
-
-    def RandomDye(self):
-        """Affects the colors of random leather items (used by leather workers for random coloring).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_dye)
-        """
-        self._function.append(
-            {
-                "function": "random_dye",
-            }
-        )
-        return self
-
-    def SetActorId(self, actor: MinecraftEntityDescriptor | Identifier | None):
-        """Sets the entity ID of a spawn egg. Only works with spawn eggs.
-
-        When actor is None, inherits the entity ID from the associated entity
-        (e.g., rabbit drops rabbit spawn egg). Be careful with chest loot tables -
-        omitting ID with player interaction creates unusable player spawn eggs.
-
-        Parameters:
-            actor (MinecraftEntityDescriptor | Identifier | None): The entity identifier for the spawn egg,
-                or None to inherit from the associated entity.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_actor_id)
-        """
-        self._function.append(
-            {
-                "function": "set_actor_id",
-                "id": str(actor) if actor is not None else None,
-            }
-        )
-        return self
-
-    def SetBannerDetails(self, type: int = 1):
-        """Sets banner details. Only works on banners and currently only supports type 1 (villager banner).
-
-        Parameters:
-            type (int, optional): Banner type. Only type 1 (villager banner) is supported. Defaults to 1.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_banner_details)
-        """
-        self._function.append(
-            {
-                "function": "set_banner_details",
-                "type": 1,
-            }
-        )
-        return self
-
-    def SetBookContent(self, author: str, title: str, pages: list[str]):
-        """Sets the contents of a book including author, title, and pages.
-
-        Can use rawtext for localization on pages only (not author/title).
-        Remember to escape special characters like quotes and backslashes in rawtext.
-
-        Parameters:
-            author (str): The author of the book.
-            title (str): The title of the book.
-            pages (list[str]): List of page contents as strings.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_book_contents)
-        """
-        self._function.append(
-            {
-                "function": "set_book_contents",
-                "author": author,
-                "title": title,
-                "pages": [str(p) for p in pages],
-            }
-        )
-        return self
-
-    @overload
-    def SetCount(self, count: int) -> "_LootPoolEntryFunctions":
-        """Sets the quantity of items returned to an exact number.
-
-        Parameters:
-            count (int): Exact number of items to return.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-        """
-        ...
-
-    @overload
-    def SetCount(self, count: tuple[int, int]) -> "_LootPoolEntryFunctions":
-        """Sets the quantity of items returned to a random number within a range.
-
-        Parameters:
-            count (tuple[int, int]): Min/max range of items to return.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-        """
-        ...
-
-    def SetCount(self, count) -> "_LootPoolEntryFunctions":
-        """Sets the quantity of items returned.
-
-        Parameters:
-            count (int | tuple[int, int]): Exact number or min/max range of items to return.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_count)
-        """
-        if isinstance(count, int):
-            self._function.append(
-                {
-                    "function": "set_count",
-                    "count": count,
-                }
-            )
-        elif isinstance(count, (list, tuple)):
-            self._function.append(
-                {
-                    "function": "set_count",
-                    "count": {"min": min(count), "max": max(count)},
-                }
-            )
-        return self
-
-    @overload
-    def SetDamage(self, damage: float):
-        """Sets the percentage of durability remaining for items with durability to an exact value.
-
-        Parameters:
-            damage (float): Durability percentage (1.0 = 100% undamaged, 0.0 = no durability).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-        """
-        ...
-
-    @overload
-    def SetDamage(self, damage: tuple[float, float]):
-        """Sets the percentage of durability remaining for items with durability to a random value within a range.
-
-        Parameters:
-            damage (tuple[float, float]): Min/max range of durability percentages (0.0-1.0).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-        """
-        ...
-
-    def SetDamage(self, damage):
-        """Sets the percentage of durability remaining for items with durability.
-
-        Parameters:
-            damage (float | tuple[float, float]): Durability percentage (1.0 = 100% undamaged, 0.0 = no durability)
-                or min/max range of durability percentages (0.0-1.0).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_damage)
-        """
-        if isinstance(damage, (int, float)):
-            self._function.append(
-                {
-                    "function": "set_damage",
-                    "damage": clamp(damage, 0, 1),
-                }
-            )
-        elif isinstance(damage, tuple):
-            self._function.append(
-                {
-                    "function": "set_damage",
-                    "damage": {
-                        "min": clamp(min(damage), 0, 1),
-                        "max": clamp(max(damage), 0, 1),
-                    },
-                }
-            )
-        return self
-
-    def SetData(self, data: int):
-        """Sets the data value of a block or item to a specific ID (e.g., specific potion variant).
-
-        Parameters:
-            data (int): The data/variant value to set.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data)
-        """
-        self._function.append(
-            {
-                "function": "set_data",
-                "data": data,
-            }
-        )
-        return self
-
-    def SetDataFromColorIndex(self):
-        """Inherits the data value from the associated entity's color index.
-
-        For example, a pink sheep drops pink wool. If the entity has no color index
-        or used in chest loot tables, always yields data value 0.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data_from_color_index)
-        """
-        self._function.append(
-            {
-                "function": "set_data_from_color_index",
-            }
-        )
-        return self
-
-    def SetLore(self, lore: tuple[str]):
-        """Sets the lore text of an item. Each string represents a single line of lore.
-
-        Note: Currently no support for rawtext in lore.
-
-        Parameters:
-            lore (tuple[str]): Tuple of lore lines to display on the item.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_lore)
-        """
-        self._function.append(
-            {
-                "function": "set_lore",
-                "lore": lore,
-            }
-        )
-        return self
-
-    def SetName(self, name: str):
-        """Sets the custom name of an item.
-
-        Note: Currently no support for rawtext in item names.
-
-        Parameters:
-            name (str): The custom name to give the item.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_name)
-        """
-        self._function.append(
-            {
-                "function": "set_name",
-                "name": name,
-            }
-        )
-        return self
-
-    # Miscellaneous Functions
-    def ExplorationMap(
-        self, destination: ExplorationMapDestinations | JigsawStructureSet | Identifier
-    ):
-        """Transforms a normal map into a treasure map marking the location of structures.
-
-        Parameters:
-            destination (ExplorationMapDestinations): The type of structure to mark
-                (buriedtreasure, endcity, fortress, mansion, mineshaft, monument,
-                pillageroutpost, ruins, shipwreck, stronghold, temple, village).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#exploration_map)
-        """
-        self._function.append(
-            {
-                "function": "exploration_map",
-                "destination": (
-                    destination if isinstance(destination, str) else str(destination)
-                ),
-            }
-        )
-        return self
-
-    def FillContainer(self, lootTable: "LootTable"):
-        """Defines the loot table for a chest. Contents are generated when opened/broken.
-
-        Tip: Use SetName() to distinguish filled chests from empty ones in inventory.
-
-        Parameters:
-            lootTable (LootTable): The loot table to use for filling the container.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#fill_container)
-        """
-        self._function.append(
-            {
-                "function": "fill_container",
-                "loot_table": str(lootTable),
-            }
-        )
-        return self
-
-    def FurnaceSmelt(self):
-        """Returns the cooked version of dropped loot when the entity dies from fire damage.
-
-        Only works with entity loot tables, not villager trades or chests.
-        Commonly used with fire aspect enchantments.
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#furnace_smelt-loot-table-only)
-        """
-        self._function.append(
-            {
-                "function": "furnace_smelt",
-                "conditions": [
-                    {
-                        "condition": "entity_properties",
-                        "entity": "this",
-                        "properties": {"on_fire": True},
-                    }
-                ],
-            }
-        )
-        return self
-
-    def TraderMaterialType(self):
-        """Affects the type of items a fisherman wants to trade (e.g., different boat types).
-
-        Returns:
-            _LootPoolEntryFunctions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#trader_material_type)
-        """
-        self._function.append(
-            {
-                "function": "trader_material_type",
-            }
-        )
-        return self
-
-    def __export__(self):
-        """Export the list of functions for JSON serialization.
-
-        Returns:
-            list: List of function dictionaries.
-        """
-        return self._function
-
-
-class _LootConditions:
-    """Provides condition modifiers that can be applied to loot pools or entries.
-
-    Conditions are requirements that must be met before a pool can be rolled
-    or an individual entry can be selected. Each condition runs in sequence;
-    if any condition fails, the pool or entry is skipped.
-
-    All methods return self to enable method chaining.
+class _LootConditions(JsonValue):
+    """Requirements that must all be met before a pool is rolled or an entry is picked.
+    Each method adds a condition and returns the conditions, to chain them.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable)
     """
 
-    def __init__(self):
-        """Initialize the conditions list."""
-        self._conditions = []
-
-    def add(self, condition: dict) -> "_LootConditions":
-        """Add a raw condition dictionary.
-
-        Parameters:
-            condition (dict): Condition dictionary to append.
-
-        Returns:
-            _LootConditions: Self for method chaining.
-        """
-        self._conditions.append(condition)
-        return self
+    conditions: list[
+        _MatchTool
+        | _RandomChance
+        | _RandomChanceWithLooting
+        | _RandomDifficultyChance
+        | _RandomRegionalDifficultyChance
+        | _KilledByPlayer
+        | _KilledByPlayerOrPets
+        | _KilledByEntity
+        | _EntityKilled
+        | _HasVariant
+        | _HasMarkVariant
+        | _EntityProperties
+    ] = json_field(default_factory=list)
 
     def match_tool(
         self,
-        item: Union[MinecraftItemDescriptor, Identifier, str, None] = None,
-        enchantments: Union[
-            str,
-            tuple[str, ...],
-            list[str],
-            dict,
-            list[dict],
-            tuple[dict, ...],
-            None,
-        ] = None,
-        count: Union[int, tuple[int, int], None] = None,
-        durability: Union[int, tuple[int, int], None] = None,
-        filter_any: Union[list[str], tuple[str, ...], None] = None,
-        filter_all: Union[list[str], tuple[str, ...], None] = None,
-        filter_none: Union[list[str], tuple[str, ...], None] = None,
-    ) -> "_LootConditions":
+        item: Item | str | None = None,
+        enchantments: str | list[str | tuple[str, int]] | None = None,
+        count: int | tuple[int, int] | None = None,
+        durability: int | tuple[int, int] | None = None,
+        filter_any: list[str] | None = None,
+        filter_all: list[str] | None = None,
+        filter_none: list[str] | None = None,
+    ) -> _LootConditions:
         """Matches the tool used to break the block or make the loot drop.
 
-        Parameters:
-            item (MinecraftItemDescriptor | Identifier | str, optional): The item identifier (e.g. "minecraft:shears").
-            enchantments (str | list | dict, optional): Enchantment name (e.g. "silk_touch") or list of enchantment specifications.
-            count (int | tuple[int, int], optional): Tool count or [min, max] range.
-            durability (int | tuple[int, int], optional): Tool durability requirement.
-            filter_any (list[str], optional): Tool must match at least one of these item tags (minecraft:match_tool_filter_any).
-            filter_all (list[str], optional): Tool must match all of these item tags (minecraft:match_tool_filter_all).
-            filter_none (list[str], optional): Tool must not match any of these item tags (minecraft:match_tool_filter_none).
+        Args:
+            item (Item | str, optional): The tool's item identifier.
+            enchantments (str | list[str | tuple[str, int]], optional): Enchantments the tool
+                must have: a name (any level), or `(name, minimum level)` pairs.
+            count (int | tuple[int, int], optional): The tool's count, or its range.
+            durability (int | tuple[int, int], optional): The minimum durability, or its range.
+            filter_any (list[str], optional): Item tags of which the tool has at least one.
+            filter_all (list[str], optional): Item tags the tool has all of.
+            filter_none (list[str], optional): Item tags the tool has none of.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#match_tool)
         """
-        cond: dict = {"condition": "match_tool"}
-        if item is not None:
-            cond["item"] = str(item)
-        if count is not None:
-            if isinstance(count, int):
-                cond["count"] = count
-            elif isinstance(count, (tuple, list)):
-                cond["count"] = {"range_min": min(count), "range_max": max(count)}
+        condition = _MatchTool(
+            item=None if item is None else str(item),
+            count=count,
+            filter_any=list(filter_any) if filter_any else None,
+            filter_all=list(filter_all) if filter_all else None,
+            filter_none=list(filter_none) if filter_none else None,
+        )
         if durability is not None:
-            if isinstance(durability, int):
-                cond["durability"] = {"range_min": durability}
-            elif isinstance(durability, (tuple, list)):
-                cond["durability"] = {
-                    "range_min": min(durability),
-                    "range_max": max(durability),
-                }
+            if isinstance(durability, tuple):
+                condition.set_durability(min(durability), max(durability))
+            else:
+                condition.set_durability(durability)
         if enchantments is not None:
-            if isinstance(enchantments, str):
-                cond["enchantments"] = [
-                    {"enchantment": enchantments, "levels": {"range_min": 1}}
-                ]
-            elif isinstance(enchantments, dict):
-                cond["enchantments"] = [enchantments]
-            elif isinstance(enchantments, (list, tuple)):
-                ench_list = []
-                for e in enchantments:
-                    if isinstance(e, str):
-                        ench_list.append({"enchantment": e, "levels": {"range_min": 1}})
-                    elif isinstance(e, dict):
-                        ench_list.append(e)
-                    elif isinstance(e, (tuple, list)) and len(e) >= 2:
-                        ench_list.append(
-                            {"enchantment": str(e[0]), "levels": {"range_min": e[1]}}
-                        )
-                cond["enchantments"] = ench_list
-        if filter_any:
-            cond["minecraft:match_tool_filter_any"] = list(filter_any)
-        if filter_all:
-            cond["minecraft:match_tool_filter_all"] = list(filter_all)
-        if filter_none:
-            cond["minecraft:match_tool_filter_none"] = list(filter_none)
-        self._conditions.append(cond)
+            for enchantment in (
+                [enchantments] if isinstance(enchantments, str) else enchantments
+            ):
+                if isinstance(enchantment, str):
+                    condition.add_enchantment(enchantment, 1)
+                else:
+                    condition.add_enchantment(str(enchantment[0]), enchantment[1])
+        self.conditions.append(condition)
         return self
 
-    def random_chance(self, chance: float) -> "_LootConditions":
-        """Applies a probability chance that loot will drop.
-
-        Parameters:
-            chance (float): Drop chance between 0.0 and 1.0.
+    def random_chance(self, chance: float) -> _LootConditions:
+        """Applies a chance, from 0 to 1, that the loot drops.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_chance)
         """
-        self._conditions.append(
-            {
-                "condition": "random_chance",
-                "chance": clamp(chance, 0.0, 1.0),
-            }
-        )
+        self.conditions.append(_RandomChance(chance=chance))
         return self
 
     def random_chance_with_looting(
         self, chance: float, looting_multiplier: float
-    ) -> "_LootConditions":
-        """Applies a probability chance modified by the looting enchantment level.
-
-        Parameters:
-            chance (float): Base drop chance between 0.0 and 1.0.
-            looting_multiplier (float): Multiplier added per level of looting.
+    ) -> _LootConditions:
+        """Applies a chance, from 0 to 1, raised by `looting_multiplier` per looting level.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_chance_with_looting)
         """
-        self._conditions.append(
-            {
-                "condition": "random_chance_with_looting",
-                "chance": clamp(chance, 0.0, 1.0),
-                "looting_multiplier": looting_multiplier,
-            }
+        self.conditions.append(
+            _RandomChanceWithLooting(
+                chance=chance, looting_multiplier=looting_multiplier
+            )
         )
         return self
 
@@ -783,175 +270,116 @@ class _LootConditions:
         easy: float | None = None,
         normal: float | None = None,
         hard: float | None = None,
-    ) -> "_LootConditions":
-        """Controls loot drop probability depending on world difficulty.
+    ) -> _LootConditions:
+        """Applies a chance, from 0 to 1, that depends on the world difficulty.
 
-        Parameters:
-            default_chance (float): Default drop chance.
-            peaceful (float, optional): Drop chance on Peaceful difficulty.
-            easy (float, optional): Drop chance on Easy difficulty.
-            normal (float, optional): Drop chance on Normal difficulty.
-            hard (float, optional): Drop chance on Hard difficulty.
-
-        Returns:
-            _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_difficulty_chance)
-        """
-        payload: dict = {
-            "condition": "random_difficulty_chance",
-            "default_chance": clamp(default_chance, 0.0, 1.0),
-        }
-        if peaceful is not None:
-            payload["peaceful"] = clamp(peaceful, 0.0, 1.0)
-        if easy is not None:
-            payload["easy"] = clamp(easy, 0.0, 1.0)
-        if normal is not None:
-            payload["normal"] = clamp(normal, 0.0, 1.0)
-        if hard is not None:
-            payload["hard"] = clamp(hard, 0.0, 1.0)
-        self._conditions.append(payload)
-        return self
-
-    def random_regional_difficulty_chance(self, max_chance: float) -> "_LootConditions":
-        """Determines loot probability according to regional difficulty.
-
-        Parameters:
-            max_chance (float): Maximum drop chance.
+        Args:
+            default_chance (float): The chance on difficulties not set.
+            peaceful (float, optional): The chance on Peaceful.
+            easy (float, optional): The chance on Easy.
+            normal (float, optional): The chance on Normal.
+            hard (float, optional): The chance on Hard.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_regional_difficulty_chance)
         """
-        self._conditions.append(
-            {
-                "condition": "random_regional_difficulty_chance",
-                "max_chance": clamp(max_chance, 0.0, 1.0),
-            }
+        self.conditions.append(
+            _RandomDifficultyChance(
+                default_chance=default_chance,
+                peaceful=peaceful,
+                easy=easy,
+                normal=normal,
+                hard=hard,
+            )
         )
         return self
 
-    def killed_by_player(self) -> "_LootConditions":
-        """Requires the entity to have been killed directly by a player.
+    def random_regional_difficulty_chance(self, max_chance: float) -> _LootConditions:
+        """Applies a chance, up to `max_chance`, that grows with the regional difficulty.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#killed_by_player_or_pets)
         """
-        self._conditions.append({"condition": "killed_by_player"})
+        self.conditions.append(_RandomRegionalDifficultyChance(max_chance=max_chance))
         return self
 
-    def killed_by_player_or_pets(self) -> "_LootConditions":
-        """Requires the entity to have been killed by a player or one of their tamed pets.
+    def killed_by_player(self) -> _LootConditions:
+        """Requires the entity to have been killed by a player.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#killed_by_player_or_pets)
         """
-        self._conditions.append({"condition": "killed_by_player_or_pets"})
+        self.conditions.append(_KilledByPlayer())
         return self
 
-    def killed_by_entity(self, entity_type: str) -> "_LootConditions":
-        """Requires the entity to have been killed by an entity of the specified type.
-
-        Parameters:
-            entity_type (str): Identifier of the killing entity type (e.g. "minecraft:skeleton").
+    def killed_by_player_or_pets(self) -> _LootConditions:
+        """Requires the entity to have been killed by a player or their tamed pets.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#pool-conditions)
         """
-        self._conditions.append(
-            {
-                "condition": "killed_by_entity",
-                "entity_type": str(entity_type),
-            }
-        )
+        self.conditions.append(_KilledByPlayerOrPets())
         return self
 
-    def entity_killed(self, entity_type: str) -> "_LootConditions":
-        """Requires the victim entity to be of the specified type.
+    def killed_by_entity(self, entity_type: str) -> _LootConditions:
+        """Requires the entity to have been killed by an entity of this type.
 
-        Parameters:
-            entity_type (str): Identifier of the victim entity type (e.g. "minecraft:magma_cube").
+        Args:
+            entity_type (str): The killer's identifier, such as `minecraft:skeleton`.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#has_variant)
         """
-        self._conditions.append(
-            {
-                "condition": "entity_killed",
-                "entity_type": str(entity_type),
-            }
-        )
+        self.conditions.append(_KilledByEntity(entity_type=str(entity_type)))
         return self
 
-    def has_variant(self, value: int) -> "_LootConditions":
-        """Specifies that the entity must have the given variant value.
+    def entity_killed(self, entity_type: str) -> _LootConditions:
+        """Requires the killed entity to be of this type.
 
-        Parameters:
-            value (int): Variant number.
+        Args:
+            entity_type (str): The killed entity's identifier, such as `minecraft:magma_cube`.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#has_variant)
         """
-        self._conditions.append(
-            {
-                "condition": "has_variant",
-                "value": int(value),
-            }
-        )
+        self.conditions.append(_EntityKilled(entity_type=str(entity_type)))
         return self
 
-    def has_mark_variant(self, value: int) -> "_LootConditions":
-        """Specifies that the entity must have the given mark variant value.
-
-        Parameters:
-            value (int): Mark variant number.
+    def has_variant(self, value: int) -> _LootConditions:
+        """Requires the entity to have this variant.
 
         Returns:
             _LootConditions: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#has_mark_variant)
         """
-        self._conditions.append(
-            {
-                "condition": "has_mark_variant",
-                "value": int(value),
-            }
-        )
+        self.conditions.append(_HasVariant(value=value))
+        return self
+
+    def has_mark_variant(self, value: int) -> _LootConditions:
+        """Requires the entity to have this mark variant.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+        """
+        self.conditions.append(_HasMarkVariant(value=value))
         return self
 
     def entity_properties(
-        self, entity: str = "this", properties: dict | None = None
-    ) -> "_LootConditions":
-        """Requires the target entity to have specific properties (e.g. on_fire).
+        self, entity: str = "this", on_fire: bool | None = None
+    ) -> _LootConditions:
+        """Requires an entity to have these properties.
 
-        Parameters:
-            entity (str, optional): Target entity ("this", "killer", etc.). Defaults to "this".
-            properties (dict, optional): Entity properties dictionary. Defaults to None.
+        Args:
+            entity (str, optional): The entity checked, such as `this`. Defaults to "this".
+            on_fire (bool, optional): The entity is on fire, or not.
 
         Returns:
             _LootConditions: Self for method chaining.
         """
-        self._conditions.append(
-            {
-                "condition": "entity_properties",
-                "entity": entity,
-                "properties": properties if properties is not None else {},
-            }
-        )
+        condition = _EntityProperties(entity=entity)
+        condition.properties.set_on_fire(on_fire)
+        self.conditions.append(condition)
         return self
 
-    # PascalCase aliases for backwards compatibility
     MatchTool = match_tool
     RandomChance = random_chance
     RandomChanceWithLooting = random_chance_with_looting
@@ -965,283 +393,714 @@ class _LootConditions:
     HasMarkVariant = has_mark_variant
     EntityProperties = entity_properties
 
-    def __export__(self) -> list[dict]:
-        """Export the conditions list for JSON serialization.
-
-        Returns:
-            list[dict]: List of condition dictionaries.
-        """
-        return self._conditions
-
 
 LootConditions = _LootConditions
 
+# endregion
 
-class _LootPoolEntry:
-    """Represents a single entry in a loot pool with its associated properties and functions.
+# region Functions
 
-    Each entry can be an item, block, another loot table, or empty, and can have functions
-    applied to modify the resulting loot.
+
+class _EnchantBookForTrading(JsonObject):
+    function: Literal["enchant_book_for_trading"] = json_field(
+        default="enchant_book_for_trading", init=False
+    )
+    base_cost: int = json_field()
+    base_random_cost: int = json_field()
+    per_level_random_cost: int = json_field()
+    per_level_cost: int = json_field()
+
+
+class _EnchantRandomGear(JsonObject):
+    function: Literal["enchant_random_gear"] = json_field(
+        default="enchant_random_gear", init=False
+    )
+    chance: Annotated[float, NonNegative] = json_field()
+
+
+class _EnchantRandomly(JsonObject):
+    function: Literal["enchant_randomly"] = json_field(
+        default="enchant_randomly", init=False
+    )
+    treasure: bool = json_field(default=False)
+
+
+class _EnchantWithLevels(JsonObject):
+    function: Literal["enchant_with_levels"] = json_field(
+        default="enchant_with_levels", init=False
+    )
+    levels: Annotated[tuple[int, int], MinMax] = json_field()
+    treasure: bool = json_field(default=False)
+
+
+class _SetPotion(JsonObject):
+    function: Literal["set_potion"] = json_field(default="set_potion", init=False)
+    id: str = json_field()
+
+
+class _EnchantLevel(JsonObject):
+    """An enchantment and its level."""
+
+    id: str = json_field()
+    level: Annotated[int, AtLeastOne] = json_field()
+
+
+class _SpecificEnchants(JsonObject):
+    function: Literal["specific_enchants"] = json_field(
+        default="specific_enchants", init=False
+    )
+    enchants: list[str] | list[_EnchantLevel] = json_field()
+
+
+class _LootingEnchant(JsonObject):
+    function: Literal["looting_enchant"] = json_field(
+        default="looting_enchant", init=False
+    )
+    count: Annotated[tuple[int, int], MinMax] = json_field()
+
+
+class _RandomAuxValue(JsonObject):
+    function: Literal["random_aux_value"] = json_field(
+        default="random_aux_value", init=False
+    )
+    values: Annotated[tuple[int, int], MinMax] = json_field()
+
+
+class _RandomBlockState(JsonObject):
+    function: Literal["random_block_state"] = json_field(
+        default="random_block_state", init=False
+    )
+    block_state: str = json_field()
+    values: Annotated[tuple[int, int], MinMax] = json_field()
+
+
+class _RandomDye(JsonObject):
+    function: Literal["random_dye"] = json_field(default="random_dye", init=False)
+
+
+class _SetActorId(JsonObject):
+    function: Literal["set_actor_id"] = json_field(default="set_actor_id", init=False)
+    id: str | None = None
+
+
+class _BannerPattern(JsonObject):
+    """A pattern of a banner and its color."""
+
+    pattern: str = json_field()
+    color: str = json_field()
+
+
+class _SetBannerDetails(JsonObject):
+    function: Literal["set_banner_details"] = json_field(
+        default="set_banner_details", init=False
+    )
+    type: Literal[0, 1, "default", "illager_captain"] = json_field(default=1)
+    base_color: str | None = None
+    patterns: Annotated[list[_BannerPattern], Length(maximum=6)] | None = None
+
+    def add_pattern(self, pattern: str, color: str) -> None:
+        """Adds a pattern and its color."""
+        if self.patterns is None:
+            self.patterns = []
+        self.patterns.append(_BannerPattern(pattern=pattern, color=color))
+
+    def __validate__(self) -> None:
+        if self.patterns and self.type not in (0, "default"):
+            raise ValueError("Only default banners (type 0) can have patterns.")
+
+
+class _ExplosionDecay(JsonObject):
+    function: Literal["explosion_decay"] = json_field(
+        default="explosion_decay", init=False
+    )
+
+
+class _StewEffect(JsonObject):
+    """An effect a suspicious stew can have."""
+
+    id: Annotated[int, NonNegative] = json_field()
+
+
+class _SetStewEffect(JsonObject):
+    function: Literal["minecraft:set_stew_effect"] = json_field(
+        default="minecraft:set_stew_effect", init=False
+    )
+    effects: Annotated[list[_StewEffect], Length(minimum=1)] = json_field(
+        default_factory=list
+    )
+
+
+class _SetOminousBottleAmplifier(JsonObject):
+    function: Literal["set_ominous_bottle_amplifier"] = json_field(
+        default="set_ominous_bottle_amplifier", init=False
+    )
+    amplifier: Annotated[
+        int | tuple[int, int], NonNegative, Bounds("min", "max", exact=True)
+    ] = json_field()
+
+
+class _SetArmorTrim(JsonObject):
+    function: Literal["set_armor_trim"] = json_field(
+        default="set_armor_trim", init=False
+    )
+    material: str = json_field()
+    pattern: str = json_field()
+
+
+class _SetBookContents(JsonObject):
+    function: Literal["set_book_contents"] = json_field(
+        default="set_book_contents", init=False
+    )
+    author: str = json_field()
+    title: str = json_field()
+    pages: list[str] = json_field(default_factory=list)
+
+
+class _SetCount(JsonObject):
+    function: Literal["set_count"] = json_field(default="set_count", init=False)
+    count: Annotated[int | tuple[int, int], MinMax] = json_field()
+
+
+class _SetDamage(JsonObject):
+    function: Literal["set_damage"] = json_field(default="set_damage", init=False)
+    damage: Annotated[float | tuple[float, float], InRange(0, 1), MinMax] = json_field()
+
+
+class _SetData(JsonObject):
+    function: Literal["set_data"] = json_field(default="set_data", init=False)
+    data: int = json_field()
+
+
+class _SetDataFromColorIndex(JsonObject):
+    function: Literal["set_data_from_color_index"] = json_field(
+        default="set_data_from_color_index", init=False
+    )
+
+
+class _SetLore(JsonObject):
+    function: Literal["set_lore"] = json_field(default="set_lore", init=False)
+    lore: list[str] = json_field(default_factory=list)
+
+
+class _SetName(JsonObject):
+    function: Literal["set_name"] = json_field(default="set_name", init=False)
+    name: str = json_field()
+
+
+class _ExplorationMap(JsonObject):
+    function: Literal["exploration_map"] = json_field(
+        default="exploration_map", init=False
+    )
+    destination: str | None = None
+
+
+class _FillContainer(JsonObject):
+    function: Literal["fill_container"] = json_field(
+        default="fill_container", init=False
+    )
+    loot_table: str = json_field()
+
+
+class _FurnaceSmelt(JsonObject):
+    function: Literal["furnace_smelt"] = json_field(default="furnace_smelt", init=False)
+    conditions: _LootConditions = json_field(default_factory=_LootConditions)
+
+
+class _TraderMaterialType(JsonObject):
+    function: Literal["trader_material_type"] = json_field(
+        default="trader_material_type", init=False
+    )
+
+
+class _LootFunctionBuilder:
+    """The function builders shared by loot entries and trade items. Each adds a function
+    and returns the builder, to chain them."""
+
+    __slots__ = ()
+
+    def _add_function(self, function: JsonObject) -> None:
+        raise NotImplementedError
+
+    def EnchantBookForTrading(
+        self,
+        base_cost: int,
+        base_random_cost: int,
+        per_level_random_cost: int,
+        per_level_cost: int,
+    ):
+        """Enchants a book with the villager trade algorithm. Trade tables only.
+
+        The cost is `base_cost + (base_random_cost + level * per_level_random_cost) +
+        level * per_level_cost`.
+
+        Args:
+            base_cost (int): The base cost.
+            base_random_cost (int): The base random cost.
+            per_level_random_cost (int): The random cost per enchantment level.
+            per_level_cost (int): The cost per enchantment level.
+        """
+        self._add_function(
+            _EnchantBookForTrading(
+                base_cost=base_cost,
+                base_random_cost=base_random_cost,
+                per_level_random_cost=per_level_random_cost,
+                per_level_cost=per_level_cost,
+            )
+        )
+        return self
+
+    def EnchantRandomGear(self, chance: float):
+        """Enchants the item like the equipment vanilla mobs spawn with.
+
+        The chance drops to 0 on Peaceful and Easy and to about 2/3 on Normal. A chance
+        above 1 makes up for the drop on Normal: 2.0 always enchants on Normal and Hard.
+
+        Args:
+            chance (float): The chance modifier, 0 or more.
+        """
+        self._add_function(_EnchantRandomGear(chance=chance))
+        return self
+
+    def EnchantRandomly(self, treasure: bool = False):
+        """Adds a random enchantment compatible with the item.
+
+        Args:
+            treasure (bool, optional): Allow treasure enchantments. Defaults to False.
+        """
+        self._add_function(_EnchantRandomly(treasure=treasure))
+        return self
+
+    def EnchantWithLevels(self, levels: tuple[int, int], treasure: bool = False):
+        """Enchants the item like an enchanting table with this many XP levels.
+
+        Args:
+            levels (tuple[int, int]): The minimum and maximum XP levels.
+            treasure (bool, optional): Allow treasure enchantments. Defaults to False.
+        """
+        self._add_function(_EnchantWithLevels(levels=levels, treasure=treasure))
+        return self
+
+    def SetPotion(self, id: MinecraftPotionEffectTypes | str):
+        """Sets the potion type of a potion, splash potion or lingering potion.
+
+        Args:
+            id (MinecraftPotionEffectTypes | str): The potion type.
+        """
+        self._add_function(_SetPotion(id=str(id)))
+        return self
+
+    def SpecificEnchants(self, enchants: tuple[str, ...] | tuple[tuple[str, int], ...]):
+        """Adds these enchantments, even to items that can't normally have them. Maximum
+        levels can't be exceeded.
+
+        Args:
+            enchants (tuple[str, ...] | tuple[tuple[str, int], ...]): Enchantment names, or
+                `(name, level)` pairs.
+        """
+        if enchants and isinstance(enchants[0], str):
+            function = _SpecificEnchants(enchants=list(enchants))
+        else:
+            function = _SpecificEnchants(
+                enchants=[
+                    _EnchantLevel(id=name, level=level) for name, level in enchants
+                ]
+            )
+        self._add_function(function)
+        return self
+
+    def LootingEnchant(self, count: tuple[int, int]):
+        """Adds items per looting level of the weapon that killed the entity. Loot tables
+        of entity deaths only.
+
+        Args:
+            count (tuple[int, int]): The minimum and maximum items added per level.
+        """
+        self._add_function(_LootingEnchant(count=count))
+        return self
+
+    def RandomAuxValue(self, values: tuple[int, int]):
+        """Picks a random auxiliary value for the item, such as a dye color.
+
+        Args:
+            values (tuple[int, int]): The minimum and maximum values.
+        """
+        self._add_function(_RandomAuxValue(values=values))
+        return self
+
+    def RandomBlockState(self, block_state: str, values: tuple[int, int]):
+        """Picks a random value for a block state of the item, such as a wool color.
+
+        Args:
+            block_state (str): The block state, such as `color`.
+            values (tuple[int, int]): The minimum and maximum values.
+        """
+        self._add_function(_RandomBlockState(block_state=block_state, values=values))
+        return self
+
+    def RandomDye(self):
+        """Gives leather items a random color."""
+        self._add_function(_RandomDye())
+        return self
+
+    def SetActorId(self, actor: str | Entity | None = None):
+        """Sets the entity of a spawn egg.
+
+        Args:
+            actor (str | Entity, optional): The entity. None takes the
+                entity the loot table belongs to; in a chest, that is the player who opens it.
+        """
+        self._add_function(_SetActorId(id=None if actor is None else str(actor)))
+        return self
+
+    def SetBannerDetails(
+        self,
+        type: Literal[0, 1, "default", "illager_captain"] = 1,
+        base_color: str | None = None,
+        patterns: list[tuple[str, str]] | None = None,
+    ):
+        """Sets the banner type, color and patterns. Banners only.
+
+        Args:
+            type (Literal[0, 1, "default", "illager_captain"], optional): The banner type:
+                0 or "default", 1 or "illager_captain". Defaults to 1.
+            base_color (str, optional): The banner color, such as `silver`.
+            patterns (list[tuple[str, str]], optional): Up to 6 `(pattern, color)` pairs, such as
+                `("gradient", "black")`. Default banners only.
+        """
+        function = _SetBannerDetails(type=type, base_color=base_color)
+        for pattern, color in patterns or ():
+            function.add_pattern(pattern, color)
+        self._add_function(function)
+        return self
+
+    def ExplosionDecay(self):
+        """When an explosion drops the loot, destroys each item with a chance of 1 in the
+        explosion radius."""
+        self._add_function(_ExplosionDecay())
+        return self
+
+    def SetStewEffect(self, effects: list[int]):
+        """Gives a suspicious stew one of these effects, picked at random.
+
+        Args:
+            effects (list[int]): The stew effect ids.
+        """
+        self._add_function(
+            _SetStewEffect(effects=[_StewEffect(id=effect) for effect in effects])
+        )
+        return self
+
+    def SetOminousBottleAmplifier(self, amplifier: int | tuple[int, int]):
+        """Sets the Bad Omen amplifier of an ominous bottle.
+
+        Args:
+            amplifier (int | tuple[int, int]): The amplifier, or the minimum and maximum.
+        """
+        self._add_function(_SetOminousBottleAmplifier(amplifier=amplifier))
+        return self
+
+    def SetArmorTrim(self, material: str, pattern: str):
+        """Trims armor that can take a trim.
+
+        Args:
+            material (str): The trim material, such as `netherite`.
+            pattern (str): The trim pattern, such as `wayfinder`.
+        """
+        self._add_function(_SetArmorTrim(material=material, pattern=pattern))
+        return self
+
+    def SetBookContent(self, author: str, title: str, pages: list[str]):
+        """Sets the author, title and pages of a book. Pages can be `rawtext`, the author
+        and title can't.
+
+        Args:
+            author (str): The author.
+            title (str): The title.
+            pages (list[str]): The pages.
+        """
+        self._add_function(
+            _SetBookContents(author=author, title=title, pages=[str(p) for p in pages])
+        )
+        return self
+
+    def SetCount(self, count: int | tuple[int, int]):
+        """Sets how many items drop.
+
+        Args:
+            count (int | tuple[int, int]): The number, or the minimum and maximum.
+        """
+        self._add_function(_SetCount(count=count))
+        return self
+
+    def SetDamage(self, damage: float | tuple[float, float]):
+        """Sets the durability left, from 0 (none) to 1 (undamaged).
+
+        Args:
+            damage (float | tuple[float, float]): The durability, or the minimum and maximum.
+        """
+        self._add_function(_SetDamage(damage=damage))
+        return self
+
+    def SetData(self, data: int):
+        """Sets the data value of the item, such as a potion variant."""
+        self._add_function(_SetData(data=data))
+        return self
+
+    def SetDataFromColorIndex(self):
+        """Takes the data value from the entity's color index, like a pink sheep's wool."""
+        self._add_function(_SetDataFromColorIndex())
+        return self
+
+    def SetLore(self, lore: tuple[str, ...]):
+        """Sets the lore of the item, one line per string. No `rawtext`."""
+        self._add_function(_SetLore(lore=list(lore)))
+        return self
+
+    def SetName(self, name: str):
+        """Sets the name of the item. No `rawtext`."""
+        self._add_function(_SetName(name=name))
+        return self
+
+    def ExplorationMap(
+        self,
+        destination: (
+            ExplorationMapDestinations | JigsawStructureSet | str | None
+        ) = None,
+    ):
+        """Turns a map into a treasure map to a structure.
+
+        Args:
+            destination (ExplorationMapDestinations | JigsawStructureSet | str, optional): The
+                structure the map leads to.
+        """
+        self._add_function(
+            _ExplorationMap(
+                destination=None if destination is None else str(destination)
+            )
+        )
+        return self
+
+    def FillContainer(self, lootTable: LootTable):
+        """Fills a container item, such as a chest, from a loot table when it is opened.
+        Name the container with `SetName` to tell it apart from an empty one.
+
+        Args:
+            lootTable (LootTable): The loot table.
+        """
+        self._add_function(_FillContainer(loot_table=lootTable.table_path))
+        return self
+
+    def FurnaceSmelt(self):
+        """Drops the cooked item when the entity dies on fire. Loot tables of entity deaths
+        only."""
+        function = _FurnaceSmelt()
+        function.conditions.entity_properties("this", on_fire=True)
+        self._add_function(function)
+        return self
+
+    def TraderMaterialType(self):
+        """Sets the material of the item a fisherman wants, such as the boat type."""
+        self._add_function(_TraderMaterialType())
+        return self
+
+
+class _LootFunctions(JsonValue, _LootFunctionBuilder):
+    """Functions that change an entry's items. Each method adds a function and returns
+    the functions, to chain them.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/lootandtradetablefunctions?view=minecraft-bedrock-stable)
     """
 
-    def __init__(
-        self,
-        entry: Union[
-            MinecraftBlockDescriptor,
-            MinecraftItemDescriptor,
-            Identifier,
-            "LootTable",
-            None,
-        ],
-        count: int = 1,
-        weight: int = 1,
-    ) -> None:
-        """Initialize a loot pool entry.
+    functions: list[
+        _EnchantBookForTrading
+        | _EnchantRandomGear
+        | _EnchantRandomly
+        | _EnchantWithLevels
+        | _SetPotion
+        | _SpecificEnchants
+        | _LootingEnchant
+        | _RandomAuxValue
+        | _RandomBlockState
+        | _RandomDye
+        | _SetActorId
+        | _SetBannerDetails
+        | _SetBookContents
+        | _SetCount
+        | _SetDamage
+        | _SetData
+        | _SetDataFromColorIndex
+        | _SetLore
+        | _SetName
+        | _ExplorationMap
+        | _FillContainer
+        | _FurnaceSmelt
+        | _TraderMaterialType
+        | _ExplosionDecay
+        | _SetStewEffect
+        | _SetOminousBottleAmplifier
+        | _SetArmorTrim
+    ] = json_field(default_factory=list)
 
-        Parameters:
-            entry (MinecraftBlockDescriptor | MinecraftItemDescriptor | Identifier | LootTable | None):
-                The entry content (item, block, loot table, or None for empty).
-            count (int, optional): Base count of items. Defaults to 1.
-            weight (int, optional): Selection weight in the pool. Defaults to 1.
-        """
-        self._functions: _LootPoolEntryFunctions | None = None
-        self._conditions: _LootConditions | None = None
-        self._LootPoolEntry = {
-            "name": str(entry),
-            "count": count,
-            "weight": weight,
-            "functions": [],
-        }
+    def _add_function(self, function: JsonObject) -> None:
+        self.functions.append(function)
 
-        if entry is None:
-            self._LootPoolEntry["type"] = LootPoolType.Empty
-        elif isinstance(
-            entry, (MinecraftBlockDescriptor, MinecraftItemDescriptor, str)
-        ):
-            self._LootPoolEntry["type"] = LootPoolType.Item
-        elif isinstance(entry, LootTable):
-            self._LootPoolEntry["type"] = LootPoolType.LootTable
 
-    def quality(self, quality: int):
-        """Sets the quality value for this entry.
+# endregion
 
-        Parameters:
-            quality (int): The quality value to assign.
+# region Loot table
+
+
+class _LootPoolEntry(JsonObject):
+    """An entry of a pool: an item, another loot table, or nothing."""
+
+    type: Literal["item", "loot_table", "empty"] = json_field()
+    name: str | None = None
+    count: int = json_field(default=1)
+    weight: Annotated[int, AtLeastOne] = json_field(default=1)
+    quality: int | None = None
+    functions: _LootFunctions = json_field(default_factory=_LootFunctions)
+    conditions: _LootConditions = json_field(default_factory=_LootConditions)
+
+    def set_quality(self, quality: int) -> _LootPoolEntry:
+        """Sets how much the luck of the player changes the entry's weight.
 
         Returns:
             _LootPoolEntry: Self for method chaining.
         """
-        self._LootPoolEntry["quality"] = quality
+        self.quality = quality
         return self
 
-    @property
-    def functions(self):
-        """Access the functions that can be applied to this loot entry.
 
-        Returns:
-            _LootPoolEntryFunctions: Functions interface for modifying this entry.
-        """
-        if self._functions is None:
-            self._functions = _LootPoolEntryFunctions()
-        return self._functions
+class _LootPoolTiers(JsonObject):
+    """Tiers of a pool: the entry is picked by tier rather than by weight."""
 
-    @property
-    def conditions(self) -> "_LootConditions":
-        """Access the conditions that must be met for this entry to be selected.
-
-        Returns:
-            _LootConditions: Conditions interface for configuring this entry.
-        """
-        if self._conditions is None:
-            self._conditions = _LootConditions()
-        return self._conditions
-
-    def __export__(self):
-        """Export the entry data for JSON serialization.
-
-        Returns:
-            dict: Entry data including functions and conditions.
-        """
-        if self._functions:
-            self._LootPoolEntry["functions"] = self._functions.__export__()
-        if self._conditions and self._conditions.__export__():
-            self._LootPoolEntry["conditions"] = self._conditions.__export__()
-        return self._LootPoolEntry
+    initial_range: int | None = None
+    bonus_rolls: int | None = None
+    bonus_chance: Annotated[float, Chance] | None = None
 
 
-class _LootPool:
-    """Represents a loot pool containing multiple entries with roll mechanics and tier bonuses.
+class _LootPool(JsonObject):
+    """A pool: rolled `rolls` times, each roll picks one of its entries by weight."""
 
-    A loot pool groups related loot entries together and determines how many times
-    the pool is rolled to select entries based on their weights.
-    """
+    __required__: ClassVar[tuple[str, ...]] = ("rolls",)
 
-    def __init__(
-        self,
-        rolls: int | tuple[int, int] = 1,
-    ):
-        """Initialize a loot pool with the specified number of rolls.
+    rolls: Annotated[int | tuple[int, int], MinMax] = json_field(default=1)
+    tiers: _LootPoolTiers | None = None
+    conditions: _LootConditions = json_field(default_factory=_LootConditions)
+    entries: list[_LootPoolEntry] = json_field(default_factory=list)
 
-        Parameters:
-            rolls (int | tuple[int, int]): Number of times to roll this pool.
-                Can be exact number or [min, max] range. Defaults to 1.
-        """
-        self._pool = {}
-        self._entries: list[_LootPoolEntry] = []
-        self._conditions: _LootConditions | None = None
-        if isinstance(rolls, int):
-            self._pool["rolls"] = rolls
-        elif isinstance(rolls, (tuple, list)):
-            self._pool["rolls"] = {"min": min(rolls), "max": max(rolls)}
-
-    @property
-    def conditions(self) -> "_LootConditions":
-        """Access the conditions that must be met for this pool to be rolled.
-
-        Returns:
-            _LootConditions: Conditions interface for configuring this pool.
-        """
-        if self._conditions is None:
-            self._conditions = _LootConditions()
-        return self._conditions
-
-    def tiers(
+    def set_tiers(
         self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0
-    ):
-        """Configure tier-based bonus mechanics for this pool.
+    ) -> _LootPool:
+        """Picks entries by tier.
 
-        Parameters:
-            bonus_chance (float, optional): Chance for bonus tier effects (0.0-1.0). Defaults to 0.0.
-            bonus_rolls (int, optional): Additional rolls from tier bonuses. Defaults to 0.
-            initial_range (int, optional): Initial range for tier calculations. Defaults to 0.
+        Args:
+            bonus_chance (float, optional): The chance, from 0 to 1, of a bonus roll.
+            bonus_rolls (int, optional): The bonus rolls.
+            initial_range (int, optional): The initial tier range.
 
         Returns:
             _LootPool: Self for method chaining.
         """
-        self._pool.update({"tiers": {}})
-        if bonus_chance != 0.0:
-            self._pool["tiers"].update({"bonus_chance": clamp(bonus_chance, 0.0, 1.0)})
-        if bonus_rolls != 0:
-            self._pool["tiers"].update({"bonus_rolls": bonus_rolls})
-        if initial_range != 0:
-            self._pool["tiers"].update({"initial_range": initial_range})
+        self.tiers = _LootPoolTiers(
+            bonus_chance=bonus_chance or None,
+            bonus_rolls=bonus_rolls or None,
+            initial_range=initial_range or None,
+        )
         return self
 
     def entry(
         self,
-        entry: Union[
-            MinecraftBlockDescriptor,
-            MinecraftItemDescriptor,
-            Identifier,
-            "LootTable",
-            None,
-        ],
+        entry: str | Block | BlockDescriptor | Item | LootTable | None,
         count: int = 1,
         weight: int = 1,
-    ):
-        """Add an entry to this loot pool.
+    ) -> _LootPoolEntry:
+        """Adds an entry to the pool.
 
-        Parameters:
-            entry (MinecraftBlockDescriptor | MinecraftItemDescriptor | Identifier | LootTable | None):
-                The item, block, loot table, or None (for empty entry) to add.
-            count (int, optional): Base count of this entry. Defaults to 1.
-            weight (int, optional): Selection weight (higher = more likely). Defaults to 1.
+        Args:
+            entry (Block | BlockDescriptor | Item | str | LootTable | None):
+                An item or block, another loot table, or None for an entry that drops nothing.
+            count (int, optional): The entry's count. Defaults to 1.
+            weight (int, optional): Its weight against the other entries, at least 1.
 
         Returns:
-            _LootPoolEntry: The created entry for further configuration.
+            _LootPoolEntry: The entry, to add functions and conditions to.
         """
-        pool_entry = _LootPoolEntry(entry, count, weight)
-        self._entries.append(pool_entry)
+        if entry is None:
+            entry_type, name = LootPoolType.Empty, None
+        elif isinstance(entry, LootTable):
+            entry_type, name = LootPoolType.LootTable, entry.table_path
+        else:
+            entry_type, name = LootPoolType.Item, str(entry)
+        pool_entry = _LootPoolEntry(
+            type=entry_type, name=name, count=count, weight=weight
+        )
+        self.entries.append(pool_entry)
         return pool_entry
 
-    def __export__(self):
-        """Export the pool data for JSON serialization.
 
-        Returns:
-            dict: Pool data including all entries and pool-level conditions.
-        """
-        for entry in self._entries:
-            if "entries" not in self._pool:
-                self._pool.update({"entries": []})
-            self._pool["entries"].append(entry.__export__())
-        if self._conditions and self._conditions.__export__():
-            self._pool["conditions"] = self._conditions.__export__()
-        return self._pool
+class _LootTableFile(JsonObject):
+    """The content of `loot_tables/<namespace>/<name>.loot_table.json`."""
+
+    pools: list[_LootPool] = json_field(default_factory=list)
+
+    def add_pool(self, rolls: int | tuple[int, int] = 1) -> _LootPool:
+        """Adds a pool and returns it."""
+        pool = _LootPool(rolls=rolls)
+        self.pools.append(pool)
+        return pool
 
 
-class LootTable(AddonObject):
-    """A Minecraft Bedrock loot table for defining random item/block drops and rewards.
+class LootTable(JsonFile[_LootTableFile]):
+    """A loot table: what drops from entities, blocks, chests, fishing and other rewards.
 
-    Loot tables are used throughout Minecraft to define what items drop when:
-    - Entities die
-    - Blocks are broken
-    - Chests generate
-    - Fishing occurs
-    - Trading with villagers
+    Each pool is rolled on its own, and each roll picks one of its entries by weight.
+    Entries take functions (`entry.functions.SetCount(...)`) and conditions
+    (`entry.conditions.random_chance(...)`).
 
-    Each loot table contains one or more pools, and each pool contains weighted entries
-    that can have functions applied to modify the resulting items.
+    ```python
+    table = LootTable("ruins_chest")
+    pool = table.pool((1, 3))
+    pool.entry("minecraft:emerald", weight=5).functions.SetCount((1, 4))
+    pool.entry(None, weight=10)
+    table.queue()
+    ```
 
-    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitionlist?view=minecraft-bedrock-stable)
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/introductiontoloottables?view=minecraft-bedrock-stable)
     """
 
     _extension = ".loot_table.json"
-    _path = os.path.join(CONFIG.BP_PATH, "loot_tables", CONFIG.NAMESPACE)
+    _pack = Pack.BP
     _object_type = "Loot Table"
 
     def __init__(self, name: str) -> None:
         """Initialize a LootTable instance.
 
-        Parameters:
+        Args:
             name (str): The name of the loot table (used for filename and referencing).
         """
         super().__init__(name)
-        self._content = JsonSchemes.loot_table()
-        self._pools: list[_LootPool] = []
+        self._folder = Path("loot_tables", CONFIG.NAMESPACE)
 
-    def pool(
-        self,
-        rolls: int | tuple[int, int] = 1,
-    ) -> "_LootPool":
-        """Create a new loot pool in this loot table.
+    def pool(self, rolls: int | tuple[int, int] = 1) -> _LootPool:
+        """Adds a pool to the loot table.
 
-        Pools are rolled independently, so multiple pools allow for multiple
-        categories of loot with different roll counts and mechanics.
-
-        Parameters:
-            rolls (int | list[int, int]): Number of times to roll this pool.
-                Can be exact number or [min, max] range. Defaults to 1.
+        Args:
+            rolls (int | tuple[int, int], optional): How many times the pool is rolled, or the
+                minimum and maximum. Defaults to 1.
 
         Returns:
-            _LootPool: The created pool for adding entries and configuration.
+            _LootPool: The pool, to add entries, conditions and tiers to.
         """
-        pool = _LootPool(rolls)
-        self._pools.append(pool)
-        return pool
+        return self._document.add_pool(rolls)
 
     @property
     def table_path(self) -> str:
-        """Get the relative path of this loot table for referencing.
-
-        Returns:
-            str: Relative path from behavior pack root.
-        """
-        return os.path.join(
-            "loot_tables",
-            CONFIG.NAMESPACE,
-            self._name + self._extension,
-        )
+        """The loot table's path from the behavior pack root, as other files reference it."""
+        return PurePosixPath(
+            "loot_tables", CONFIG.NAMESPACE, self.identifier.name + self._extension
+        ).as_posix()
 
     def queue(self) -> "LootTable":
-        """Queue this loot table for generation in the behavior pack.
-
-        Exports all pools and their entries to JSON format and adds the
-        loot table file to the generation queue.
-
-        Returns:
-            LootTable: Self for method chaining.
-        """
-        for pool in self._pools:
-            self._content["pools"].append(pool.__export__())
-        self.content(self._content)
+        """Queues the loot table for export."""
         return super().queue()

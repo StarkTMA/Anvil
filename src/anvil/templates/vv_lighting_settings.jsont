@@ -1,9 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:lighting_settings": {
-        "description": {
-            "identifier": "{{ identifier }}"
-        },
-        "directional_lights": {}
-    }
-}

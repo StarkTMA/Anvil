@@ -19,14 +19,21 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
+    ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
-    BlockMovementType,
     BlockSoundGroup,
     CardinalDirectionsValues,
     ItemCategory,
@@ -34,12 +41,7 @@ from anvil.api.core.enums import (
     PlacementDirectionTrait,
     RecipeUnlockContext,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import (
     BlockWoodSetInteractable,
@@ -47,7 +49,6 @@ from ..components import (
 )
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -58,7 +59,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.25,
 }
 
-# Rotation (x, y, z) per direction the player is facing
 CARDINAL_ROTATIONS = {
     CardinalDirectionsValues.NORTH: (0, 0, 0),
     CardinalDirectionsValues.WEST: (0, 90, 0),
@@ -67,7 +67,6 @@ CARDINAL_ROTATIONS = {
 }
 
 
-# Vanilla's sounds for it, which the scripts play when it opens and closes
 OPEN_SOUND = "open.fence_gate"
 CLOSE_SOUND = "close.fence_gate"
 
@@ -86,81 +85,83 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Fence Gate"
 
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         y_rotation_offset=0, traits=[PlacementDirectionTrait.CardinalDirection]
     )
     for direction, rotation in CARDINAL_ROTATIONS.items():
         block.server.permutation(
             Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
-        ).add(BlockTransformation().rotation(rotation))
+        ).add(BlockTransformation(rotation=rotation))
 
     block.server.description.add_state("open", (False, True))
     block.server.description.add_state("powered", (False, True))
 
-    mining = BlockDestructibleByMining(3)
+    mining = BlockDestructibleByMining(seconds_to_destroy=3)
     for tier, speed in AXE_SPEEDS.items():
-        mining.item_specific_speeds_tag(
-            speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
+        mining.add_item_specific_speed(
+            item=ItemTagFilter(tags=Query.AllTags([MinecraftItemTags.IsAxe, tier])),
+            destroy_speed=speed,
         )
 
     block.server.permutation(~Query.BlockState("open")).add(
-        BlockCollisionBox((16, 24, 4), (-8, 0, -2))
+        BlockCollisionBox(origin=(-8, 0, -2), size=(16, 24, 4))
     )
     block.server.permutation(Query.BlockState("open")).add(
-        BlockCollisionBox((0, 0, 0), (0, 0, 0))
+        BlockCollisionBox(enabled=False)
     )
 
-    item_visual = BlockItemVisual(MODEL, collection="fence_gate")
-    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual = BlockItemVisual(
+        blockbench=MODEL,
+        collection="fence_gate",
+    ).add_bone_visibility(fence_gate_open="0")
+    item_visual.add_material_instance(blockbench=MODEL, texture=f"{wood}_planks")
     item_visual.item_display_transforms(
-        False,
-        gui={
-            "rotation": [30, -45, 0],
-            "scale": [0.625, 0.625, 0.625],
-            "fit_to_frame": False,
-        },
-        firstperson_righthand={
-            "rotation": [0, -45, 0],
-            "scale": [0.375, 0.375, 0.375],
-        },
-        thirdperson_righthand={
-            "rotation": [70, -45, 0],
-            "scale": [0.375, 0.375, 0.375],
-        },
+        merge=False,
+        gui=ItemDisplayGuiTransform(
+            rotation=[30, -45, 0], scale=[0.625, 0.625, 0.625], fit_to_frame=False
+        ),
+        firstperson_righthand=ItemDisplayTransform(
+            rotation=[0, -45, 0], scale=[0.375, 0.375, 0.375]
+        ),
+        thirdperson_righthand=ItemDisplayTransform(
+            rotation=[70, -45, 0], scale=[0.375, 0.375, 0.375]
+        ),
     )
-    item_visual.bone_visibility(fence_gate_open="0")
     block.server.components.add(
-        BlockDisplayName(display_name),
+        BlockDisplayName(value=display_name),
         mining,
-        BlockGeometry(MODEL, collection="fence_gate").bone_visibility(
+        BlockGeometry(
+            blockbench=MODEL,
+            collection="fence_gate",
+        ).add_bone_visibility(
             fence_gate_closed=~Query.BlockState("open"),
             fence_gate_open=Query.BlockState("open"),
         ),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
             )
         ),
-        BlockSelectionBox((16, 16, 4), (-8, 0, -2)),
-        BlockMovable(BlockMovementType.Popped),
+        BlockSelectionBox(origin=(-8, 0, -2), size=(16, 16, 4)),
+        BlockMovable(movement_type="popped"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
-        BlockLiquidDetection().add_rule(
+        BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
         ),
-        BlockMapColor(map_color),
+        BlockMapColor(color=map_color),
         BlockTagComponent(
-            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+            value=[MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
         ),
-        BlockConnectionRule("all"),
-        BlockDestructibleByExplosion(7),
-        BlockRedstoneConductivity(False, False),
-        BlockRedstoneConsumer(0, True),
-        # Scripts: opened by players and by redstone
+        BlockConnectionRule(accepts_connections_from="all"),
+        BlockDestructibleByExplosion(explosion_resistance=7),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=False, redstone_conductor=False
+        ),
+        BlockRedstoneConsumer(min_power=0, propagates_power=True),
         BlockWoodSetInteractable(
             open_sound=open_sound,
             close_sound=close_sound,
@@ -172,13 +173,12 @@ def create(
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemFuel(15),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemFuel(duration=15),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.FenceGate
     )
 

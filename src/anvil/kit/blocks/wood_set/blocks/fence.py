@@ -21,14 +21,21 @@ from anvil.api.blocks.components import (
     BlockTagComponent,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
+    ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
-    BlockMovementType,
     BlockSoundGroup,
     CardinalConnectionStates,
     ConnectionTrait,
@@ -36,15 +43,10 @@ from anvil.api.core.enums import (
     ItemGroups,
     RecipeUnlockContext,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
+
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -55,7 +57,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.25,
 }
 
-# (size, origin) for the central post and each connected arm
 POST = ([4, 24, 4], [-2, 0, -2])
 ARMS = {
     CardinalConnectionStates.North: ([2, 24, 6], [-1, 0, -8]),
@@ -77,8 +78,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Fence"
 
-    # Connects to its neighbours, with a collision and selection box per combination
-    block.server.description.traits.connection([ConnectionTrait.CardinalConnections])
+    block.server.description.traits.set_connection([ConnectionTrait.CardinalConnections])
 
     for combo in product([False, True], repeat=len(ARMS)):
         boxes = [POST]
@@ -89,11 +89,11 @@ def create(
             if connected:
                 boxes.append(ARMS[direction])
 
-        collision = BlockCollisionBox(*boxes[0])
-        for box in boxes[1:]:
-            collision.add_box(*box)
+        size, origin = boxes[0]
+        collision = BlockCollisionBox(origin=origin, size=size)
+        for size, origin in boxes[1:]:
+            collision.add_box(origin=origin, size=size)
 
-        # Selection box: the bounding envelope of the active boxes
         min_x = min(origin[0] for _, origin in boxes)
         min_z = min(origin[2] for _, origin in boxes)
         max_x = max(origin[0] + size[0] for size, origin in boxes)
@@ -101,80 +101,82 @@ def create(
 
         block.server.permutation(" && ".join(terms)).add(
             collision,
-            BlockSelectionBox([max_x - min_x, 16, max_z - min_z], [min_x, 0, min_z]),
+            BlockSelectionBox(
+                origin=[min_x, 0, min_z], size=[max_x - min_x, 16, max_z - min_z]
+            ),
         )
 
-    mining = BlockDestructibleByMining(3)
+    mining = BlockDestructibleByMining(seconds_to_destroy=3)
     for tier, speed in AXE_SPEEDS.items():
-        mining.item_specific_speeds_tag(
-            speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
+        mining.add_item_specific_speed(
+            item=ItemTagFilter(tags=Query.AllTags([MinecraftItemTags.IsAxe, tier])),
+            destroy_speed=speed,
         )
 
-    item_visual = BlockItemVisual(MODEL, collection="fence_item_visual")
-    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual = BlockItemVisual(blockbench=MODEL, collection="fence_item_visual")
+    item_visual.add_material_instance(blockbench=MODEL, texture=f"{wood}_planks")
     item_visual.item_display_transforms(
-        False,
-        gui={
-            "rotation": [30, -45, 0],
-            "scale": [0.625, 0.625, 0.625],
-            "fit_to_frame": False,
-        },
-        firstperson_righthand={
-            "rotation": [0, -45, 0],
-            "scale": [0.375, 0.375, 0.375],
-        },
-        thirdperson_righthand={
-            "rotation": [70, -45, 0],
-            "scale": [0.375, 0.375, 0.375],
-        },
+        merge=False,
+        gui=ItemDisplayGuiTransform(
+            rotation=[30, -45, 0], scale=[0.625, 0.625, 0.625], fit_to_frame=False
+        ),
+        firstperson_righthand=ItemDisplayTransform(
+            rotation=[0, -45, 0], scale=[0.375, 0.375, 0.375]
+        ),
+        thirdperson_righthand=ItemDisplayTransform(
+            rotation=[70, -45, 0], scale=[0.375, 0.375, 0.375]
+        ),
     )
     block.server.components.add(
-        BlockDisplayName(display_name),
+        BlockDisplayName(value=display_name),
         mining,
-        BlockGeometry(MODEL, collection="fence").bone_visibility(
+        BlockGeometry(
+            blockbench=MODEL,
+            collection="fence",
+        ).add_bone_visibility(
             fence_north=Query.BlockState(CardinalConnectionStates.North),
             fence_south=Query.BlockState(CardinalConnectionStates.South),
             fence_east=Query.BlockState(CardinalConnectionStates.East),
             fence_west=Query.BlockState(CardinalConnectionStates.West),
         ),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
             )
         ),
-        BlockMovable(BlockMovementType.Push),
+        BlockMovable(movement_type="push"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
-        BlockLiquidDetection().add_rule(
+        BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
         ),
-        BlockMapColor(map_color),
+        BlockMapColor(color=map_color),
         BlockTagComponent(
-            [
+            value=[
                 MinecraftBlockTags.Wood,
                 MinecraftBlockTags.IsAxeItemDestructible,
                 MinecraftBlockTags.HasFenceConnections,
             ]
         ),
-        BlockConnectionRule("all"),
-        BlockDestructibleByExplosion(7),
-        BlockRedstoneConductivity(False, False),
-        BlockSupport("fence"),
-        BlockLeashable((0, 12, 0)),
+        BlockConnectionRule(accepts_connections_from="all"),
+        BlockDestructibleByExplosion(explosion_resistance=7),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=False, redstone_conductor=False
+        ),
+        BlockSupport(shape="fence"),
+        BlockLeashable(offset=(0, 12, 0)),
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemFuel(15),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemFuel(duration=15),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Fence
     )
 

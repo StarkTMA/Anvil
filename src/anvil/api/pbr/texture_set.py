@@ -1,57 +1,15 @@
-import os
 from dataclasses import dataclass
-from typing import Literal
+from pathlib import Path
+from typing import ClassVar, Literal
 
-from anvil.api.core.types import (
-    Color,
-    HexRGB,
-    HexRGBA,
-)
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import CONFIG
-from anvil.lib.lib import AnvilFormatter, AnvilValidator, Directory, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.config import CONFIG, Pack
+from anvil.lib.format_versions import TEXTURE_SET_VERSION
+from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
+from anvil.lib.lib import AnvilFormatter, AnvilValidator, Directory
 
-
-@dataclass
-class KeyFrame:
-    """Represents a single keyframe for animating properties over the daily cycle.
-
-    Attributes:
-        time (float): The time of day, between 0.0 and 1.0 (clamped).
-        value (float | Color): The value at this keyframe (could be a float, RGB tuple, or Hex color).
-    """
-
-    time: float
-    value: float | Color
-
-    @classmethod
-    def keyframe_dict(
-        cls,
-        keyframes: list["KeyFrame"],
-        target_color_format=None,
-    ) -> dict[str, float | Color]:
-        """Converts a list of KeyFrames into a dictionary suitable for Minecraft JSON.
-
-        Each keyframe's time will be clamped to [0.0, 1.0] and formatted as a string key.
-
-        Args:
-            keyframes (list[KeyFrame]): A list of keyframe instances to convert.
-            target_color_format (optional): The target color type class (e.g. HexRGB, RGB) to convert color values to.
-
-        Returns:
-            dict[str, float | Color]: A dictionary mapping normalized time strings to their corresponding values.
-        """
-        result = {}
-        for k in keyframes:
-            time_str = str(clamp(k.time, 0.0, 1.0))
-            if AnvilValidator.is_color_value(k.value):
-                result[time_str] = AnvilFormatter.convert_color(
-                    k.value, target_color_format
-                )
-            else:
-                result[time_str] = k.value
-        return result
+__all__ = ["TextureComponents", "TextureSet"]
 
 
 @dataclass(frozen=True)
@@ -67,10 +25,10 @@ class TextureComponents:
     """
 
     color: str
-    normal: str | Color | None = None
-    height: str | Color | None = None
-    mer: str | Color | None = None
-    mers: str | Color | None = None
+    normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None
+    height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None
+    mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None
+    mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None
 
     def has_aux(self) -> bool:
         """Checks if the texture components have any auxiliary texture maps (normal, height, mer, or mers).
@@ -81,21 +39,111 @@ class TextureComponents:
         return bool(self.normal or self.height or self.mer or self.mers)
 
 
-class TextureSet(AddonObject):
+class _TextureSet(JsonObject):
+    """The `minecraft:texture_set` object: the texture name or color of each layer."""
+
+    color: str | None = None
+    normal: str | None = None
+    heightmap: str | None = None
+    metalness_emissive_roughness: str | None = None
+    metalness_emissive_roughness_subsurface: str | None = None
+
+    def set_color(self, color: str) -> None:
+        """Sets the color layer.
+
+        Args:
+            color (str): A texture name or a `#rrggbb` color.
+        """
+        self.color = color
+
+    def set_normal(self, normal: str) -> None:
+        """Sets the normal map layer.
+
+        Args:
+            normal (str): A texture name or a `#rrggbb` color.
+        """
+        self.normal = normal
+
+    def set_heightmap(self, heightmap: str) -> None:
+        """Sets the height map layer.
+
+        Args:
+            heightmap (str): A texture name or a `#rrggbb` color.
+        """
+        self.heightmap = heightmap
+
+    def set_metalness_emissive_roughness(
+        self, metalness_emissive_roughness: str
+    ) -> None:
+        """Sets the MER layer.
+
+        Args:
+            metalness_emissive_roughness (str): A texture name or a `#rrggbb` color.
+        """
+        self.metalness_emissive_roughness = metalness_emissive_roughness
+
+    def set_metalness_emissive_roughness_subsurface(
+        self, metalness_emissive_roughness_subsurface: str
+    ) -> None:
+        """Sets the MERS layer.
+
+        Args:
+            metalness_emissive_roughness_subsurface (str): A texture name or a `#rrggbbaa` color.
+        """
+        self.metalness_emissive_roughness_subsurface = (
+            metalness_emissive_roughness_subsurface
+        )
+
+    def set_layers(self, layers: dict[str, str]) -> None:
+        """Sets several layers at once.
+
+        Args:
+            layers (dict[str, str]): Each layer's key and its texture name or color.
+        """
+        for layer, value in layers.items():
+            getattr(self, f"set_{layer}")(value)
+
+    @property
+    def layer_count(self) -> int:
+        """The number of layers set."""
+        return sum(
+            value is not None
+            for value in (
+                self.color,
+                self.normal,
+                self.heightmap,
+                self.metalness_emissive_roughness,
+                self.metalness_emissive_roughness_subsurface,
+            )
+        )
+
+
+class _TextureSetFile(JsonObject):
+    """The content of a `.texture_set.json` file."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "minecraft:texture_set",
+    )
+
+    format_version: str = json_field(default=TEXTURE_SET_VERSION, init=False)
+    texture_set: _TextureSet = json_field(
+        key="minecraft:texture_set", default_factory=_TextureSet
+    )
+
+
+class TextureSet(JsonFile[_TextureSetFile]):
     """Represents a PBR Texture Set configuration for Minecraft Bedrock Edition.
 
     Allows linking base color textures with physical property maps (normal, height, MER, MERS)
     and handles copying the files to the resource pack layout.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/visualreference/texture_set.v1.21.30)
     """
 
     _object_type = "Texture Set"
     _extension = ".texture_set.json"
-    _path = os.path.join(
-        CONFIG.RP_PATH,
-        "textures",
-        CONFIG.NAMESPACE,
-        CONFIG.PROJECT_NAME,
-    )
+    _pack = Pack.RP
 
     def __init__(
         self,
@@ -110,25 +158,15 @@ class TextureSet(AddonObject):
             target (Literal["blocks", "items"]): The target directory layout/namespace.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the configuration and auxiliary maps are specified.
+            ValueError: If PBR is not enabled in the configuration and auxiliary maps are specified.
         """
         super().__init__(texture_name)
-        self.content(JsonSchemes.texture_set())
         self._target = target
         self._overriding_vanilla = overriding_vanilla
         if self._overriding_vanilla:
-            self._path = os.path.join(
-                CONFIG.RP_PATH,
-                "textures",
-                target,
-            )
+            self._folder = Path("textures", target)
         else:
-            self._path = os.path.join(
-                CONFIG.RP_PATH,
-                "textures",
-                CONFIG.NAMESPACE,
-                CONFIG.PROJECT_NAME,
-            )
+            self._folder = Path("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
 
     def __validate(
         self,
@@ -144,10 +182,10 @@ class TextureSet(AddonObject):
 
         Raises:
             ValueError: If mutually exclusive components are provided.
-            RuntimeError: If auxiliary maps are used when PBR is disabled in configuration.
+            ValueError: If auxiliary maps are used when PBR is disabled in configuration.
         """
         if not CONFIG.PBR and components.has_aux():
-            raise RuntimeError(
+            raise ValueError(
                 "PBR maps (normal, height, MER, MERS) require PBR to be enabled in the config."
             )
 
@@ -200,19 +238,15 @@ class TextureSet(AddonObject):
         self._queued_textures: dict[str, dict[str, list[str]]] = {
             source: {components.color: [components.color]}
         }
-        if not os.path.exists(
-            os.path.join("assets", source, f"{components.color}.png")
-        ):
+        if not (Path("assets", source) / f"{components.color}.png").exists():
             raise FileNotFoundError(
-                f"Color texture file '{components.color}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                f"Color texture file '{components.color}.png' does not exist in 'assets/{source}'. {self._object_type}[{self.identifier.name}]"
             )
 
         if isinstance(components.normal, str) and not components.normal.startswith("#"):
-            if not os.path.exists(
-                os.path.join("assets", source, f"{components.normal}.png")
-            ):
+            if not (Path("assets", source) / f"{components.normal}.png").exists():
                 raise FileNotFoundError(
-                    f"Normal texture file '{components.normal}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                    f"Normal texture file '{components.normal}.png' does not exist in 'assets/{source}'. {self._object_type}[{self.identifier.name}]"
                 )
             color_map["normal"] = components.normal
             self._queued_textures.get(source).get(components.color).append(
@@ -220,11 +254,9 @@ class TextureSet(AddonObject):
             )
 
         if isinstance(components.height, str) and not components.height.startswith("#"):
-            if not os.path.exists(
-                os.path.join("assets", source, f"{components.height}.png")
-            ):
+            if not (Path("assets", source) / f"{components.height}.png").exists():
                 raise FileNotFoundError(
-                    f"Height texture file '{components.height}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                    f"Height texture file '{components.height}.png' does not exist in 'assets/{source}'. {self._object_type}[{self.identifier.name}]"
                 )
             color_map["heightmap"] = components.height
             self._queued_textures.get(source).get(components.color).append(
@@ -232,11 +264,9 @@ class TextureSet(AddonObject):
             )
 
         if isinstance(components.mer, str) and not components.mer.startswith("#"):
-            if not os.path.exists(
-                os.path.join("assets", source, f"{components.mer}.png")
-            ):
+            if not (Path("assets", source) / f"{components.mer}.png").exists():
                 raise FileNotFoundError(
-                    f"MER texture file '{components.mer}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                    f"MER texture file '{components.mer}.png' does not exist in 'assets/{source}'. {self._object_type}[{self.identifier.name}]"
                 )
             color_map["metalness_emissive_roughness"] = components.mer
             self._queued_textures.get(source).get(components.color).append(
@@ -244,19 +274,17 @@ class TextureSet(AddonObject):
             )
 
         if isinstance(components.mers, str) and not components.mers.startswith("#"):
-            if not os.path.exists(
-                os.path.join("assets", source, f"{components.mers}.png")
-            ):
+            if not (Path("assets", source) / f"{components.mers}.png").exists():
                 raise FileNotFoundError(
-                    f"MERS texture file '{components.mers}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                    f"MERS texture file '{components.mers}.png' does not exist in 'assets/{source}'. {self._object_type}[{self.identifier.name}]"
                 )
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
             self._queued_textures.get(source).get(components.color).append(
                 components.mers
             )
 
-        self._content["minecraft:texture_set"].update(color_map)
-        self._path = os.path.join(self._path, self._target)
+        self._document.texture_set.set_layers(color_map)
+        self._folder = self._folder / self._target
 
     def set_particle_textures(
         self,
@@ -287,18 +315,18 @@ class TextureSet(AddonObject):
 
     def set_blockbench_textures(
         self,
-        blockbench_name: str,
+        blockbench: str,
         components: TextureComponents,
     ) -> "TextureSet":
         """Sets texture components using standard Blockbench exporter conventions.
 
         Args:
-            blockbench_name (str): The name of the blockbench model asset directory.
+            blockbench (str): The name of the blockbench model asset directory.
             components (TextureComponents): The PBR texture components.
         """
         color_map = self.__validate(components)
 
-        self._blockbench = _Blockbench(blockbench_name, self._target)
+        self._blockbench = _Blockbench(blockbench, self._target)
         self._blockbench.textures.queue_texture(components.color)
         color_map["color"] = components.color
         if isinstance(components.normal, str) and not components.normal.startswith("#"):
@@ -314,33 +342,28 @@ class TextureSet(AddonObject):
             self._blockbench.textures.queue_texture(components.mers)
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
-        self._path = os.path.join(self._path, self._target, blockbench_name)
-        self._content["minecraft:texture_set"].update(color_map)
+        self._folder = self._folder / self._target / blockbench
+        self._document.texture_set.set_layers(color_map)
         return self
 
     def set_vanilla_texture(
         self,
-        blockbench_name: str,
+        blockbench: str,
         components: TextureComponents,
         subfolder: str = "",
     ) -> "TextureSet":
         """Sets texture components for overriding a vanilla texture.
 
         Args:
-            blockbench_name (str): The name of the blockbench model asset directory.
+            blockbench (str): The name of the blockbench model asset directory.
             components (TextureComponents): The PBR texture components.
             subfolder (str, optional): Subfolder under RP_PATH/textures/blocks. Defaults to "".
         """
         color_map = self.__validate(components)
 
-        dest_dir = os.path.join(
-            CONFIG.RP_PATH,
-            "textures",
-            self._target,
-            subfolder,
-        )
+        dest_dir = CONFIG.RP_PATH / "textures" / self._target / subfolder
 
-        self._blockbench = _Blockbench(blockbench_name, self._target)
+        self._blockbench = _Blockbench(blockbench, self._target)
         self._blockbench.textures.queue_texture(components.color, dest_dir=dest_dir)
         color_map["color"] = components.color
         if isinstance(components.normal, str) and not components.normal.startswith("#"):
@@ -360,7 +383,7 @@ class TextureSet(AddonObject):
             self._blockbench.textures.queue_texture(components.mers, dest_dir=dest_dir)
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
-        self._content["minecraft:texture_set"].update(color_map)
+        self._document.texture_set.set_layers(color_map)
         return self
 
     def __export__(self) -> None:
@@ -370,13 +393,13 @@ class TextureSet(AddonObject):
                 for color, texture_list in textures.items():
                     for texture in texture_list:
                         Directory.copy_files(
-                            os.path.join("assets", source),
+                            Path("assets", source),
                             self._path,
                             f"{texture}.png",
                         )
 
         if CONFIG.PBR and (
-            len(self._content["minecraft:texture_set"].keys()) > 1
+            self._document.texture_set.layer_count > 1
             or self._target == "particle"
             or self._overriding_vanilla
         ):

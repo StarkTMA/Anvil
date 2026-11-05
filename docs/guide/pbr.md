@@ -13,7 +13,7 @@ For **Blocks** and **Entities**, textures and animations are **not** stored as s
 1.  **Create your model** in Blockbench.
 2.  **Import your textures** (Color, Normal, MER) into the Blockbench project.
 3.  **Save the model** as a `.bbmodel` file.
-4.  **Place the file** in `assets/blockbench/` (e.g., `assets/blockbench/my_model.bbmodel`).
+4.  **Place the file** in `assets/bbmodels/` (e.g., `assets/bbmodels/my_model.bbmodel`).
 
 Anvil will automatically extract the textures, processing PBR maps like Normal and MER (Metalness/Emissive/Roughness) during the build.
 
@@ -22,45 +22,42 @@ Anvil will automatically extract the textures, processing PBR maps like Normal a
 Here is a production-ready example demonstrating a **Mystic Crystal** block. It uses:
 
 - **PBR Textures**: Color, MER, and Height maps.
-- **Flipbook Animation**: Animated textures defined in code.
 - **Render Method**: Blending for transparency/translucency.
 
 ```python title="blocks/mystic_crystal.py"
+from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
+    BlockGeometry,
     BlockMaterialInstance,
     InstanceSpec,
     InstanceVariant,
     MaterialParams,
-    FlipbookParams,
-    BlockMaterial
 )
-from anvil.api.core.enums import BlockFaceValues
+from anvil.lib.jsonmodel.enums import BlockFaceValues, BlockMaterial
 
+block = Block("mystic_crystal")
 block.server.components.add(
+    BlockGeometry(blockbench="mystic_crystal"),
     BlockMaterialInstance().add_instance(
-        InstanceSpec(
-            blockbench_name="mystic_crystal",
+        spec=InstanceSpec(
+            blockbench="mystic_crystal",
+            face=BlockFaceValues.All,
             variations=[
                 InstanceVariant(
-                    # These texture keys must match what is inside 'mystic_crystal.bbmodel'
+                    # These texture names must match what is inside 'mystic_crystal.bbmodel'
                     color="mystic_crystal_texture",
                     mer="mystic_crystal_mer",
                     height="mystic_crystal_height",
                 )
             ],
-            face=BlockFaceValues.All,
             params=MaterialParams(render_method=BlockMaterial.Blend),
-            # Define texture animation properties
-            flipbooks=[
-                FlipbookParams(
-                    frames=[0, 1, 2, 3],
-                    ticks_per_frame=20,
-                ),
-            ],
         )
-    )
+    ),
 )
+block.queue()
 ```
+
+A flipbook animates the texture: give `InstanceSpec` several `InstanceVariant`s (one per frame, all in the same Blockbench file) and `flipbooks=[FlipbookParams(frames=[0, 1, 2, 3], ticks_per_frame=20)]`.
 
 !!! warning "Do not use loose PNGs"
     Do not place block or entity textures in `assets/textures/`. They will be ignored. Usage of the Blockbench file is mandatory for these assets.
@@ -70,16 +67,16 @@ block.server.components.add(
 This example shows a **Mystic Wisp** entity using PBR textures defined in its client description.
 
 ```python title="entities/mystic_wisp.py"
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 from anvil.api.pbr.texture_set import TextureComponents
 
 def mystic_wisp():
     entity = Entity("mystic_wisp")
 
     # Define the geometry and textures (must be in 'mystic_wisp.bbmodel')
-    entity.client.description.geometry("mystic_wisp")
-    entity.client.description.texture(
-        blockbench_name="mystic_wisp",
+    entity.client.description.add_geometry("mystic_wisp")
+    entity.client.description.add_texture(
+        blockbench="mystic_wisp",
         component=TextureComponents(
             color="mystic_wisp",
             mer="mystic_wisp_mer",
@@ -89,11 +86,10 @@ def mystic_wisp():
 
     # Render Controller
     rc = entity.client.description.render_controller("default")
-    rc.geometry("mystic_wisp")
-    rc.textures("mystic_wisp")
+    rc.set_geometry("mystic_wisp")
+    rc.add_texture("mystic_wisp")
 
-    entity.queue()
-    return entity
+    return entity.queue()
 ```
 
 ---
@@ -123,5 +119,11 @@ from anvil.api.items.components import ItemIcon
 from anvil.api.pbr.texture_set import TextureComponents
 
 # References 'assets/textures/items/my_item.png'
-ItemIcon(TextureComponents(color="my_item"))
+ItemIcon(textures=TextureComponents(color="my_item"))
 ```
+
+---
+
+## World Settings
+
+Vibrant Visuals also has world-level files: `LightingSettings`, `AtmosphericSettings`, `FogSettings`, `WaterSettings`, `ColorGradingSettings`, `ShadowSettings` and `LocalLighting` in `anvil.api.pbr`. [Creating a biome](custom_biome.md) builds a full set and attaches it to a biome.
