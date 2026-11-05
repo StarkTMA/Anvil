@@ -16,18 +16,10 @@ from anvil.api.blocks.components import (
     BlockTagComponent,
     InstanceSpec,
     InstanceVariant,
+    ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockMaterial,
-    BlockMovementType,
-    BlockSoundGroup,
-    ItemCategory,
-    ItemGroups,
-    RecipeUnlockContext,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -38,10 +30,18 @@ from anvil.api.items.crafting import ShapedCraftingRecipe, ShapelessRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockMaterial,
+    BlockSoundGroup,
+    ItemCategory,
+    ItemGroups,
+    RecipeUnlockContext,
+)
+from anvil.lib.jsonmodel.types import Color
+
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -65,52 +65,53 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Planks"
 
-    mining = BlockDestructibleByMining(3)
+    mining = BlockDestructibleByMining(seconds_to_destroy=3)
     for tier, speed in AXE_SPEEDS.items():
-        mining.item_specific_speeds_tag(
-            speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
+        mining.add_item_specific_speed(
+            item=ItemTagFilter(tags=Query.AllTags([MinecraftItemTags.IsAxe, tier])),
+            destroy_speed=speed,
         )
 
     block.server.components.add(
-        BlockDisplayName(display_name),
+        BlockDisplayName(value=display_name),
         mining,
         BlockGeometry(),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
             )
         ),
-        BlockCollisionBox((16, 16, 16), (-8, 0, -8)),
-        BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
-        BlockMovable(BlockMovementType.PushPull),
+        BlockCollisionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockMovable(movement_type="push_pull"),
         BlockFlammable(),
-        BlockMapColor(map_color),
-        BlockLightDampening(0),
+        BlockMapColor(color=map_color),
+        BlockLightDampening(value=0),
         BlockTagComponent(
-            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+            value=[MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
         ),
-        BlockConnectionRule("all"),
-        BlockDestructibleByExplosion(15),
-        BlockRedstoneConductivity(True, True),
+        BlockConnectionRule(accepts_connections_from="all"),
+        BlockDestructibleByExplosion(explosion_resistance=15),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=True, redstone_conductor=True
+        ),
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemFuel(15),
-        ItemTags([MinecraftItemTags.Planks]),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemFuel(duration=15),
+        ItemTags(tags=[MinecraftItemTags.Planks]),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Planks
     )
 
     block.queue()
 
-    # 4 planks from any trunk block
     for trunk in ("log", "log_stripped", "wood", "wood_stripped"):
         if trunk in selected:
             recipe = ShapelessRecipe(f"{wood}_planks_from_{trunk}")
@@ -119,7 +120,6 @@ def create(
             recipe.unlock_context(RecipeUnlockContext.AlwaysUnlocked)
             recipe.queue()
 
-    # 1 plank from 2 slabs
     if "slab" in selected:
         slab = f"{namespace}:{wood}_slab"
         recipe = ShapedCraftingRecipe(f"{wood}_planks_from_slab")

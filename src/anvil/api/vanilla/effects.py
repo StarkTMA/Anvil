@@ -2,6 +2,8 @@ from enum import StrEnum
 
 
 class MinecraftPotionEffectTypes(StrEnum):
+    """Vanilla potion types."""
+
     Awkward = "minecraft:awkward"
     FireResistance = "minecraft:fire_resistance"
     Harming = "minecraft:harming"
@@ -52,15 +54,15 @@ class MinecraftPotionEffectTypes(StrEnum):
 
 
 class MinecraftPotionLiquidTypes(StrEnum):
+    """Vanilla potion deliveries."""
+
     Consume = "Consume"
     ThrownLingering = "ThrownLingering"
     ThrownSplash = "ThrownSplash"
 
 
 class MinecraftEffects(StrEnum):
-    """
-    Enumeration for the different types of effects in the game.
-    """
+    """Vanilla effect identifiers."""
 
     Absorption = "minecraft:absorption"
     BadOmen = "minecraft:bad_omen"

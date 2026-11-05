@@ -4,7 +4,7 @@
 ![](https://img.shields.io/github/license/starktma/anvil)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/StarkTMA/Anvil)
 
-![Python](https://img.shields.io/badge/Python_3.13-3776AB?style=flat&logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python_3.15-3776AB?style=flat&logo=python&logoColor=white)
 
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat&logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
@@ -34,7 +34,7 @@ Anvil is intended to grow as a community-driven project. Contributions are very 
 
 To use Anvil, ensure you have the following installed:
 
-- [**Python 3.13**](https://www.python.org/downloads/) or higher.
+- [**Python 3.15**](https://www.python.org/downloads/) or higher.
 - **Operating System**: Windows, Linux, or macOS.
 
 ### Installation

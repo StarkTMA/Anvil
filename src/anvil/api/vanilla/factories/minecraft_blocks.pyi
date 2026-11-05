@@ -1,469 +1,12 @@
 from enum import StrEnum
-from typing import Literal, TypeAlias, TypedDict, Unpack
+from typing import Literal, TypedDict, Unpack
 
-from anvil.lib.schemas import MinecraftBlockDescriptor
-
-Active: TypeAlias = Literal["0b", "1b"]
-Age: TypeAlias = Literal[
-    "12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"
-]
-AgeBit: TypeAlias = Literal["0b", "1b"]
-AllowUnderwaterBit: TypeAlias = Literal["0b", "1b"]
-AttachedBit: TypeAlias = Literal["0b", "1b"]
-Attachment: TypeAlias = Literal["standing", "side", "multiple", "hanging"]
-BambooLeafSize: TypeAlias = Literal["no_leaves", "small_leaves", "large_leaves"]
-BambooStalkThickness: TypeAlias = Literal["thin", "thick"]
-BigDripleafHead: TypeAlias = Literal["0b", "1b"]
-BigDripleafTilt: TypeAlias = Literal["none", "unstable", "partial_tilt", "full_tilt"]
-BiteCounter: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6"]
-BlockFace: TypeAlias = Literal["down", "up", "north", "south", "east", "west"]
-Bloom: TypeAlias = Literal["0b", "1b"]
-BooksStored: TypeAlias = Literal[
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28",
-    "29",
-    "30",
-    "31",
-    "32",
-    "33",
-    "34",
-    "35",
-    "36",
-    "37",
-    "38",
-    "39",
-    "40",
-    "41",
-    "42",
-    "43",
-    "44",
-    "45",
-    "46",
-    "47",
-    "48",
-    "49",
-    "50",
-    "51",
-    "52",
-    "53",
-    "54",
-    "55",
-    "56",
-    "57",
-    "58",
-    "59",
-    "60",
-    "61",
-    "62",
-    "63",
-]
-BrewingStandSlotABit: TypeAlias = Literal["0b", "1b"]
-BrewingStandSlotBBit: TypeAlias = Literal["0b", "1b"]
-BrewingStandSlotCBit: TypeAlias = Literal["0b", "1b"]
-BrushedProgress: TypeAlias = Literal["0", "2", "1", "3"]
-ButtonPressedBit: TypeAlias = Literal["0b", "1b"]
-CanSummon: TypeAlias = Literal["0b", "1b"]
-Candles: TypeAlias = Literal["0", "2", "1", "3"]
-CardinalDirection: TypeAlias = Literal["south", "west", "north", "east"]
-CauldronLiquid: TypeAlias = Literal["water", "lava", "powder_snow"]
-ChiselType: TypeAlias = Literal["chiseled", "default", "smooth", "lines"]
-ClusterCount: TypeAlias = Literal["0", "1", "2", "3"]
-Color: TypeAlias = Literal[
-    "black",
-    "silver",
-    "red",
-    "orange",
-    "lime",
-    "pink",
-    "purple",
-    "magenta",
-    "light_blue",
-    "yellow",
-    "gray",
-    "cyan",
-    "white",
-    "blue",
-    "green",
-    "brown",
-]
-ColorBit: TypeAlias = Literal["0b", "1b"]
-ComposterFillLevel: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7", "8"]
-ConditionalBit: TypeAlias = Literal["0b", "1b"]
-CoralColor: TypeAlias = Literal["red", "pink", "purple", "yellow", "blue"]
-CoralDirection: TypeAlias = Literal["0", "2", "1", "3"]
-CoralFanDirection: TypeAlias = Literal["0", "1"]
-CoralHangTypeBit: TypeAlias = Literal["0b", "1b"]
-CoveredBit: TypeAlias = Literal["0b", "1b"]
-CrackedState: TypeAlias = Literal["max_cracked", "cracked", "no_cracks"]
-Crafting: TypeAlias = Literal["0b", "1b"]
-Damage: TypeAlias = Literal["undamaged", "slightly_damaged", "very_damaged", "broken"]
-DeadBit: TypeAlias = Literal["0b", "1b"]
-Deprecated: TypeAlias = Literal["0", "2", "1", "3"]
-Direction: TypeAlias = Literal["0", "2", "1", "3"]
-DirtType: TypeAlias = Literal["normal", "coarse"]
-DisarmedBit: TypeAlias = Literal["0b", "1b"]
-DoorHingeBit: TypeAlias = Literal["0b", "1b"]
-DragDown: TypeAlias = Literal["0b", "1b"]
-DripstoneThickness: TypeAlias = Literal["tip", "frustum", "middle", "base", "merge"]
-EndPortalEyeBit: TypeAlias = Literal["0b", "1b"]
-ExplodeBit: TypeAlias = Literal["0b", "1b"]
-Extinguished: TypeAlias = Literal["0b", "1b"]
-FacingDirection: TypeAlias = Literal["5", "4", "0", "1", "2", "3"]
-FillLevel: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6"]
-FlowerType: TypeAlias = Literal[
-    "poppy",
-    "orchid",
-    "allium",
-    "houstonia",
-    "tulip_red",
-    "tulip_orange",
-    "tulip_white",
-    "tulip_pink",
-    "oxeye",
-    "cornflower",
-    "lily_of_the_valley",
-]
-GroundSignDirection: TypeAlias = Literal[
-    "12", "10", "5", "7", "13", "9", "4", "11", "0", "6", "14", "1", "2", "3", "8", "15"
-]
-GrowingPlantAge: TypeAlias = Literal[
-    "22",
-    "0",
-    "23",
-    "15",
-    "17",
-    "9",
-    "4",
-    "16",
-    "19",
-    "8",
-    "11",
-    "5",
-    "24",
-    "13",
-    "18",
-    "6",
-    "2",
-    "3",
-    "7",
-    "20",
-    "12",
-    "10",
-    "21",
-    "25",
-    "14",
-    "1",
-]
-Growth: TypeAlias = Literal["5", "4", "0", "6", "1", "2", "3", "7"]
-Hanging: TypeAlias = Literal["0b", "1b"]
-HeadPieceBit: TypeAlias = Literal["0b", "1b"]
-Height: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7"]
-HoneyLevel: TypeAlias = Literal["5", "4", "0", "1", "2", "3"]
-HugeMushroomBits: TypeAlias = Literal[
-    "12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"
-]
-InWallBit: TypeAlias = Literal["0b", "1b"]
-InfiniburnBit: TypeAlias = Literal["0b", "1b"]
-ItemFrameMapBit: TypeAlias = Literal["0b", "1b"]
-ItemFramePhotoBit: TypeAlias = Literal["0b", "1b"]
-KelpAge: TypeAlias = Literal[
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-]
-LeverDirection: TypeAlias = Literal[
-    "down_east_west",
-    "east",
-    "west",
-    "south",
-    "north",
-    "up_north_south",
-    "up_east_west",
-    "down_north_south",
-]
-LiquidDepth: TypeAlias = Literal[
-    "12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"
-]
-Lit: TypeAlias = Literal["0b", "1b"]
-MoisturizedAmount: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7"]
-MultiFaceDirectionBits: TypeAlias = Literal[
-    "35",
-    "22",
-    "62",
-    "45",
-    "0",
-    "36",
-    "53",
-    "30",
-    "59",
-    "47",
-    "23",
-    "15",
-    "50",
-    "17",
-    "9",
-    "4",
-    "16",
-    "27",
-    "60",
-    "32",
-    "33",
-    "19",
-    "8",
-    "26",
-    "31",
-    "11",
-    "38",
-    "46",
-    "58",
-    "5",
-    "24",
-    "13",
-    "18",
-    "40",
-    "54",
-    "63",
-    "42",
-    "6",
-    "29",
-    "43",
-    "52",
-    "2",
-    "3",
-    "41",
-    "44",
-    "7",
-    "20",
-    "51",
-    "12",
-    "10",
-    "21",
-    "61",
-    "56",
-    "25",
-    "57",
-    "55",
-    "34",
-    "14",
-    "1",
-    "39",
-    "28",
-    "49",
-    "37",
-    "48",
-]
-NewLeafType: TypeAlias = Literal["acacia", "dark_oak"]
-OccupiedBit: TypeAlias = Literal["0b", "1b"]
-OldLeafType: TypeAlias = Literal["oak", "spruce", "birch", "jungle"]
-OpenBit: TypeAlias = Literal["0b", "1b"]
-OutputLitBit: TypeAlias = Literal["0b", "1b"]
-OutputSubtractBit: TypeAlias = Literal["0b", "1b"]
-PersistentBit: TypeAlias = Literal["0b", "1b"]
-PillarAxis: TypeAlias = Literal["z", "x", "y"]
-PortalAxis: TypeAlias = Literal["unknown", "x", "z"]
-PoweredBit: TypeAlias = Literal["0b", "1b"]
-PrismarineBlockType: TypeAlias = Literal["default", "dark", "bricks"]
-PropaguleStage: TypeAlias = Literal["0", "1", "2", "3", "4"]
-RailDataBit: TypeAlias = Literal["0b", "1b"]
-RailDirection: TypeAlias = Literal["5", "9", "4", "0", "6", "1", "8", "2", "3", "7"]
-RedstoneSignal: TypeAlias = Literal[
-    "12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"
-]
-RepeaterDelay: TypeAlias = Literal["0", "2", "1", "3"]
-RespawnAnchorCharge: TypeAlias = Literal["0", "1", "2", "3", "4"]
-Rotation: TypeAlias = Literal["0", "1", "2", "3"]
-SandStoneType: TypeAlias = Literal["heiroglyphs", "default", "cut", "smooth"]
-SandType: TypeAlias = Literal["normal", "red"]
-SaplingType: TypeAlias = Literal[
-    "dark_oak", "acacia", "spruce", "birch", "jungle", "oak"
-]
-SculkSensorPhase: TypeAlias = Literal["0", "2", "1"]
-SeaGrassType: TypeAlias = Literal["default", "double_top", "double_bot"]
-SpongeType: TypeAlias = Literal["dry", "wet"]
-Stability: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7"]
-StabilityCheck: TypeAlias = Literal["0b", "1b"]
-StoneBrickType: TypeAlias = Literal["default", "mossy", "cracked", "chiseled", "smooth"]
-StoneType: TypeAlias = Literal[
-    "stone",
-    "granite",
-    "granite_smooth",
-    "diorite",
-    "diorite_smooth",
-    "andesite",
-    "andesite_smooth",
-]
-StrippedBit: TypeAlias = Literal["0b", "1b"]
-StructureBlockType: TypeAlias = Literal[
-    "data", "save", "load", "corner", "invalid", "export"
-]
-StructureVoidType: TypeAlias = Literal["void", "air"]
-SuspendedBit: TypeAlias = Literal["0b", "1b"]
-ToggleBit: TypeAlias = Literal["0b", "1b"]
-TopSlotBit: TypeAlias = Literal["0b", "1b"]
-TorchFacingDirection: TypeAlias = Literal[
-    "unknown", "west", "south", "north", "east", "top"
-]
-TrialSpawnerState: TypeAlias = Literal["5", "4", "3", "2", "1", "0"]
-TriggeredBit: TypeAlias = Literal["0b", "1b"]
-TurtleEggCount: TypeAlias = Literal["one_egg", "two_egg", "three_egg", "four_egg"]
-TwistingVinesAge: TypeAlias = Literal[
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-]
-UpdateBit: TypeAlias = Literal["0b", "1b"]
-UpperBlockBit: TypeAlias = Literal["0b", "1b"]
-UpsideDownBit: TypeAlias = Literal["0b", "1b"]
-VaultState: TypeAlias = Literal["active", "ejecting", "interactive", "unlocking"]
-VerticalHalf: TypeAlias = Literal["bottom", "top"]
-VineDirectionBits: TypeAlias = Literal[
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"
-]
-WallBlockType: TypeAlias = Literal[
-    "cobblestone",
-    "mossy_cobblestone",
-    "granite",
-    "diorite",
-    "andesite",
-    "sandstone",
-    "brick",
-    "stone_brick",
-    "mossy_stone_brick",
-    "nether_brick",
-    "end_brick",
-    "prismarine",
-    "red_sandstone",
-    "red_nether_brick",
-]
-WallConnectionTypeEast: TypeAlias = Literal["tall", "none", "short"]
-WallConnectionTypeNorth: TypeAlias = Literal["tall", "none", "short"]
-WallConnectionTypeSouth: TypeAlias = Literal["tall", "none", "short"]
-WallConnectionTypeWest: TypeAlias = Literal["tall", "none", "short"]
-WallPostBit: TypeAlias = Literal["0b", "1b"]
-WeepingVinesAge: TypeAlias = Literal[
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-]
-WeirdoDirection: TypeAlias = Literal["0", "2", "1", "3"]
-WoodType: TypeAlias = Literal["dark_oak", "acacia", "spruce", "birch", "jungle", "oak"]
-Orientation: TypeAlias = Literal[
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"
-]
-CreakingHeartState: TypeAlias = Literal["0b", "1b"]
-Natural: TypeAlias = Literal["0b", "1b"]
-RehydrationLevel: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7"]
-Tip: TypeAlias = Literal["0b", "1b"]
-PaleMossCarpetSideEast: TypeAlias = Literal["none", "short", "tall"]
-PaleMossCarpetSideNorth: TypeAlias = Literal["none", "short", "tall"]
-PaleMossCarpetSideSouth: TypeAlias = Literal["none", "short", "tall"]
-PaleMossCarpetSideWest: TypeAlias = Literal["none", "short", "tall"]
-Ominous: TypeAlias = Literal["0b", "1b"]
-ConnectionBit: TypeAlias = Literal["0b", "1b"]
-Corner: TypeAlias = Literal[
-    "none", "inner_left", "inner_right", "outer_left", "outer_right"
-]
-SixteenWayRotation: TypeAlias = Literal[
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"
-]
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.lib.jsonmodel import Identifier
 
 class BlockStateKeys(StrEnum):
+    """Every vanilla block state name."""
+
     Active = "active"
     Age = "age"
     AgeBit = "age_bit"
@@ -535,7 +78,16 @@ class BlockStateKeys(StrEnum):
     Lit = "lit"
     MinecraftBlockFace = "minecraft:block_face"
     MinecraftCardinalDirection = "minecraft:cardinal_direction"
+    MinecraftConnectionDown = "minecraft:connection_down"
+    MinecraftConnectionEast = "minecraft:connection_east"
+    MinecraftConnectionNorth = "minecraft:connection_north"
+    MinecraftConnectionSouth = "minecraft:connection_south"
+    MinecraftConnectionUp = "minecraft:connection_up"
+    MinecraftConnectionWest = "minecraft:connection_west"
+    MinecraftCorner = "minecraft:corner"
     MinecraftFacingDirection = "minecraft:facing_direction"
+    MinecraftMultiBlockPart = "minecraft:multi_block_part"
+    MinecraftSixteenWayRotation = "minecraft:sixteen_way_rotation"
     MinecraftVerticalHalf = "minecraft:vertical_half"
     MoisturizedAmount = "moisturized_amount"
     MonsterEggStoneType = "monster_egg_stone_type"
@@ -559,13 +111,18 @@ class BlockStateKeys(StrEnum):
     PersistentBit = "persistent_bit"
     PillarAxis = "pillar_axis"
     PortalAxis = "portal_axis"
+    PotentSulfurState = "potent_sulfur_state"
     PoweredBit = "powered_bit"
     PoweredShelfType = "powered_shelf_type"
     PrismarineBlockType = "prismarine_block_type"
     PropaguleStage = "propagule_stage"
     RailDataBit = "rail_data_bit"
     RailDirection = "rail_direction"
+    RedstoneEast = "redstone_east"
+    RedstoneNorth = "redstone_north"
     RedstoneSignal = "redstone_signal"
+    RedstoneSouth = "redstone_south"
+    RedstoneWest = "redstone_west"
     RehydrationLevel = "rehydration_level"
     RepeaterDelay = "repeater_delay"
     RespawnAnchorCharge = "respawn_anchor_charge"
@@ -611,2630 +168,7375 @@ class BlockStateKeys(StrEnum):
     WeepingVinesAge = "weeping_vines_age"
     WeirdoDirection = "weirdo_direction"
     WoodType = "wood_type"
-    MinecraftConnectionDown = "minecraft:connection_down"
-    MinecraftConnectionEast = "minecraft:connection_east"
-    MinecraftConnectionNorth = "minecraft:connection_north"
-    MinecraftConnectionSouth = "minecraft:connection_south"
-    MinecraftConnectionUp = "minecraft:connection_up"
-    MinecraftConnectionWest = "minecraft:connection_west"
-    MinecraftCorner = "minecraft:corner"
-    MinecraftMultiBlockPart = "minecraft:multi_block_part"
-    MinecraftSixteenWayRotation = "minecraft:sixteen_way_rotation"
-    PotentSulfurState = "potent_sulfur_state"
 
-# State Bundles
+class AcaciaButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
-class ButtonStates(TypedDict, total=False):
-    button_pressed_bit: ButtonPressedBit | None
-    facing_direction: FacingDirection | None
+class AcaciaDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
 
-class DoorStates(TypedDict, total=False):
-    door_hinge_bit: DoorHingeBit | None
-    minecraft_cardinal_direction: CardinalDirection | None
-    open_bit: OpenBit | None
-    upper_block_bit: UpperBlockBit | None
+class AcaciaDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
 
-class SlabStates(TypedDict, total=False):
-    minecraft_vertical_half: VerticalHalf | None
+class AcaciaFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
 
-class ConnectionStates(TypedDict, total=False):
-    minecraft_connection_east: ConnectionBit | None
-    minecraft_connection_north: ConnectionBit | None
-    minecraft_connection_south: ConnectionBit | None
-    minecraft_connection_west: ConnectionBit | None
+class AcaciaFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
 
-class ChorusPlantStates(ConnectionStates):
-    minecraft_connection_up: ConnectionBit | None
-    minecraft_connection_down: ConnectionBit | None
+class AcaciaHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
 
-class FenceGateStates(TypedDict, total=False):
-    in_wall_bit: InWallBit | None
-    minecraft_cardinal_direction: CardinalDirection | None
-    open_bit: OpenBit | None
+class AcaciaLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
 
-class HangingSignStates(TypedDict, total=False):
-    attached_bit: AttachedBit | None
-    facing_direction: FacingDirection | None
-    ground_sign_direction: GroundSignDirection | None
-    hanging: Hanging | None
+class AcaciaLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
-class LeavesStates(TypedDict, total=False):
-    persistent_bit: PersistentBit | None
-    update_bit: UpdateBit | None
+class AcaciaPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
 
-class PillarStates(TypedDict, total=False):
-    pillar_axis: PillarAxis | None
+class AcaciaSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
 
-class PressurePlateStates(TypedDict, total=False):
-    redstone_signal: RedstoneSignal | None
+class AcaciaShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
 
-class SaplingStates(TypedDict, total=False):
-    age_bit: AgeBit | None
+class AcaciaSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
 
-class ShelfStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    powered_bit: PoweredBit | None
-    powered_shelf_type: int | None
+class AcaciaStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
 
-class StairsStates(TypedDict, total=False):
-    minecraft_corner: Corner | str | None
-    upside_down_bit: UpsideDownBit | None
-    weirdo_direction: WeirdoDirection | None
+class AcaciaStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
 
-class StandingSignStates(TypedDict, total=False):
-    ground_sign_direction: GroundSignDirection | None
+class AcaciaTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
 
-class TrapdoorStates(TypedDict, total=False):
-    direction: Direction | None
-    open_bit: OpenBit | None
-    upside_down_bit: UpsideDownBit | None
+class AcaciaWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
-class FacingStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
+class AcaciaWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
 class ActivatorRailStates(TypedDict, total=False):
-    rail_data_bit: RailDataBit | None
-    rail_direction: RailDirection | None
+    rail_data_bit: bool | None
+    rail_direction: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | None
 
-class BlockFaceValuestates(TypedDict, total=False):
-    minecraft_block_face: BlockFace | None
+class AmethystClusterStates(TypedDict, total=False):
+    minecraft_block_face: Literal["down", "up", "north", "south", "west", "east"] | None
 
-class WallStates(TypedDict, total=False):
-    wall_connection_type_east: WallConnectionTypeEast | None
-    wall_connection_type_north: WallConnectionTypeNorth | None
-    wall_connection_type_south: WallConnectionTypeSouth | None
-    wall_connection_type_west: WallConnectionTypeWest | None
-    wall_post_bit: WallPostBit | None
+class AndesiteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
 
-class CardinalDirectionStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
+class AndesiteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class AndesiteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class AndesiteWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class AnvilStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class AzaleaLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class AzaleaLeavesFloweredStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
 
 class BambooStates(TypedDict, total=False):
-    age_bit: AgeBit | None
-    bamboo_leaf_size: BambooLeafSize | None
-    bamboo_stalk_thickness: BambooStalkThickness | None
+    age_bit: bool | None
+    bamboo_leaf_size: Literal["no_leaves", "small_leaves", "large_leaves"] | None
+    bamboo_stalk_thickness: Literal["thin", "thick"] | None
+
+class BambooBlockStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class BambooButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class BambooDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class BambooDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BambooFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class BambooFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class BambooHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class BambooMosaicDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BambooMosaicSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BambooMosaicStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BambooPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class BambooSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class BambooShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class BambooSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BambooStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BambooStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class BambooTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class BambooWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
 class BarrelStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    open_bit: OpenBit | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    open_bit: bool | None
+
+class BasaltStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
 class BedStates(TypedDict, total=False):
-    direction: Direction | None
-    head_piece_bit: HeadPieceBit | None
-    occupied_bit: OccupiedBit | None
+    direction: Literal[0, 1, 2, 3] | None
+    head_piece_bit: bool | None
+    occupied_bit: bool | None
 
 class BedrockStates(TypedDict, total=False):
-    infiniburn_bit: InfiniburnBit | None
+    infiniburn_bit: bool | None
+
+class BeeNestStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    honey_level: Literal[0, 1, 2, 3, 4, 5] | None
 
 class BeehiveStates(TypedDict, total=False):
-    direction: Direction | None
-    honey_level: HoneyLevel | None
+    direction: Literal[0, 1, 2, 3] | None
+    honey_level: Literal[0, 1, 2, 3, 4, 5] | None
 
-class CropGrowthStates(TypedDict, total=False):
-    growth: Growth | None
+class BeetrootStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
 
 class BellStates(TypedDict, total=False):
-    attachment: Attachment | None
-    direction: Direction | None
-    toggle_bit: ToggleBit | None
+    attachment: Literal["standing", "hanging", "side", "multiple"] | None
+    direction: Literal[0, 1, 2, 3] | None
+    toggle_bit: bool | None
 
 class BigDripleafStates(TypedDict, total=False):
-    big_dripleaf_head: BigDripleafHead | None
-    big_dripleaf_tilt: BigDripleafTilt | None
-    minecraft_cardinal_direction: CardinalDirection | None
+    big_dripleaf_head: bool | None
+    big_dripleaf_tilt: Literal["none", "unstable", "partial_tilt", "full_tilt"] | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
-class CandleStates(TypedDict, total=False):
-    candles: Candles | None
-    lit: Lit | None
+class BirchButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
-class LitStates(TypedDict, total=False):
-    lit: Lit | None
+class BirchDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class BirchDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BirchFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class BirchFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class BirchHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class BirchLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class BirchLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class BirchPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class BirchSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class BirchShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class BirchSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BirchStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BirchStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class BirchTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class BirchWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class BirchWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class BlackCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class BlackCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class BlackConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlackConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlackConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BlackGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class BlackStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class BlackWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlackWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlackWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BlackstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlackstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlackstoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BlackstoneWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class BlastFurnaceStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class BlueCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class BlueCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class BlueConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlueConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlueConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BlueGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class BlueStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class BlueWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlueWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BlueWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
 
 class BoneBlockStates(TypedDict, total=False):
-    deprecated: Deprecated | None
-    pillar_axis: PillarAxis | None
+    deprecated: Literal[0, 1, 2, 3] | None
+    pillar_axis: Literal["y", "x", "z"] | None
 
-class CoralFanStates(TypedDict, total=False):
-    coral_fan_direction: CoralFanDirection | None
+class BorderBlockStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
 
-class CoralWallFanStates(TypedDict, total=False):
-    coral_direction: CoralDirection | None
+class BrainCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class BrainCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
 
 class BrewingStandStates(TypedDict, total=False):
-    brewing_stand_slot_a_bit: BrewingStandSlotABit | None
-    brewing_stand_slot_b_bit: BrewingStandSlotBBit | None
-    brewing_stand_slot_c_bit: BrewingStandSlotCBit | None
+    brewing_stand_slot_a_bit: bool | None
+    brewing_stand_slot_b_bit: bool | None
+    brewing_stand_slot_c_bit: bool | None
 
-class MushroomBlockStates(TypedDict, total=False):
-    huge_mushroom_bits: HugeMushroomBits | None
+class BrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class BrownCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class BrownCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class BrownConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BrownConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BrownConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class BrownGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class BrownMushroomBlockStates(TypedDict, total=False):
+    huge_mushroom_bits: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class BrownStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class BrownWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BrownWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class BrownWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
 
 class BubbleColumnStates(TypedDict, total=False):
-    drag_down: DragDown | None
+    drag_down: bool | None
+
+class BubbleCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class BubbleCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
 
 class CactusStates(TypedDict, total=False):
-    age: Age | None
-
-class FireStates(ChorusPlantStates, CactusStates): ...
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
 
 class CakeStates(TypedDict, total=False):
-    bite_counter: BiteCounter | None
+    bite_counter: Literal[0, 1, 2, 3, 4, 5, 6] | None
 
 class CalibratedSculkSensorStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    sculk_sensor_phase: SculkSensorPhase | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    sculk_sensor_phase: Literal[0, 1, 2] | None
 
 class CampfireStates(TypedDict, total=False):
-    extinguished: Extinguished | None
-    minecraft_cardinal_direction: CardinalDirection | None
+    extinguished: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class CandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class CandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class CarrotsStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class CarvedPumpkinStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
 class CauldronStates(TypedDict, total=False):
-    cauldron_liquid: CauldronLiquid | None
-    fill_level: FillLevel | None
+    cauldron_liquid: Literal["water", "lava", "powder_snow"] | None
+    fill_level: Literal[0, 1, 2, 3, 4, 5, 6] | None
 
 class CaveVinesStates(TypedDict, total=False):
-    growing_plant_age: GrowingPlantAge | None
+    growing_plant_age: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ]
+        | None
+    )
+
+class CaveVinesBodyWithBerriesStates(TypedDict, total=False):
+    growing_plant_age: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ]
+        | None
+    )
+
+class CaveVinesHeadWithBerriesStates(TypedDict, total=False):
+    growing_plant_age: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ]
+        | None
+    )
 
 class ChainCommandBlockStates(TypedDict, total=False):
-    conditional_bit: ConditionalBit | None
-    facing_direction: FacingDirection | None
+    conditional_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CherryButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CherryDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class CherryDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CherryFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class CherryFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class CherryHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class CherryLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class CherryLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class CherryPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class CherrySaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class CherryShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class CherrySlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CherryStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CherryStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class CherryTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class CherryWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CherryWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class ChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class ChippedAnvilStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
 class ChiseledBookshelfStates(TypedDict, total=False):
-    books_stored: BooksStored | None
-    direction: Direction | None
+    books_stored: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+        ]
+        | None
+    )
+    direction: Literal[0, 1, 2, 3] | None
+
+class ChiseledQuartzBlockStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class ChorusFlowerStates(TypedDict, total=False):
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class ChorusPlantStates(TypedDict, total=False):
+    minecraft_connection_down: bool | None
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_up: bool | None
+    minecraft_connection_west: bool | None
+
+class CinnabarBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CinnabarBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CinnabarBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CinnabarBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class CinnabarDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CinnabarSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CinnabarStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CinnabarWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class CobbledDeepslateDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CobbledDeepslateSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CobbledDeepslateStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CobbledDeepslateWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class CobblestoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CobblestoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CobblestoneWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
 
 class CocoaStates(TypedDict, total=False):
-    age: Age | None
-    direction: Direction | None
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    direction: Literal[0, 1, 2, 3] | None
 
-class TorchStates(TypedDict, total=False):
-    torch_facing_direction: TorchFacingDirection | None
+class ColoredTorchBlueStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class ColoredTorchGreenStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class ColoredTorchPurpleStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class ColoredTorchRedStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class CommandBlockStates(TypedDict, total=False):
+    conditional_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
 class ComposterStates(TypedDict, total=False):
-    composter_fill_level: ComposterFillLevel | None
+    composter_fill_level: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8] | None
 
 class CompoundCreatorStates(TypedDict, total=False):
-    direction: Direction | None
+    direction: Literal[0, 1, 2, 3] | None
+
+class CopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
 
 class CopperBulbStates(TypedDict, total=False):
-    lit: Lit | None
-    powered_bit: PoweredBit | None
+    lit: bool | None
+    powered_bit: bool | None
 
-class LanternStates(TypedDict, total=False):
-    hanging: Hanging | None
+class CopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class CopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class CopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class CopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class CopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class CopperTorchStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class CopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
 
 class CrafterStates(TypedDict, total=False):
-    crafting: Crafting | None
-    orientation: Orientation | None
-    triggered_bit: TriggeredBit | None
+    crafting: bool | None
+    orientation: (
+        Literal[
+            "down_east",
+            "down_north",
+            "down_south",
+            "down_west",
+            "up_east",
+            "up_north",
+            "up_south",
+            "up_west",
+            "west_up",
+            "east_up",
+            "north_up",
+            "south_up",
+        ]
+        | None
+    )
+    triggered_bit: bool | None
 
 class CreakingHeartStates(TypedDict, total=False):
-    creaking_heart_state: CreakingHeartState | None
-    natural: Natural | None
-    pillar_axis: PillarAxis | None
+    creaking_heart_state: Literal["uprooted", "dormant", "awake"] | None
+    natural: bool | None
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class CreeperHeadStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CrimsonButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CrimsonDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class CrimsonDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CrimsonFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class CrimsonFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class CrimsonHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class CrimsonHyphaeStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class CrimsonPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class CrimsonShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class CrimsonSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CrimsonStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CrimsonStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class CrimsonStemStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class CrimsonTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class CrimsonWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CutRedSandstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CutRedSandstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CutSandstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CutSandstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CyanCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class CyanCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class CyanConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CyanConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CyanConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class CyanGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class CyanStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class CyanWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CyanWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class CyanWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class DamagedAnvilStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class DarkOakButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class DarkOakDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class DarkOakDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DarkOakFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class DarkOakFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class DarkOakHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class DarkOakLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class DarkOakLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class DarkOakPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class DarkOakSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class DarkOakShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class DarkOakSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DarkOakStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class DarkOakTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class DarkOakWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class DarkPrismarineDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DarkPrismarineSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DarkPrismarineStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class DarkoakStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class DarkoakWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class DaylightDetectorStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class DaylightDetectorInvertedStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class DeadBrainCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class DeadBrainCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class DeadBubbleCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class DeadBubbleCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class DeadFireCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class DeadFireCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class DeadHornCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class DeadHornCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class DeadTubeCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class DeadTubeCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class DecoratedPotStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+
+class DeepslateStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class DeepslateBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DeepslateBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DeepslateBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class DeepslateBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class DeepslateTileDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DeepslateTileSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DeepslateTileStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class DeepslateTileWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class DetectorRailStates(TypedDict, total=False):
+    rail_data_bit: bool | None
+    rail_direction: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | None
+
+class DioriteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DioriteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DioriteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class DioriteWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
 
 class DispenserStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    triggered_bit: TriggeredBit | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    triggered_bit: bool | None
+
+class DoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class DragonHeadStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
 class DriedGhastStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    rehydration_level: RehydrationLevel | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    rehydration_level: Literal[0, 1, 2, 3] | None
+
+class DropperStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    triggered_bit: bool | None
+
+class ElementConstructorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+
+class EndBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
 
 class EndPortalFrameStates(TypedDict, total=False):
-    end_portal_eye_bit: EndPortalEyeBit | None
-    minecraft_cardinal_direction: CardinalDirection | None
+    end_portal_eye_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
-class LightningRodStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    powered_bit: PoweredBit | None
+class EndRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class EndStoneBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class EndStoneBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class EndStoneBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class EnderChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class ExposedCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class ExposedCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class ExposedCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class ExposedCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class ExposedCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class ExposedCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class ExposedCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class ExposedCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class ExposedCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class ExposedCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class ExposedDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class ExposedLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
 
 class FarmlandStates(TypedDict, total=False):
-    moisturized_amount: MoisturizedAmount | None
+    moisturized_amount: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class FenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class FireStates(TypedDict, total=False):
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_up: bool | None
+    minecraft_connection_west: bool | None
+
+class FireCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class FireCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
 
 class FlowerPotStates(TypedDict, total=False):
-    update_bit: UpdateBit | None
+    update_bit: bool | None
 
-class LiquidDepthStates(TypedDict, total=False):
-    liquid_depth: LiquidDepth | None
+class FlowingLavaStates(TypedDict, total=False):
+    liquid_depth: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class FlowingWaterStates(TypedDict, total=False):
+    liquid_depth: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
 
 class FrameStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    item_frame_map_bit: ItemFrameMapBit | None
-    item_frame_photo_bit: ItemFramePhotoBit | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    item_frame_map_bit: bool | None
+    item_frame_photo_bit: bool | None
+
+class FrostedIceStates(TypedDict, total=False):
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class FurnaceStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class GlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class GlowFrameStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    item_frame_map_bit: bool | None
+    item_frame_photo_bit: bool | None
 
 class GlowLichenStates(TypedDict, total=False):
-    multi_face_direction_bits: MultiFaceDirectionBits | None
+    multi_face_direction_bits: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+        ]
+        | None
+    )
+
+class GoldenRailStates(TypedDict, total=False):
+    rail_data_bit: bool | None
+    rail_direction: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | None
+
+class GraniteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GraniteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GraniteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class GraniteWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class GrayCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class GrayCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class GrayConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GrayConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GrayConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class GrayGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class GrayStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class GrayWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GrayWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GrayWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class GreenCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class GreenCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class GreenConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GreenConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GreenConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class GreenGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class GreenStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class GreenWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GreenWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class GreenWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
 
 class GrindstoneStates(TypedDict, total=False):
-    attachment: Attachment | None
-    direction: Direction | None
+    attachment: Literal["standing", "hanging", "side", "multiple"] | None
+    direction: Literal[0, 1, 2, 3] | None
+
+class HardBlackStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardBlueStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardBrownStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardCyanStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardGrayStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardGreenStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardLightBlueStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardLightGrayStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardLimeStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardMagentaStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardOrangeStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardPinkStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardPurpleStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardRedStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardWhiteStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HardYellowStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class HayBlockStates(TypedDict, total=False):
+    deprecated: Literal[0, 1, 2, 3] | None
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class HeavyWeightedPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
 
 class HopperStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    toggle_bit: ToggleBit | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    toggle_bit: bool | None
+
+class HornCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class HornCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class InfestedDeepslateStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class IronBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class IronChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class IronDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class IronTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
 
 class JigsawStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    rotation: Rotation | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    rotation: Literal[0, 1, 2, 3] | None
+
+class JungleButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class JungleDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class JungleDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class JungleFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class JungleFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class JungleHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class JungleLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class JungleLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class JunglePressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class JungleSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class JungleShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class JungleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class JungleStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class JungleStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class JungleTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class JungleWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class JungleWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
 class KelpStates(TypedDict, total=False):
-    kelp_age: KelpAge | None
+    kelp_age: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ]
+        | None
+    )
 
-class DoublePlantStates(TypedDict, total=False):
-    upper_block_bit: UpperBlockBit | None
+class LabTableStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
 
-class PetalsStates(TypedDict, total=False):
-    growth: Growth | None
-    minecraft_cardinal_direction: CardinalDirection | None
+class LadderStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class LanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class LargeAmethystBudStates(TypedDict, total=False):
+    minecraft_block_face: Literal["down", "up", "north", "south", "west", "east"] | None
+
+class LargeFernStates(TypedDict, total=False):
+    upper_block_bit: bool | None
+
+class LavaStates(TypedDict, total=False):
+    liquid_depth: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class LeafLitterStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
 class LecternStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    powered_bit: PoweredBit | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
 
 class LeverStates(TypedDict, total=False):
-    lever_direction: LeverDirection | None
-    open_bit: OpenBit | None
+    lever_direction: (
+        Literal[
+            "down_east_west",
+            "east",
+            "west",
+            "south",
+            "north",
+            "up_north_south",
+            "up_east_west",
+            "down_north_south",
+        ]
+        | None
+    )
+    open_bit: bool | None
 
-class PropaguleStates(TypedDict, total=False):
-    hanging: Hanging | None
-    propagule_stage: PropaguleStage | None
+class LightBlueCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class LightBlueCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class LightBlueConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightBlueConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightBlueConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class LightBlueGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class LightBlueStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class LightBlueWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightBlueWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightBlueWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class LightGrayCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class LightGrayCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class LightGrayConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightGrayConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightGrayConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class LightGrayStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class LightGrayWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightGrayWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LightGrayWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class LightWeightedPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class LightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
+
+class LilacStates(TypedDict, total=False):
+    upper_block_bit: bool | None
+
+class LimeCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class LimeCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class LimeConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LimeConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LimeConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class LimeGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class LimeStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class LimeWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LimeWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class LimeWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class LitBlastFurnaceStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class LitFurnaceStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class LitPumpkinStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class LitSmokerStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class LoomStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+
+class MagentaCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class MagentaCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class MagentaConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MagentaConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MagentaConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class MagentaGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class MagentaStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class MagentaWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MagentaWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MagentaWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class MangroveButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class MangroveDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class MangroveDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MangroveFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class MangroveFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class MangroveHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class MangroveLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class MangroveLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class MangrovePressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class MangrovePropaguleStates(TypedDict, total=False):
+    hanging: bool | None
+    propagule_stage: Literal[0, 1, 2, 3, 4] | None
+
+class MangroveShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class MangroveSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MangroveStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class MangroveStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class MangroveTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class MangroveWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class MangroveWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class MaterialReducerStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+
+class MediumAmethystBudStates(TypedDict, total=False):
+    minecraft_block_face: Literal["down", "up", "north", "south", "west", "east"] | None
 
 class MelonStemStates(TypedDict, total=False):
-    facing_direction: FacingDirection | None
-    growth: Growth | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class MossyCobblestoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MossyCobblestoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MossyCobblestoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class MossyCobblestoneWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class MossyStoneBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MossyStoneBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MossyStoneBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class MossyStoneBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class MudBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MudBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class MudBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class MudBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class MuddyMangroveRootsStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class MushroomStemStates(TypedDict, total=False):
+    huge_mushroom_bits: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class NetherBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class NetherBrickFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class NetherBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class NetherBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class NetherBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class NetherWartStates(TypedDict, total=False):
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class NormalStoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class NormalStoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class NormalStoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class OakDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OakFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class OakHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class OakLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class OakLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class OakSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class OakShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class OakSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OakStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class OakWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class ObserverStates(TypedDict, total=False):
+    minecraft_facing_direction: (
+        Literal["down", "up", "north", "south", "west", "east"] | None
+    )
+    powered_bit: bool | None
+
+class OchreFroglightStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class OrangeCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class OrangeCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class OrangeConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OrangeConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OrangeConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class OrangeGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class OrangePoplarLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class OrangeStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class OrangeWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OrangeWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OrangeWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class OxidizedCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class OxidizedCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class OxidizedCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class OxidizedCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class OxidizedCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class OxidizedCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class OxidizedCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class OxidizedCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class OxidizedCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OxidizedCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class OxidizedDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class OxidizedLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
 
 class PaleHangingMossStates(TypedDict, total=False):
-    tip: Tip | None
+    tip: bool | None
 
 class PaleMossCarpetStates(TypedDict, total=False):
-    pale_moss_carpet_side_east: PaleMossCarpetSideEast | None
-    pale_moss_carpet_side_north: PaleMossCarpetSideNorth | None
-    pale_moss_carpet_side_south: PaleMossCarpetSideSouth | None
-    pale_moss_carpet_side_west: PaleMossCarpetSideWest | None
-    upper_block_bit: UpperBlockBit | None
+    pale_moss_carpet_side_east: Literal["none", "short", "tall"] | None
+    pale_moss_carpet_side_north: Literal["none", "short", "tall"] | None
+    pale_moss_carpet_side_south: Literal["none", "short", "tall"] | None
+    pale_moss_carpet_side_west: Literal["none", "short", "tall"] | None
+    upper_block_bit: bool | None
+
+class PaleOakButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PaleOakDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class PaleOakDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PaleOakFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class PaleOakFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class PaleOakHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class PaleOakLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class PaleOakLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PaleOakPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class PaleOakSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class PaleOakShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class PaleOakSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PaleOakStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PaleOakStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class PaleOakTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class PaleOakWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PaleOakWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PearlescentFroglightStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PeonyStates(TypedDict, total=False):
+    upper_block_bit: bool | None
+
+class PetrifiedOakDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PetrifiedOakSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PiglinHeadStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PinkCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class PinkCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class PinkConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PinkConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PinkConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PinkGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PinkPetalsStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class PinkStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class PinkWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PinkWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PinkWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PistonStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PistonArmCollisionStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
 
 class PitcherCropStates(TypedDict, total=False):
-    growth: Growth | None
-    upper_block_bit: UpperBlockBit | None
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+    upper_block_bit: bool | None
 
-class DripstoneStates(TypedDict, total=False):
-    dripstone_thickness: DripstoneThickness | None
-    hanging: Hanging | None
+class PitcherPlantStates(TypedDict, total=False):
+    upper_block_bit: bool | None
+
+class PlayerHeadStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PointedDripstoneStates(TypedDict, total=False):
+    dripstone_thickness: Literal["tip", "frustum", "middle", "base", "merge"] | None
+    hanging: bool | None
+
+class PolishedAndesiteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedAndesiteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedAndesiteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedBasaltStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PolishedBlackstoneBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedBlackstoneBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedBlackstoneBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedBlackstoneBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PolishedBlackstoneButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PolishedBlackstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedBlackstonePressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class PolishedBlackstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedBlackstoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedBlackstoneWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PolishedCinnabarDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedCinnabarSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedCinnabarStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedCinnabarWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PolishedDeepslateDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedDeepslateSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedDeepslateStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedDeepslateWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PolishedDioriteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedDioriteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedDioriteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedGraniteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedGraniteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedGraniteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedSulfurDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedSulfurSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedSulfurStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedSulfurWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PolishedTuffDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedTuffSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PolishedTuffStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PolishedTuffWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PoplarButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PoplarDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class PoplarDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PoplarFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class PoplarFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class PoplarHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class PoplarLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PoplarPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class PoplarSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class PoplarShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class PoplarSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PoplarStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PoplarStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class PoplarTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class PoplarWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PoplarWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
 class PortalStates(TypedDict, total=False):
-    portal_axis: PortalAxis | None
+    portal_axis: Literal["unknown", "x", "z"] | None
+
+class PotatoesStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
 
 class PotentSulfurStates(TypedDict, total=False):
-    potent_sulfur_state: str | None
+    potent_sulfur_state: (
+        Literal["dry", "wet", "dormant", "erupting", "continuous"] | None
+    )
 
 class PoweredComparatorStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    output_lit_bit: OutputLitBit | None
-    output_subtract_bit: OutputSubtractBit | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    output_lit_bit: bool | None
+    output_subtract_bit: bool | None
 
 class PoweredRepeaterStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    repeater_delay: RepeaterDelay | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    repeater_delay: Literal[0, 1, 2, 3] | None
+
+class PrismarineBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PrismarineBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PrismarineBricksStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PrismarineDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PrismarineSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PrismarineStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PrismarineWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class PumpkinStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class PumpkinStemStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class PurpleCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class PurpleCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class PurpleConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PurpleConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PurpleConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PurpleGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class PurpleStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class PurpleWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PurpleWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PurpleWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class PurpurBlockStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PurpurDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PurpurPillarStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class PurpurSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class PurpurStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class QuartzBlockStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class QuartzDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class QuartzPillarStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class QuartzSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class QuartzStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
 
 class RailStates(TypedDict, total=False):
-    rail_direction: RailDirection | None
+    rail_direction: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | None
+
+class RedCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class RedCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class RedConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class RedGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class RedMushroomBlockStates(TypedDict, total=False):
+    huge_mushroom_bits: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class RedNetherBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedNetherBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedNetherBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class RedNetherBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class RedPoplarLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class RedSandstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedSandstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedSandstoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class RedSandstoneWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class RedStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class RedWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class RedWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class RedstoneTorchStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class RedstoneWireStates(TypedDict, total=False):
+    redstone_east: Literal["none", "side", "up"] | None
+    redstone_north: Literal["none", "side", "up"] | None
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    redstone_south: Literal["none", "side", "up"] | None
+    redstone_west: Literal["none", "side", "up"] | None
+
+class ReedsStates(TypedDict, total=False):
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class RepeatingCommandBlockStates(TypedDict, total=False):
+    conditional_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class ResinBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class ResinBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class ResinBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class ResinBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class ResinClumpStates(TypedDict, total=False):
+    multi_face_direction_bits: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+        ]
+        | None
+    )
 
 class RespawnAnchorStates(TypedDict, total=False):
-    respawn_anchor_charge: RespawnAnchorCharge | None
+    respawn_anchor_charge: Literal[0, 1, 2, 3, 4] | None
+
+class RoseBushStates(TypedDict, total=False):
+    upper_block_bit: bool | None
+
+class SandstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SandstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SandstoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SandstoneWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
 
 class ScaffoldingStates(TypedDict, total=False):
-    stability: Stability | None
-    stability_check: StabilityCheck | None
+    stability: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+    stability_check: bool | None
 
 class SculkCatalystStates(TypedDict, total=False):
-    bloom: Bloom | None
+    bloom: bool | None
 
 class SculkSensorStates(TypedDict, total=False):
-    sculk_sensor_phase: SculkSensorPhase | None
+    sculk_sensor_phase: Literal[0, 1, 2] | None
 
 class SculkShriekerStates(TypedDict, total=False):
-    active: Active | None
-    can_summon: CanSummon | None
+    active: bool | None
+    can_summon: bool | None
+
+class SculkVeinStates(TypedDict, total=False):
+    multi_face_direction_bits: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+        ]
+        | None
+    )
 
 class SeaPickleStates(TypedDict, total=False):
-    cluster_count: ClusterCount | None
-    dead_bit: DeadBit | None
+    cluster_count: Literal[0, 1, 2, 3] | None
+    dead_bit: bool | None
 
 class SeagrassStates(TypedDict, total=False):
-    sea_grass_type: SeaGrassType | None
+    sea_grass_type: Literal["default", "double_top", "double_bot"] | None
+
+class ShelfMushroomStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class SilverGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class SkeletonSkullStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class SmallAmethystBudStates(TypedDict, total=False):
+    minecraft_block_face: Literal["down", "up", "north", "south", "west", "east"] | None
 
 class SmallDripleafBlockStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    upper_block_bit: UpperBlockBit | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    upper_block_bit: bool | None
+
+class SmokerStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class SmoothQuartzStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class SmoothQuartzDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothQuartzSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothQuartzStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SmoothRedSandstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothRedSandstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothRedSandstoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SmoothSandstoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothSandstoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothSandstoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SmoothStoneDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SmoothStoneSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
 
 class SnifferEggStates(TypedDict, total=False):
-    cracked_state: CrackedState | None
+    cracked_state: Literal["no_cracks", "cracked", "max_cracked"] | None
 
 class SnowLayerStates(TypedDict, total=False):
-    covered_bit: CoveredBit | None
-    height: Height | None
+    covered_bit: bool | None
+    height: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class SoulCampfireStates(TypedDict, total=False):
+    extinguished: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class SoulFireStates(TypedDict, total=False):
+    age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class SoulLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class SoulTorchStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class SpruceButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class SpruceDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class SpruceDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SpruceFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class SpruceFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class SpruceHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class SpruceLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class SpruceLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class SprucePressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class SpruceSaplingStates(TypedDict, total=False):
+    age_bit: bool | None
+
+class SpruceShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class SpruceSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SpruceStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SpruceStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class SpruceTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class SpruceWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class SpruceWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StandingBannerStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class StandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class StickyPistonStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class StickyPistonArmCollisionStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class StoneBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class StoneBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class StoneBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class StoneBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class StoneButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class StonePressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class StoneStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class StonecutterBlockStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
 class StrawBedStates(TypedDict, total=False):
-    head_piece_bit: HeadPieceBit | None
-    minecraft_cardinal_direction: CardinalDirection | None
-    occupied_bit: OccupiedBit | None
+    head_piece_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    occupied_bit: bool | None
+
+class StrippedAcaciaLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedAcaciaWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedBambooBlockStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedBirchLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedBirchWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedCherryLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedCherryWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedCrimsonHyphaeStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedCrimsonStemStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedDarkOakLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedDarkOakWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedJungleLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedJungleWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedMangroveLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedMangroveWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedOakLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedOakWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedPaleOakLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedPaleOakWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedPoplarLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedPoplarWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedSpruceLogStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedSpruceWoodStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedWarpedHyphaeStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class StrippedWarpedStemStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
 class StructureBlockStates(TypedDict, total=False):
-    structure_block_type: StructureBlockType | None
+    structure_block_type: (
+        Literal["data", "save", "load", "corner", "invalid", "export"] | None
+    )
+
+class SulfurBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SulfurBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SulfurBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SulfurBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class SulfurDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SulfurSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SulfurSpikeStates(TypedDict, total=False):
+    dripstone_thickness: Literal["tip", "frustum", "middle", "base", "merge"] | None
+    hanging: bool | None
+
+class SulfurStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SulfurWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class SunflowerStates(TypedDict, total=False):
+    upper_block_bit: bool | None
 
 class SuspiciousGravelStates(TypedDict, total=False):
-    brushed_progress: BrushedProgress | None
-    hanging: Hanging | None
+    brushed_progress: Literal[0, 1, 2, 3] | None
+    hanging: bool | None
+
+class SuspiciousSandStates(TypedDict, total=False):
+    brushed_progress: Literal[0, 1, 2, 3] | None
+    hanging: bool | None
+
+class SweetBerryBushStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class TallGrassStates(TypedDict, total=False):
+    upper_block_bit: bool | None
 
 class TntStates(TypedDict, total=False):
-    explode_bit: ExplodeBit | None
+    explode_bit: bool | None
+
+class TorchStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class TorchflowerCropStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+
+class TrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class TrappedChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
 
 class TrialSpawnerStates(TypedDict, total=False):
-    ominous: Ominous | None
-    trial_spawner_state: TrialSpawnerState | None
+    ominous: bool | None
+    trial_spawner_state: Literal[0, 1, 2, 3, 4, 5] | None
 
 class TripWireStates(TypedDict, total=False):
-    attached_bit: AttachedBit | None
-    disarmed_bit: DisarmedBit | None
-    minecraft_connection_east: ConnectionBit | None
-    minecraft_connection_north: ConnectionBit | None
-    minecraft_connection_south: ConnectionBit | None
-    minecraft_connection_west: ConnectionBit | None
-    powered_bit: PoweredBit | None
-    suspended_bit: SuspendedBit | None
+    attached_bit: bool | None
+    disarmed_bit: bool | None
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+    powered_bit: bool | None
+    suspended_bit: bool | None
 
 class TripwireHookStates(TypedDict, total=False):
-    attached_bit: AttachedBit | None
-    direction: Direction | None
-    powered_bit: PoweredBit | None
+    attached_bit: bool | None
+    direction: Literal[0, 1, 2, 3] | None
+    powered_bit: bool | None
+
+class TubeCoralFanStates(TypedDict, total=False):
+    coral_fan_direction: Literal[0, 1] | None
+
+class TubeCoralWallFanStates(TypedDict, total=False):
+    coral_direction: Literal[0, 1, 2, 3] | None
+
+class TuffBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class TuffBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class TuffBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class TuffBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
+class TuffDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class TuffSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class TuffStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class TuffWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
 
 class TurtleEggStates(TypedDict, total=False):
-    cracked_state: CrackedState | None
-    turtle_egg_count: TurtleEggCount | None
+    cracked_state: Literal["no_cracks", "cracked", "max_cracked"] | None
+    turtle_egg_count: Literal["one_egg", "two_egg", "three_egg", "four_egg"] | None
 
 class TwistingVinesStates(TypedDict, total=False):
-    twisting_vines_age: TwistingVinesAge | None
+    twisting_vines_age: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ]
+        | None
+    )
+
+class UnderwaterTntStates(TypedDict, total=False):
+    explode_bit: bool | None
+
+class UnderwaterTorchStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class UnlitRedstoneTorchStates(TypedDict, total=False):
+    torch_facing_direction: (
+        Literal["unknown", "west", "east", "north", "south", "top"] | None
+    )
+
+class UnpoweredComparatorStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    output_lit_bit: bool | None
+    output_subtract_bit: bool | None
+
+class UnpoweredRepeaterStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    repeater_delay: Literal[0, 1, 2, 3] | None
 
 class VaultStates(TypedDict, total=False):
-    minecraft_cardinal_direction: CardinalDirection | None
-    ominous: Ominous | None
-    vault_state: VaultState | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    ominous: bool | None
+    vault_state: Literal["inactive", "active", "unlocking", "ejecting"] | None
+
+class VerdantFroglightStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
 
 class VineStates(TypedDict, total=False):
-    vine_direction_bits: VineDirectionBits | None
+    vine_direction_bits: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class WallBannerStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WarpedButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WarpedDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WarpedDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WarpedFenceStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WarpedFenceGateStates(TypedDict, total=False):
+    in_wall_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+
+class WarpedHangingSignStates(TypedDict, total=False):
+    attached_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+    hanging: bool | None
+
+class WarpedHyphaeStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WarpedPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class WarpedShelfStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    powered_bit: bool | None
+    powered_shelf_type: Literal[0, 1, 2, 3] | None
+
+class WarpedSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WarpedStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WarpedStandingSignStates(TypedDict, total=False):
+    ground_sign_direction: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class WarpedStemStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WarpedTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class WarpedWallSignStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WaterStates(TypedDict, total=False):
+    liquid_depth: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+
+class WaxedCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WaxedCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class WaxedCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WaxedCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WaxedCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class WaxedCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class WaxedCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WaxedDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedExposedCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WaxedExposedCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class WaxedExposedCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WaxedExposedCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedExposedCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WaxedExposedCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedExposedCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class WaxedExposedCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class WaxedExposedCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedExposedCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WaxedExposedDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedExposedLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
+
+class WaxedLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
+
+class WaxedOxidizedCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WaxedOxidizedCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class WaxedOxidizedCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WaxedOxidizedCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedOxidizedCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WaxedOxidizedCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedOxidizedCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class WaxedOxidizedCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class WaxedOxidizedCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedOxidizedCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WaxedOxidizedDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedOxidizedLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
+
+class WaxedWeatheredCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WaxedWeatheredCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class WaxedWeatheredCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WaxedWeatheredCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedWeatheredCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WaxedWeatheredCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WaxedWeatheredCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class WaxedWeatheredCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class WaxedWeatheredCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedWeatheredCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WaxedWeatheredDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WaxedWeatheredLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
+
+class WeatheredCopperBarsStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WeatheredCopperBulbStates(TypedDict, total=False):
+    lit: bool | None
+    powered_bit: bool | None
+
+class WeatheredCopperChainStates(TypedDict, total=False):
+    pillar_axis: Literal["y", "x", "z"] | None
+
+class WeatheredCopperChestStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WeatheredCopperDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WeatheredCopperGolemStatueStates(TypedDict, total=False):
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WeatheredCopperLanternStates(TypedDict, total=False):
+    hanging: bool | None
+
+class WeatheredCopperTrapdoorStates(TypedDict, total=False):
+    direction: Literal[0, 1, 2, 3] | None
+    open_bit: bool | None
+    upside_down_bit: bool | None
+
+class WeatheredCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WeatheredCutCopperStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WeatheredDoubleCutCopperSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WeatheredLightningRodStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+    powered_bit: bool | None
 
 class WeepingVinesStates(TypedDict, total=False):
-    weeping_vines_age: WeepingVinesAge | None
+    weeping_vines_age: (
+        Literal[
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+        ]
+        | None
+    )
 
-# Block Factories
+class WheatStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
 
-# WOOD SETS
+class WhiteCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
 
-# Acacia
-def AcaciaButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
+class WhiteCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class WhiteConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WhiteConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WhiteConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WhiteGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WhiteStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class WhiteWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WhiteWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class WhiteWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class WildflowersStates(TypedDict, total=False):
+    growth: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+
+class WitherSkeletonSkullStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WoodenButtonStates(TypedDict, total=False):
+    button_pressed_bit: bool | None
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class WoodenDoorStates(TypedDict, total=False):
+    door_hinge_bit: bool | None
+    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
+    open_bit: bool | None
+    upper_block_bit: bool | None
+
+class WoodenPressurePlateStates(TypedDict, total=False):
+    redstone_signal: (
+        Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    )
+
+class YellowCandleStates(TypedDict, total=False):
+    candles: Literal[0, 1, 2, 3] | None
+    lit: bool | None
+
+class YellowCandleCakeStates(TypedDict, total=False):
+    lit: bool | None
+
+class YellowConcreteDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class YellowConcreteSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class YellowConcreteStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class YellowGlazedTerracottaStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+class YellowPoplarLeavesStates(TypedDict, total=False):
+    persistent_bit: bool | None
+    update_bit: bool | None
+
+class YellowStainedGlassPaneStates(TypedDict, total=False):
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_west: bool | None
+
+class YellowWoolDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class YellowWoolSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class YellowWoolStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class ZombieHeadStates(TypedDict, total=False):
+    facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
+
+def AcaciaButton(
+    **states: Unpack[AcaciaButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaDoor(**states: Unpack[AcaciaDoorStates]) -> Identifier | BlockDescriptor: ...
+def AcaciaDoubleSlab(
+    **states: Unpack[AcaciaDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaFence(
+    **states: Unpack[AcaciaFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaFenceGate(
+    **states: Unpack[AcaciaFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
 def AcaciaHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def AcaciaLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaPlanks() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[AcaciaHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaLeaves(
+    **states: Unpack[AcaciaLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaLog(**states: Unpack[AcaciaLogStates]) -> Identifier | BlockDescriptor: ...
+def AcaciaPlanks() -> Identifier: ...
 def AcaciaPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def AcaciaSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[AcaciaPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaSapling(
+    **states: Unpack[AcaciaSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaShelf(
+    **states: Unpack[AcaciaShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaSlab(**states: Unpack[AcaciaSlabStates]) -> Identifier | BlockDescriptor: ...
+def AcaciaStairs(
+    **states: Unpack[AcaciaStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def AcaciaStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def AcaciaTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def AcaciaWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedAcaciaLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedAcaciaWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Bamboo
-def Bamboo(**states: Unpack[BambooStates]) -> MinecraftBlockDescriptor: ...
-def BambooBlock(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def BambooButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def BambooDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def BambooDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BambooFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def BambooFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def BambooHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def BambooMosaic() -> MinecraftBlockDescriptor: ...
-def BambooMosaicDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def BambooMosaicSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BambooMosaicStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BambooPlanks() -> MinecraftBlockDescriptor: ...
-def BambooPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def BambooSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def BambooShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def BambooSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BambooStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BambooStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def BambooTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def BambooWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def StrippedBambooBlock(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Birch
-def BirchButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def BirchDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def BirchDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BirchFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def BirchFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def BirchHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def BirchLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def BirchLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def BirchPlanks() -> MinecraftBlockDescriptor: ...
-def BirchPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def BirchSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def BirchShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def BirchSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BirchStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BirchStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def BirchTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def BirchWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def BirchWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedBirchLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedBirchWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Cherry
-def CherryButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def CherryDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def CherryDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CherryFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def CherryFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def CherryHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def CherryLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def CherryLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def CherryPlanks() -> MinecraftBlockDescriptor: ...
-def CherryPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def CherrySapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def CherryShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def CherrySlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CherryStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def CherryStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def CherryTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def CherryWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def CherryWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedCherryLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedCherryWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Crimson Fungus
-def CrimsonButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonFungus() -> MinecraftBlockDescriptor: ...
-def CrimsonHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def CrimsonHyphae(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonNylium() -> MinecraftBlockDescriptor: ...
-def CrimsonPlanks() -> MinecraftBlockDescriptor: ...
-def CrimsonPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def CrimsonRoots() -> MinecraftBlockDescriptor: ...
-def CrimsonShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def CrimsonStem(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def CrimsonWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def StrippedCrimsonHyphae(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
-def StrippedCrimsonStem(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Dark Oak
-def DarkOakButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def DarkOakLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakPlanks() -> MinecraftBlockDescriptor: ...
-def DarkOakPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def DarkOakSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def DarkOakWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def DarkoakStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def DarkoakWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def StrippedDarkOakLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedDarkOakWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Generic Wood Items
-def FenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def StandingSign(**states: Unpack[StandingSignStates]) -> MinecraftBlockDescriptor: ...
-def Trapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def WallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def WoodenButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def WoodenDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def WoodenPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Jungle
-def JungleButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def JungleDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def JungleDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def JungleFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def JungleFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def JungleHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def JungleLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def JungleLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def JunglePlanks() -> MinecraftBlockDescriptor: ...
-def JunglePressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def JungleSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def JungleShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def JungleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def JungleStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def JungleStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def JungleTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def JungleWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def JungleWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedJungleLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedJungleWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Mangrove
-def MangroveButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def MangroveDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def MangroveDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MangroveFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def MangroveFenceGate(
-    **states: Unpack[FenceGateStates],
-) -> MinecraftBlockDescriptor: ...
-def MangroveHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def MangroveLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def MangroveLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def MangrovePlanks() -> MinecraftBlockDescriptor: ...
-def MangrovePressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def MangrovePropagule(
-    **states: Unpack[PropaguleStates],
-) -> MinecraftBlockDescriptor: ...
-def MangroveRoots() -> MinecraftBlockDescriptor: ...
-def MangroveShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def MangroveSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MangroveStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def MangroveStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def MangroveTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def MangroveWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def MangroveWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedMangroveLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedMangroveWood(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Oak
-def OakDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def OakFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def OakHangingSign(**states: Unpack[HangingSignStates]) -> MinecraftBlockDescriptor: ...
-def OakLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def OakLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def OakPlanks() -> MinecraftBlockDescriptor: ...
-def OakSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def OakShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def OakSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def OakStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def OakWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PetrifiedOakDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PetrifiedOakSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def StrippedOakLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedOakWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Poplar
-def OrangePoplarLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def PoplarButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def PoplarDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def PoplarDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PoplarFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def PoplarFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def PoplarHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def PoplarLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PoplarPlanks() -> MinecraftBlockDescriptor: ...
-def PoplarPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def PoplarSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def PoplarShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def PoplarSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PoplarStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PoplarStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def PoplarTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def PoplarWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def PoplarWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def RedPoplarLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def StrippedPoplarLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedPoplarWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def YellowPoplarLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-
-# Pale Oak
-def PaleHangingMoss(
-    **states: Unpack[PaleHangingMossStates],
-) -> MinecraftBlockDescriptor: ...
-def PaleMossCarpet(
-    **states: Unpack[PaleMossCarpetStates],
-) -> MinecraftBlockDescriptor: ...
-def PaleOakButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def PaleOakLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakPlanks() -> MinecraftBlockDescriptor: ...
-def PaleOakPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def PaleOakSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def PaleOakTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def PaleOakWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedPaleOakLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedPaleOakWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Spruce
-def SpruceButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def SpruceDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def SpruceDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SpruceFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def SpruceFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def SpruceHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def SpruceLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-def SpruceLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def SprucePlanks() -> MinecraftBlockDescriptor: ...
-def SprucePressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def SpruceSapling(**states: Unpack[SaplingStates]) -> MinecraftBlockDescriptor: ...
-def SpruceShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def SpruceSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SpruceStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def SpruceStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def SpruceTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def SpruceWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def SpruceWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedSpruceLog(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def StrippedSpruceWood(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-
-# Warped Fungus
-def StrippedWarpedHyphae(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
-def StrippedWarpedStem(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def WarpedButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def WarpedDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def WarpedDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def WarpedFence(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def WarpedFenceGate(**states: Unpack[FenceGateStates]) -> MinecraftBlockDescriptor: ...
-def WarpedFungus() -> MinecraftBlockDescriptor: ...
-def WarpedHangingSign(
-    **states: Unpack[HangingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def WarpedHyphae(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def WarpedNylium() -> MinecraftBlockDescriptor: ...
-def WarpedPlanks() -> MinecraftBlockDescriptor: ...
-def WarpedPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def WarpedRoots() -> MinecraftBlockDescriptor: ...
-def WarpedShelf(**states: Unpack[ShelfStates]) -> MinecraftBlockDescriptor: ...
-def WarpedSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def WarpedStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def WarpedStandingSign(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def WarpedStem(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def WarpedTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def WarpedWallSign(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def WarpedWartBlock() -> MinecraftBlockDescriptor: ...
-
-# REDSTONE & MECHANICS
-
-# Redstone Devices & Mechanisms
+    **states: Unpack[AcaciaStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaTrapdoor(
+    **states: Unpack[AcaciaTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaWallSign(
+    **states: Unpack[AcaciaWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def AcaciaWood(**states: Unpack[AcaciaWoodStates]) -> Identifier | BlockDescriptor: ...
 def ActivatorRail(
     **states: Unpack[ActivatorRailStates],
-) -> MinecraftBlockDescriptor: ...
-def Crafter(**states: Unpack[CrafterStates]) -> MinecraftBlockDescriptor: ...
-def DaylightDetector(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def DaylightDetectorInverted(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def DetectorRail(**states: Unpack[ActivatorRailStates]) -> MinecraftBlockDescriptor: ...
-def Dispenser(**states: Unpack[DispenserStates]) -> MinecraftBlockDescriptor: ...
-def Dropper(**states: Unpack[DispenserStates]) -> MinecraftBlockDescriptor: ...
-def GoldenRail(**states: Unpack[ActivatorRailStates]) -> MinecraftBlockDescriptor: ...
-def HeavyWeightedPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def Hopper(**states: Unpack[HopperStates]) -> MinecraftBlockDescriptor: ...
-def Lever(**states: Unpack[LeverStates]) -> MinecraftBlockDescriptor: ...
-def LightWeightedPressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def LitRedstoneLamp() -> MinecraftBlockDescriptor: ...
-def Noteblock() -> MinecraftBlockDescriptor: ...
-def Observer(**states: Unpack[LightningRodStates]) -> MinecraftBlockDescriptor: ...
-def Piston(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def PistonArmCollision(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def PoweredComparator(
-    **states: Unpack[PoweredComparatorStates],
-) -> MinecraftBlockDescriptor: ...
-def PoweredRepeater(
-    **states: Unpack[PoweredRepeaterStates],
-) -> MinecraftBlockDescriptor: ...
-def Rail(**states: Unpack[RailStates]) -> MinecraftBlockDescriptor: ...
-def RedstoneBlock() -> MinecraftBlockDescriptor: ...
-def RedstoneLamp() -> MinecraftBlockDescriptor: ...
-def RedstoneTorch(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def RedstoneWire(**states: Unpack[PressurePlateStates]) -> MinecraftBlockDescriptor: ...
-def Scaffolding(**states: Unpack[ScaffoldingStates]) -> MinecraftBlockDescriptor: ...
-def StickyPiston(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def StickyPistonArmCollision(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def Target() -> MinecraftBlockDescriptor: ...
-def Tnt(**states: Unpack[TntStates]) -> MinecraftBlockDescriptor: ...
-def TrappedChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def TripWire(**states: Unpack[TripWireStates]) -> MinecraftBlockDescriptor: ...
-def TripwireHook(**states: Unpack[TripwireHookStates]) -> MinecraftBlockDescriptor: ...
-def UnderwaterTnt(**states: Unpack[TntStates]) -> MinecraftBlockDescriptor: ...
-def UnlitRedstoneTorch(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def UnpoweredComparator(
-    **states: Unpack[PoweredComparatorStates],
-) -> MinecraftBlockDescriptor: ...
-def UnpoweredRepeater(
-    **states: Unpack[PoweredRepeaterStates],
-) -> MinecraftBlockDescriptor: ...
-
-# SPECIAL & TECHNICAL
-
-# Special & Technical
-def Air() -> MinecraftBlockDescriptor: ...
-def Allow() -> MinecraftBlockDescriptor: ...
-def Barrier() -> MinecraftBlockDescriptor: ...
-def BoneBlock(**states: Unpack[BoneBlockStates]) -> MinecraftBlockDescriptor: ...
-def BorderBlock(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def Cake(**states: Unpack[CakeStates]) -> MinecraftBlockDescriptor: ...
-def Camera() -> MinecraftBlockDescriptor: ...
-def CommandBlock(
-    **states: Unpack[ChainCommandBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def Deny() -> MinecraftBlockDescriptor: ...
-def EndPortal() -> MinecraftBlockDescriptor: ...
-def Fire(**states: Unpack[FireStates]) -> MinecraftBlockDescriptor: ...
-def FrogSpawn() -> MinecraftBlockDescriptor: ...
-def HayBlock(**states: Unpack[BoneBlockStates]) -> MinecraftBlockDescriptor: ...
-def Jigsaw(**states: Unpack[JigsawStates]) -> MinecraftBlockDescriptor: ...
-def Portal(**states: Unpack[PortalStates]) -> MinecraftBlockDescriptor: ...
-def RepeatingCommandBlock(
-    **states: Unpack[ChainCommandBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def Slime() -> MinecraftBlockDescriptor: ...
-def SoulFire(**states: Unpack[FireStates]) -> MinecraftBlockDescriptor: ...
-def StructureBlock(
-    **states: Unpack[StructureBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def StructureVoid() -> MinecraftBlockDescriptor: ...
-def Unknown() -> MinecraftBlockDescriptor: ...
-
-# Light Blocks
-def LightBlock0() -> MinecraftBlockDescriptor: ...
-def LightBlock1() -> MinecraftBlockDescriptor: ...
-def LightBlock10() -> MinecraftBlockDescriptor: ...
-def LightBlock11() -> MinecraftBlockDescriptor: ...
-def LightBlock12() -> MinecraftBlockDescriptor: ...
-def LightBlock13() -> MinecraftBlockDescriptor: ...
-def LightBlock14() -> MinecraftBlockDescriptor: ...
-def LightBlock15() -> MinecraftBlockDescriptor: ...
-def LightBlock2() -> MinecraftBlockDescriptor: ...
-def LightBlock3() -> MinecraftBlockDescriptor: ...
-def LightBlock4() -> MinecraftBlockDescriptor: ...
-def LightBlock5() -> MinecraftBlockDescriptor: ...
-def LightBlock6() -> MinecraftBlockDescriptor: ...
-def LightBlock7() -> MinecraftBlockDescriptor: ...
-def LightBlock8() -> MinecraftBlockDescriptor: ...
-def LightBlock9() -> MinecraftBlockDescriptor: ...
-
-# FLORA & VEGETATION
-
-# Flowers
-def Allium() -> MinecraftBlockDescriptor: ...
+) -> Identifier | BlockDescriptor: ...
+def Air() -> Identifier: ...
+def Allium() -> Identifier: ...
+def Allow() -> Identifier: ...
+def AmethystBlock() -> Identifier: ...
+def AmethystCluster(
+    **states: Unpack[AmethystClusterStates],
+) -> Identifier | BlockDescriptor: ...
+def AncientDebris() -> Identifier: ...
+def Andesite() -> Identifier: ...
+def AndesiteDoubleSlab(
+    **states: Unpack[AndesiteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def AndesiteSlab(
+    **states: Unpack[AndesiteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def AndesiteStairs(
+    **states: Unpack[AndesiteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def AndesiteWall(
+    **states: Unpack[AndesiteWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Anvil(**states: Unpack[AnvilStates]) -> Identifier | BlockDescriptor: ...
+def Azalea() -> Identifier: ...
+def AzaleaLeaves(
+    **states: Unpack[AzaleaLeavesStates],
+) -> Identifier | BlockDescriptor: ...
 def AzaleaLeavesFlowered(
-    **states: Unpack[LeavesStates],
-) -> MinecraftBlockDescriptor: ...
-def AzureBluet() -> MinecraftBlockDescriptor: ...
-def BlueOrchid() -> MinecraftBlockDescriptor: ...
-def CactusFlower() -> MinecraftBlockDescriptor: ...
-def ChorusFlower(**states: Unpack[CactusStates]) -> MinecraftBlockDescriptor: ...
-def ClosedEyeblossom() -> MinecraftBlockDescriptor: ...
-def Cornflower() -> MinecraftBlockDescriptor: ...
-def Dandelion() -> MinecraftBlockDescriptor: ...
-def FlowerPot(**states: Unpack[FlowerPotStates]) -> MinecraftBlockDescriptor: ...
-def FloweringAzalea() -> MinecraftBlockDescriptor: ...
-def GoldenDandelion() -> MinecraftBlockDescriptor: ...
-def Lilac(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def LilyOfTheValley() -> MinecraftBlockDescriptor: ...
-def OpenEyeblossom() -> MinecraftBlockDescriptor: ...
-def OrangeTulip() -> MinecraftBlockDescriptor: ...
-def OxeyeDaisy() -> MinecraftBlockDescriptor: ...
-def Peony(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def PinkPetals(**states: Unpack[PetalsStates]) -> MinecraftBlockDescriptor: ...
-def PinkTulip() -> MinecraftBlockDescriptor: ...
-def Poppy() -> MinecraftBlockDescriptor: ...
-def RedTulip() -> MinecraftBlockDescriptor: ...
-def RoseBush(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def Sunflower(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def WhiteTulip() -> MinecraftBlockDescriptor: ...
-def Wildflowers(**states: Unpack[PetalsStates]) -> MinecraftBlockDescriptor: ...
-def WitherRose() -> MinecraftBlockDescriptor: ...
-
-# Trees & Foliage
-def Azalea() -> MinecraftBlockDescriptor: ...
-def AzaleaLeaves(**states: Unpack[LeavesStates]) -> MinecraftBlockDescriptor: ...
-
-# Crops & Plants
-def Beetroot(**states: Unpack[CropGrowthStates]) -> MinecraftBlockDescriptor: ...
-def BigDripleaf(**states: Unpack[BigDripleafStates]) -> MinecraftBlockDescriptor: ...
-def Bush() -> MinecraftBlockDescriptor: ...
-def Cactus(**states: Unpack[CactusStates]) -> MinecraftBlockDescriptor: ...
-def Carrots(**states: Unpack[CropGrowthStates]) -> MinecraftBlockDescriptor: ...
-def CarvedPumpkin(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def ChorusPlant(**states: ChorusPlantStates) -> MinecraftBlockDescriptor: ...
-def Cocoa(**states: Unpack[CocoaStates]) -> MinecraftBlockDescriptor: ...
-def Deadbush() -> MinecraftBlockDescriptor: ...
-def DriedKelpBlock() -> MinecraftBlockDescriptor: ...
-def Fern() -> MinecraftBlockDescriptor: ...
-def FireflyBush() -> MinecraftBlockDescriptor: ...
-def HangingRoots() -> MinecraftBlockDescriptor: ...
-def Kelp(**states: Unpack[KelpStates]) -> MinecraftBlockDescriptor: ...
-def LargeFern(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def LeafLitter(**states: Unpack[PetalsStates]) -> MinecraftBlockDescriptor: ...
-def LitPumpkin(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def MelonBlock() -> MinecraftBlockDescriptor: ...
-def MelonStem(**states: Unpack[MelonStemStates]) -> MinecraftBlockDescriptor: ...
-def MossBlock() -> MinecraftBlockDescriptor: ...
-def NetherSprouts() -> MinecraftBlockDescriptor: ...
-def NetherWart(**states: Unpack[CactusStates]) -> MinecraftBlockDescriptor: ...
-def PaleMossBlock() -> MinecraftBlockDescriptor: ...
-def PitcherCrop(**states: Unpack[PitcherCropStates]) -> MinecraftBlockDescriptor: ...
-def PitcherPlant(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def Potatoes(**states: Unpack[CropGrowthStates]) -> MinecraftBlockDescriptor: ...
-def Pumpkin(**states: Unpack[CardinalDirectionStates]) -> MinecraftBlockDescriptor: ...
-def PumpkinStem(**states: Unpack[MelonStemStates]) -> MinecraftBlockDescriptor: ...
-def RedShrub() -> MinecraftBlockDescriptor: ...
-def Reeds(**states: Unpack[CactusStates]) -> MinecraftBlockDescriptor: ...
-def SeaPickle(**states: Unpack[SeaPickleStates]) -> MinecraftBlockDescriptor: ...
-def Seagrass(**states: Unpack[SeagrassStates]) -> MinecraftBlockDescriptor: ...
-def ShortDryGrass() -> MinecraftBlockDescriptor: ...
-def ShortGrass() -> MinecraftBlockDescriptor: ...
-def SmallDripleafBlock(
-    **states: Unpack[SmallDripleafBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def SporeBlossom() -> MinecraftBlockDescriptor: ...
-def SweetBerryBush(**states: Unpack[CropGrowthStates]) -> MinecraftBlockDescriptor: ...
-def TallDryGrass() -> MinecraftBlockDescriptor: ...
-def TallGrass(**states: Unpack[DoublePlantStates]) -> MinecraftBlockDescriptor: ...
-def TorchflowerCrop(**states: Unpack[CropGrowthStates]) -> MinecraftBlockDescriptor: ...
-def Waterlily() -> MinecraftBlockDescriptor: ...
-def Wheat(**states: Unpack[CropGrowthStates]) -> MinecraftBlockDescriptor: ...
-
-# Corals
-def BrainCoral() -> MinecraftBlockDescriptor: ...
-def BrainCoralBlock() -> MinecraftBlockDescriptor: ...
-def BrainCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[AzaleaLeavesFloweredStates],
+) -> Identifier | BlockDescriptor: ...
+def AzureBluet() -> Identifier: ...
+def Bamboo(**states: Unpack[BambooStates]) -> Identifier | BlockDescriptor: ...
+def BambooBlock(
+    **states: Unpack[BambooBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooButton(
+    **states: Unpack[BambooButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooDoor(**states: Unpack[BambooDoorStates]) -> Identifier | BlockDescriptor: ...
+def BambooDoubleSlab(
+    **states: Unpack[BambooDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooFence(
+    **states: Unpack[BambooFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooFenceGate(
+    **states: Unpack[BambooFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooHangingSign(
+    **states: Unpack[BambooHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooMosaic() -> Identifier: ...
+def BambooMosaicDoubleSlab(
+    **states: Unpack[BambooMosaicDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooMosaicSlab(
+    **states: Unpack[BambooMosaicSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooMosaicStairs(
+    **states: Unpack[BambooMosaicStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooPlanks() -> Identifier: ...
+def BambooPressurePlate(
+    **states: Unpack[BambooPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooSapling(
+    **states: Unpack[BambooSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooShelf(
+    **states: Unpack[BambooShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooSlab(**states: Unpack[BambooSlabStates]) -> Identifier | BlockDescriptor: ...
+def BambooStairs(
+    **states: Unpack[BambooStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooStandingSign(
+    **states: Unpack[BambooStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooTrapdoor(
+    **states: Unpack[BambooTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def BambooWallSign(
+    **states: Unpack[BambooWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def Barrel(**states: Unpack[BarrelStates]) -> Identifier | BlockDescriptor: ...
+def Barrier() -> Identifier: ...
+def Basalt(**states: Unpack[BasaltStates]) -> Identifier | BlockDescriptor: ...
+def Beacon() -> Identifier: ...
+def Bed(**states: Unpack[BedStates]) -> Identifier | BlockDescriptor: ...
+def Bedrock(**states: Unpack[BedrockStates]) -> Identifier | BlockDescriptor: ...
+def BeeNest(**states: Unpack[BeeNestStates]) -> Identifier | BlockDescriptor: ...
+def Beehive(**states: Unpack[BeehiveStates]) -> Identifier | BlockDescriptor: ...
+def Beetroot(**states: Unpack[BeetrootStates]) -> Identifier | BlockDescriptor: ...
+def Bell(**states: Unpack[BellStates]) -> Identifier | BlockDescriptor: ...
+def BigDripleaf(
+    **states: Unpack[BigDripleafStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchButton(
+    **states: Unpack[BirchButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchDoor(**states: Unpack[BirchDoorStates]) -> Identifier | BlockDescriptor: ...
+def BirchDoubleSlab(
+    **states: Unpack[BirchDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchFence(**states: Unpack[BirchFenceStates]) -> Identifier | BlockDescriptor: ...
+def BirchFenceGate(
+    **states: Unpack[BirchFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchHangingSign(
+    **states: Unpack[BirchHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchLeaves(
+    **states: Unpack[BirchLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchLog(**states: Unpack[BirchLogStates]) -> Identifier | BlockDescriptor: ...
+def BirchPlanks() -> Identifier: ...
+def BirchPressurePlate(
+    **states: Unpack[BirchPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchSapling(
+    **states: Unpack[BirchSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchShelf(**states: Unpack[BirchShelfStates]) -> Identifier | BlockDescriptor: ...
+def BirchSlab(**states: Unpack[BirchSlabStates]) -> Identifier | BlockDescriptor: ...
+def BirchStairs(
+    **states: Unpack[BirchStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchStandingSign(
+    **states: Unpack[BirchStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchTrapdoor(
+    **states: Unpack[BirchTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchWallSign(
+    **states: Unpack[BirchWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def BirchWood(**states: Unpack[BirchWoodStates]) -> Identifier | BlockDescriptor: ...
+def BlackCandle(
+    **states: Unpack[BlackCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackCandleCake(
+    **states: Unpack[BlackCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackCarpet() -> Identifier: ...
+def BlackConcrete() -> Identifier: ...
+def BlackConcreteDoubleSlab(
+    **states: Unpack[BlackConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackConcretePowder() -> Identifier: ...
+def BlackConcreteSlab(
+    **states: Unpack[BlackConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackConcreteStairs(
+    **states: Unpack[BlackConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackGlazedTerracotta(
+    **states: Unpack[BlackGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackShulkerBox() -> Identifier: ...
+def BlackStainedGlass() -> Identifier: ...
+def BlackStainedGlassPane(
+    **states: Unpack[BlackStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackTerracotta() -> Identifier: ...
+def BlackWool() -> Identifier: ...
+def BlackWoolDoubleSlab(
+    **states: Unpack[BlackWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackWoolSlab(
+    **states: Unpack[BlackWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackWoolStairs(
+    **states: Unpack[BlackWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Blackstone() -> Identifier: ...
+def BlackstoneDoubleSlab(
+    **states: Unpack[BlackstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackstoneSlab(
+    **states: Unpack[BlackstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackstoneStairs(
+    **states: Unpack[BlackstoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BlackstoneWall(
+    **states: Unpack[BlackstoneWallStates],
+) -> Identifier | BlockDescriptor: ...
+def BlastFurnace(
+    **states: Unpack[BlastFurnaceStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueCandle(**states: Unpack[BlueCandleStates]) -> Identifier | BlockDescriptor: ...
+def BlueCandleCake(
+    **states: Unpack[BlueCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueCarpet() -> Identifier: ...
+def BlueConcrete() -> Identifier: ...
+def BlueConcreteDoubleSlab(
+    **states: Unpack[BlueConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueConcretePowder() -> Identifier: ...
+def BlueConcreteSlab(
+    **states: Unpack[BlueConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueConcreteStairs(
+    **states: Unpack[BlueConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueGlazedTerracotta(
+    **states: Unpack[BlueGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueIce() -> Identifier: ...
+def BlueOrchid() -> Identifier: ...
+def BlueShulkerBox() -> Identifier: ...
+def BlueStainedGlass() -> Identifier: ...
+def BlueStainedGlassPane(
+    **states: Unpack[BlueStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueTerracotta() -> Identifier: ...
+def BlueWool() -> Identifier: ...
+def BlueWoolDoubleSlab(
+    **states: Unpack[BlueWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueWoolSlab(
+    **states: Unpack[BlueWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BlueWoolStairs(
+    **states: Unpack[BlueWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BoneBlock(**states: Unpack[BoneBlockStates]) -> Identifier | BlockDescriptor: ...
+def Bookshelf() -> Identifier: ...
+def BorderBlock(
+    **states: Unpack[BorderBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def BrainCoral() -> Identifier: ...
+def BrainCoralBlock() -> Identifier: ...
+def BrainCoralFan(
+    **states: Unpack[BrainCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
 def BrainCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def BubbleCoral() -> MinecraftBlockDescriptor: ...
-def BubbleCoralBlock() -> MinecraftBlockDescriptor: ...
-def BubbleCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def BubbleCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def DeadBrainCoral() -> MinecraftBlockDescriptor: ...
-def DeadBrainCoralBlock() -> MinecraftBlockDescriptor: ...
-def DeadBrainCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def DeadBrainCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def DeadBubbleCoral() -> MinecraftBlockDescriptor: ...
-def DeadBubbleCoralBlock() -> MinecraftBlockDescriptor: ...
-def DeadBubbleCoralFan(
-    **states: Unpack[CoralFanStates],
-) -> MinecraftBlockDescriptor: ...
-def DeadBubbleCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def DeadFireCoral() -> MinecraftBlockDescriptor: ...
-def DeadFireCoralBlock() -> MinecraftBlockDescriptor: ...
-def DeadFireCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def DeadFireCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def DeadHornCoral() -> MinecraftBlockDescriptor: ...
-def DeadHornCoralBlock() -> MinecraftBlockDescriptor: ...
-def DeadHornCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def DeadHornCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def DeadTubeCoral() -> MinecraftBlockDescriptor: ...
-def DeadTubeCoralBlock() -> MinecraftBlockDescriptor: ...
-def DeadTubeCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def DeadTubeCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def FireCoral() -> MinecraftBlockDescriptor: ...
-def FireCoralBlock() -> MinecraftBlockDescriptor: ...
-def FireCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def FireCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def HornCoral() -> MinecraftBlockDescriptor: ...
-def HornCoralBlock() -> MinecraftBlockDescriptor: ...
-def HornCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def HornCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-def TubeCoral() -> MinecraftBlockDescriptor: ...
-def TubeCoralBlock() -> MinecraftBlockDescriptor: ...
-def TubeCoralFan(**states: Unpack[CoralFanStates]) -> MinecraftBlockDescriptor: ...
-def TubeCoralWallFan(
-    **states: Unpack[CoralWallFanStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Mushrooms & Fungi
-def BrownMushroom() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[BrainCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def BrewingStand(
+    **states: Unpack[BrewingStandStates],
+) -> Identifier | BlockDescriptor: ...
+def BrickBlock() -> Identifier: ...
+def BrickDoubleSlab(
+    **states: Unpack[BrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BrickSlab(**states: Unpack[BrickSlabStates]) -> Identifier | BlockDescriptor: ...
+def BrickStairs(
+    **states: Unpack[BrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BrickWall(**states: Unpack[BrickWallStates]) -> Identifier | BlockDescriptor: ...
+def BrownCandle(
+    **states: Unpack[BrownCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownCandleCake(
+    **states: Unpack[BrownCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownCarpet() -> Identifier: ...
+def BrownConcrete() -> Identifier: ...
+def BrownConcreteDoubleSlab(
+    **states: Unpack[BrownConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownConcretePowder() -> Identifier: ...
+def BrownConcreteSlab(
+    **states: Unpack[BrownConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownConcreteStairs(
+    **states: Unpack[BrownConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownGlazedTerracotta(
+    **states: Unpack[BrownGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownMushroom() -> Identifier: ...
 def BrownMushroomBlock(
-    **states: Unpack[MushroomBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def MushroomStem(**states: Unpack[MushroomBlockStates]) -> MinecraftBlockDescriptor: ...
-def NetherWartBlock() -> MinecraftBlockDescriptor: ...
-def RedMushroom() -> MinecraftBlockDescriptor: ...
-def RedMushroomBlock(
-    **states: Unpack[MushroomBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def ShelfMushroom(**states: Unpack[PetalsStates]) -> MinecraftBlockDescriptor: ...
-def Shroomlight() -> MinecraftBlockDescriptor: ...
-
-# Sculk
+    **states: Unpack[BrownMushroomBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownShulkerBox() -> Identifier: ...
+def BrownStainedGlass() -> Identifier: ...
+def BrownStainedGlassPane(
+    **states: Unpack[BrownStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownTerracotta() -> Identifier: ...
+def BrownWool() -> Identifier: ...
+def BrownWoolDoubleSlab(
+    **states: Unpack[BrownWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownWoolSlab(
+    **states: Unpack[BrownWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def BrownWoolStairs(
+    **states: Unpack[BrownWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def BubbleColumn(
+    **states: Unpack[BubbleColumnStates],
+) -> Identifier | BlockDescriptor: ...
+def BubbleCoral() -> Identifier: ...
+def BubbleCoralBlock() -> Identifier: ...
+def BubbleCoralFan(
+    **states: Unpack[BubbleCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def BubbleCoralWallFan(
+    **states: Unpack[BubbleCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def BuddingAmethyst() -> Identifier: ...
+def Bush() -> Identifier: ...
+def Cactus(**states: Unpack[CactusStates]) -> Identifier | BlockDescriptor: ...
+def CactusFlower() -> Identifier: ...
+def Cake(**states: Unpack[CakeStates]) -> Identifier | BlockDescriptor: ...
+def Calcite() -> Identifier: ...
 def CalibratedSculkSensor(
     **states: Unpack[CalibratedSculkSensorStates],
-) -> MinecraftBlockDescriptor: ...
-def Sculk() -> MinecraftBlockDescriptor: ...
-def SculkCatalyst(
-    **states: Unpack[SculkCatalystStates],
-) -> MinecraftBlockDescriptor: ...
-def SculkSensor(**states: Unpack[SculkSensorStates]) -> MinecraftBlockDescriptor: ...
-def SculkShrieker(
-    **states: Unpack[SculkShriekerStates],
-) -> MinecraftBlockDescriptor: ...
-def SculkVein(**states: Unpack[GlowLichenStates]) -> MinecraftBlockDescriptor: ...
-
-# Vines
-def CaveVines(**states: Unpack[CaveVinesStates]) -> MinecraftBlockDescriptor: ...
+) -> Identifier | BlockDescriptor: ...
+def Camera() -> Identifier: ...
+def Campfire(**states: Unpack[CampfireStates]) -> Identifier | BlockDescriptor: ...
+def Candle(**states: Unpack[CandleStates]) -> Identifier | BlockDescriptor: ...
+def CandleCake(**states: Unpack[CandleCakeStates]) -> Identifier | BlockDescriptor: ...
+def Carrots(**states: Unpack[CarrotsStates]) -> Identifier | BlockDescriptor: ...
+def CartographyTable() -> Identifier: ...
+def CarvedPumpkin(
+    **states: Unpack[CarvedPumpkinStates],
+) -> Identifier | BlockDescriptor: ...
+def Cauldron(**states: Unpack[CauldronStates]) -> Identifier | BlockDescriptor: ...
+def CaveVines(**states: Unpack[CaveVinesStates]) -> Identifier | BlockDescriptor: ...
 def CaveVinesBodyWithBerries(
-    **states: Unpack[CaveVinesStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[CaveVinesBodyWithBerriesStates],
+) -> Identifier | BlockDescriptor: ...
 def CaveVinesHeadWithBerries(
-    **states: Unpack[CaveVinesStates],
-) -> MinecraftBlockDescriptor: ...
-def TwistingVines(
-    **states: Unpack[TwistingVinesStates],
-) -> MinecraftBlockDescriptor: ...
-def Vine(**states: Unpack[VineStates]) -> MinecraftBlockDescriptor: ...
-def WeepingVines(**states: Unpack[WeepingVinesStates]) -> MinecraftBlockDescriptor: ...
-
-# ORES & MINERALS
-
-# Ores & Mineral Blocks
-def AmethystBlock() -> MinecraftBlockDescriptor: ...
-def AmethystCluster(
-    **states: Unpack[BlockFaceValuestates],
-) -> MinecraftBlockDescriptor: ...
-def AncientDebris() -> MinecraftBlockDescriptor: ...
-def BuddingAmethyst() -> MinecraftBlockDescriptor: ...
-def CoalBlock() -> MinecraftBlockDescriptor: ...
-def CoalOre() -> MinecraftBlockDescriptor: ...
-def DiamondBlock() -> MinecraftBlockDescriptor: ...
-def DiamondOre() -> MinecraftBlockDescriptor: ...
-def EmeraldBlock() -> MinecraftBlockDescriptor: ...
-def EmeraldOre() -> MinecraftBlockDescriptor: ...
-def GoldBlock() -> MinecraftBlockDescriptor: ...
-def GoldOre() -> MinecraftBlockDescriptor: ...
-def IronBlock() -> MinecraftBlockDescriptor: ...
-def IronOre() -> MinecraftBlockDescriptor: ...
-def LapisBlock() -> MinecraftBlockDescriptor: ...
-def LapisOre() -> MinecraftBlockDescriptor: ...
-def LargeAmethystBud(
-    **states: Unpack[BlockFaceValuestates],
-) -> MinecraftBlockDescriptor: ...
-def LitDeepslateRedstoneOre() -> MinecraftBlockDescriptor: ...
-def LitRedstoneOre() -> MinecraftBlockDescriptor: ...
-def MediumAmethystBud(
-    **states: Unpack[BlockFaceValuestates],
-) -> MinecraftBlockDescriptor: ...
-def NetherGoldOre() -> MinecraftBlockDescriptor: ...
-def NetheriteBlock() -> MinecraftBlockDescriptor: ...
-def RawGoldBlock() -> MinecraftBlockDescriptor: ...
-def RawIronBlock() -> MinecraftBlockDescriptor: ...
-def RedstoneOre() -> MinecraftBlockDescriptor: ...
-def SmallAmethystBud(
-    **states: Unpack[BlockFaceValuestates],
-) -> MinecraftBlockDescriptor: ...
-
-# STONE & MINERAL SETS
-
-# Granite, Diorite & Andesite
-def Andesite() -> MinecraftBlockDescriptor: ...
-def AndesiteDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def AndesiteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def AndesiteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def AndesiteWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def Diorite() -> MinecraftBlockDescriptor: ...
-def DioriteDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DioriteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DioriteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def DioriteWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def Granite() -> MinecraftBlockDescriptor: ...
-def GraniteDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GraniteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GraniteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def GraniteWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def PolishedAndesite() -> MinecraftBlockDescriptor: ...
-def PolishedAndesiteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedAndesiteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedAndesiteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedDiorite() -> MinecraftBlockDescriptor: ...
-def PolishedDioriteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedDioriteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedDioriteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedGranite() -> MinecraftBlockDescriptor: ...
-def PolishedGraniteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedGraniteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedGraniteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Blackstone & Basalt
-def Basalt(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def Blackstone() -> MinecraftBlockDescriptor: ...
-def BlackstoneDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlackstoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlackstoneStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BlackstoneWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def ChiseledPolishedBlackstone() -> MinecraftBlockDescriptor: ...
-def CrackedPolishedBlackstoneBricks() -> MinecraftBlockDescriptor: ...
-def GildedBlackstone() -> MinecraftBlockDescriptor: ...
-def PolishedBasalt(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstone() -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneBrickSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneBrickStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneBrickWall(
-    **states: Unpack[WallStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneBricks() -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneButton(
-    **states: Unpack[ButtonStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstonePressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedBlackstoneWall(
-    **states: Unpack[WallStates],
-) -> MinecraftBlockDescriptor: ...
-def SmoothBasalt() -> MinecraftBlockDescriptor: ...
-
-# Clay Bricks
-def BrickBlock() -> MinecraftBlockDescriptor: ...
-def BrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-
-# Other Minerals & Rocks
-def Calcite() -> MinecraftBlockDescriptor: ...
-def CryingObsidian() -> MinecraftBlockDescriptor: ...
-def DripstoneBlock() -> MinecraftBlockDescriptor: ...
-def Obsidian() -> MinecraftBlockDescriptor: ...
-def PointedDripstone(**states: Unpack[DripstoneStates]) -> MinecraftBlockDescriptor: ...
-
-# Cinnabar & Sulfur
-def ChiseledCinnabar() -> MinecraftBlockDescriptor: ...
-def ChiseledSulfur() -> MinecraftBlockDescriptor: ...
-def Cinnabar() -> MinecraftBlockDescriptor: ...
-def CinnabarBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def CinnabarBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CinnabarBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def CinnabarBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def CinnabarBricks() -> MinecraftBlockDescriptor: ...
-def CinnabarDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CinnabarSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CinnabarStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def CinnabarWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def PolishedCinnabar() -> MinecraftBlockDescriptor: ...
-def PolishedCinnabarDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedCinnabarSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedCinnabarStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedCinnabarWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def PolishedSulfur() -> MinecraftBlockDescriptor: ...
-def PolishedSulfurDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedSulfurSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedSulfurStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedSulfurWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def PotentSulfur(**states: Unpack[PotentSulfurStates]) -> MinecraftBlockDescriptor: ...
-def Sulfur() -> MinecraftBlockDescriptor: ...
-def SulfurBrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SulfurBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SulfurBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def SulfurBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def SulfurBricks() -> MinecraftBlockDescriptor: ...
-def SulfurDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SulfurSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SulfurSpike(**states: Unpack[DripstoneStates]) -> MinecraftBlockDescriptor: ...
-def SulfurStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def SulfurWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-
-# Deepslate
-def ChiseledDeepslate() -> MinecraftBlockDescriptor: ...
-def CobbledDeepslate() -> MinecraftBlockDescriptor: ...
-def CobbledDeepslateDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def CobbledDeepslateSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CobbledDeepslateStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def CobbledDeepslateWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def CrackedDeepslateBricks() -> MinecraftBlockDescriptor: ...
-def CrackedDeepslateTiles() -> MinecraftBlockDescriptor: ...
-def Deepslate(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def DeepslateBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateBrickStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def DeepslateBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateBricks() -> MinecraftBlockDescriptor: ...
-def DeepslateCoalOre() -> MinecraftBlockDescriptor: ...
-def DeepslateDiamondOre() -> MinecraftBlockDescriptor: ...
-def DeepslateEmeraldOre() -> MinecraftBlockDescriptor: ...
-def DeepslateGoldOre() -> MinecraftBlockDescriptor: ...
-def DeepslateIronOre() -> MinecraftBlockDescriptor: ...
-def DeepslateLapisOre() -> MinecraftBlockDescriptor: ...
-def DeepslateRedstoneOre() -> MinecraftBlockDescriptor: ...
-def DeepslateTileDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def DeepslateTileSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateTileStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateTileWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateTiles() -> MinecraftBlockDescriptor: ...
-def InfestedDeepslate(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PolishedDeepslate() -> MinecraftBlockDescriptor: ...
-def PolishedDeepslateDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedDeepslateSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedDeepslateStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedDeepslateWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def ReinforcedDeepslate() -> MinecraftBlockDescriptor: ...
-
-# Nether Bricks
-def ChiseledNetherBricks() -> MinecraftBlockDescriptor: ...
-def CrackedNetherBricks() -> MinecraftBlockDescriptor: ...
-def NetherBrick() -> MinecraftBlockDescriptor: ...
-def NetherBrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def NetherBrickFence(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def NetherBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def NetherBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def NetherBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def RedNetherBrick() -> MinecraftBlockDescriptor: ...
-def RedNetherBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def RedNetherBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedNetherBrickStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def RedNetherBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-
-# Quartz
-def ChiseledQuartzBlock(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def QuartzBlock(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def QuartzBricks() -> MinecraftBlockDescriptor: ...
-def QuartzDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def QuartzOre() -> MinecraftBlockDescriptor: ...
-def QuartzPillar(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def QuartzSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def QuartzStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def SmoothQuartz(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def SmoothQuartzDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def SmoothQuartzSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SmoothQuartzStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-
-# Sandstone & Red Sandstone
-def ChiseledRedSandstone() -> MinecraftBlockDescriptor: ...
-def ChiseledSandstone() -> MinecraftBlockDescriptor: ...
-def CutRedSandstone() -> MinecraftBlockDescriptor: ...
-def CutRedSandstoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def CutRedSandstoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CutSandstone() -> MinecraftBlockDescriptor: ...
-def CutSandstoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def CutSandstoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedSandstone() -> MinecraftBlockDescriptor: ...
-def RedSandstoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def RedSandstoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedSandstoneStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def RedSandstoneWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def Sandstone() -> MinecraftBlockDescriptor: ...
-def SandstoneDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SandstoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SandstoneStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def SandstoneWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def SmoothRedSandstone() -> MinecraftBlockDescriptor: ...
-def SmoothRedSandstoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def SmoothRedSandstoneSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def SmoothRedSandstoneStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def SmoothSandstone() -> MinecraftBlockDescriptor: ...
-def SmoothSandstoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def SmoothSandstoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SmoothSandstoneStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Resin
-def ChiseledResinBricks() -> MinecraftBlockDescriptor: ...
-def ResinBlock() -> MinecraftBlockDescriptor: ...
-def ResinBrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def ResinBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def ResinBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def ResinBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def ResinBricks() -> MinecraftBlockDescriptor: ...
-def ResinClump(**states: Unpack[GlowLichenStates]) -> MinecraftBlockDescriptor: ...
-
-# Stone & Cobblestone
-def ChiseledStoneBricks() -> MinecraftBlockDescriptor: ...
-def Cobblestone() -> MinecraftBlockDescriptor: ...
-def CobblestoneDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CobblestoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CobblestoneWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def CrackedStoneBricks() -> MinecraftBlockDescriptor: ...
-def InfestedChiseledStoneBricks() -> MinecraftBlockDescriptor: ...
-def InfestedCobblestone() -> MinecraftBlockDescriptor: ...
-def InfestedCrackedStoneBricks() -> MinecraftBlockDescriptor: ...
-def InfestedMossyStoneBricks() -> MinecraftBlockDescriptor: ...
-def InfestedStone() -> MinecraftBlockDescriptor: ...
-def InfestedStoneBricks() -> MinecraftBlockDescriptor: ...
-def MossyCobblestone() -> MinecraftBlockDescriptor: ...
-def MossyCobblestoneDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def MossyCobblestoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MossyCobblestoneStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def MossyCobblestoneWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def MossyStoneBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def MossyStoneBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MossyStoneBrickStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def MossyStoneBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def MossyStoneBricks() -> MinecraftBlockDescriptor: ...
-def NormalStoneDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def NormalStoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def NormalStoneStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def SmoothStone() -> MinecraftBlockDescriptor: ...
-def SmoothStoneDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def SmoothStoneSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def Stone() -> MinecraftBlockDescriptor: ...
-def StoneBrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def StoneBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def StoneBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def StoneBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def StoneBricks() -> MinecraftBlockDescriptor: ...
-def StoneButton(**states: Unpack[ButtonStates]) -> MinecraftBlockDescriptor: ...
-def StonePressurePlate(
-    **states: Unpack[PressurePlateStates],
-) -> MinecraftBlockDescriptor: ...
-def StoneStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def StonecutterBlock(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Tuff
-def ChiseledTuff() -> MinecraftBlockDescriptor: ...
-def ChiseledTuffBricks() -> MinecraftBlockDescriptor: ...
-def PolishedTuff() -> MinecraftBlockDescriptor: ...
-def PolishedTuffDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PolishedTuffSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PolishedTuffStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PolishedTuffWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def Tuff() -> MinecraftBlockDescriptor: ...
-def TuffBrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def TuffBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def TuffBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def TuffBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def TuffBricks() -> MinecraftBlockDescriptor: ...
-def TuffDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def TuffSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def TuffStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def TuffWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-
-# Prismarine
-def DarkPrismarine() -> MinecraftBlockDescriptor: ...
-def DarkPrismarineDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def DarkPrismarineSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def DarkPrismarineStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def Prismarine() -> MinecraftBlockDescriptor: ...
-def PrismarineBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PrismarineBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PrismarineBricks() -> MinecraftBlockDescriptor: ...
-def PrismarineBricksStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PrismarineDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PrismarineSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PrismarineStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PrismarineWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-
-# End Stone & Purpur
-def EndBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def EndBricks() -> MinecraftBlockDescriptor: ...
-def EndStone() -> MinecraftBlockDescriptor: ...
-def EndStoneBrickDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def EndStoneBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def EndStoneBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def PurpurBlock(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PurpurDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PurpurPillar(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PurpurSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PurpurStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-
-# Mud & Packed Mud
-def Mud() -> MinecraftBlockDescriptor: ...
-def MudBrickDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MudBrickSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MudBrickStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def MudBrickWall(**states: Unpack[WallStates]) -> MinecraftBlockDescriptor: ...
-def MudBricks() -> MinecraftBlockDescriptor: ...
-def MuddyMangroveRoots(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PackedMud() -> MinecraftBlockDescriptor: ...
-
-# UTILITIES & WORKSTATIONS
-
-# Utility & Workstations
-def Anvil(**states: Unpack[CardinalDirectionStates]) -> MinecraftBlockDescriptor: ...
-def Barrel(**states: Unpack[BarrelStates]) -> MinecraftBlockDescriptor: ...
-def Beacon() -> MinecraftBlockDescriptor: ...
-def Bell(**states: Unpack[BellStates]) -> MinecraftBlockDescriptor: ...
-def BlastFurnace(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def Bookshelf() -> MinecraftBlockDescriptor: ...
-def BrewingStand(**states: Unpack[BrewingStandStates]) -> MinecraftBlockDescriptor: ...
-def Campfire(**states: Unpack[CampfireStates]) -> MinecraftBlockDescriptor: ...
-def CartographyTable() -> MinecraftBlockDescriptor: ...
-def Cauldron(**states: Unpack[CauldronStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[CaveVinesHeadWithBerriesStates],
+) -> Identifier | BlockDescriptor: ...
 def ChainCommandBlock(
     **states: Unpack[ChainCommandBlockStates],
-) -> MinecraftBlockDescriptor: ...
-def Chest(**states: Unpack[CardinalDirectionStates]) -> MinecraftBlockDescriptor: ...
+) -> Identifier | BlockDescriptor: ...
+def ChemicalHeat() -> Identifier: ...
+def CherryButton(
+    **states: Unpack[CherryButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryDoor(**states: Unpack[CherryDoorStates]) -> Identifier | BlockDescriptor: ...
+def CherryDoubleSlab(
+    **states: Unpack[CherryDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryFence(
+    **states: Unpack[CherryFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryFenceGate(
+    **states: Unpack[CherryFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryHangingSign(
+    **states: Unpack[CherryHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryLeaves(
+    **states: Unpack[CherryLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryLog(**states: Unpack[CherryLogStates]) -> Identifier | BlockDescriptor: ...
+def CherryPlanks() -> Identifier: ...
+def CherryPressurePlate(
+    **states: Unpack[CherryPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def CherrySapling(
+    **states: Unpack[CherrySaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryShelf(
+    **states: Unpack[CherryShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def CherrySlab(**states: Unpack[CherrySlabStates]) -> Identifier | BlockDescriptor: ...
+def CherryStairs(
+    **states: Unpack[CherryStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryStandingSign(
+    **states: Unpack[CherryStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryTrapdoor(
+    **states: Unpack[CherryTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryWallSign(
+    **states: Unpack[CherryWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def CherryWood(**states: Unpack[CherryWoodStates]) -> Identifier | BlockDescriptor: ...
+def Chest(**states: Unpack[ChestStates]) -> Identifier | BlockDescriptor: ...
 def ChippedAnvil(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ChippedAnvilStates],
+) -> Identifier | BlockDescriptor: ...
 def ChiseledBookshelf(
     **states: Unpack[ChiseledBookshelfStates],
-) -> MinecraftBlockDescriptor: ...
-def ColoredTorchBlue(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def ColoredTorchGreen(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def ColoredTorchPurple(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def ColoredTorchRed(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def Composter(**states: Unpack[ComposterStates]) -> MinecraftBlockDescriptor: ...
-def Conduit() -> MinecraftBlockDescriptor: ...
-def CraftingTable() -> MinecraftBlockDescriptor: ...
-def CreakingHeart(
-    **states: Unpack[CreakingHeartStates],
-) -> MinecraftBlockDescriptor: ...
-def DamagedAnvil(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def DecoratedPot(
-    **states: Unpack[CompoundCreatorStates],
-) -> MinecraftBlockDescriptor: ...
-def DriedGhast(**states: Unpack[DriedGhastStates]) -> MinecraftBlockDescriptor: ...
-def EnchantingTable() -> MinecraftBlockDescriptor: ...
-def EndPortalFrame(
-    **states: Unpack[EndPortalFrameStates],
-) -> MinecraftBlockDescriptor: ...
-def EndRod(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def EnderChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def FletchingTable() -> MinecraftBlockDescriptor: ...
-def Frame(**states: Unpack[FrameStates]) -> MinecraftBlockDescriptor: ...
-def Furnace(**states: Unpack[CardinalDirectionStates]) -> MinecraftBlockDescriptor: ...
-def GlowFrame(**states: Unpack[FrameStates]) -> MinecraftBlockDescriptor: ...
-def GlowLichen(**states: Unpack[GlowLichenStates]) -> MinecraftBlockDescriptor: ...
-def Glowstone() -> MinecraftBlockDescriptor: ...
-def Grindstone(**states: Unpack[GrindstoneStates]) -> MinecraftBlockDescriptor: ...
-def HeavyCore() -> MinecraftBlockDescriptor: ...
-def IronBars(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def IronChain(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def IronDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
-def IronTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def Jukebox() -> MinecraftBlockDescriptor: ...
-def LabTable(**states: Unpack[CompoundCreatorStates]) -> MinecraftBlockDescriptor: ...
-def Ladder(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def Lantern(**states: Unpack[LanternStates]) -> MinecraftBlockDescriptor: ...
-def Lectern(**states: Unpack[LecternStates]) -> MinecraftBlockDescriptor: ...
-def LitBlastFurnace(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def LitFurnace(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def LitSmoker(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def Lodestone() -> MinecraftBlockDescriptor: ...
-def Loom(**states: Unpack[CompoundCreatorStates]) -> MinecraftBlockDescriptor: ...
-def MobSpawner() -> MinecraftBlockDescriptor: ...
-def OchreFroglight(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def PearlescentFroglight(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
-def RespawnAnchor(
-    **states: Unpack[RespawnAnchorStates],
-) -> MinecraftBlockDescriptor: ...
-def SeaLantern() -> MinecraftBlockDescriptor: ...
-def SmithingTable() -> MinecraftBlockDescriptor: ...
-def Smoker(**states: Unpack[CardinalDirectionStates]) -> MinecraftBlockDescriptor: ...
-def SnifferEgg(**states: Unpack[SnifferEggStates]) -> MinecraftBlockDescriptor: ...
-def SoulCampfire(**states: Unpack[CampfireStates]) -> MinecraftBlockDescriptor: ...
-def SoulLantern(**states: Unpack[LanternStates]) -> MinecraftBlockDescriptor: ...
-def SoulTorch(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def Sponge() -> MinecraftBlockDescriptor: ...
-def Torch(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def Torchflower() -> MinecraftBlockDescriptor: ...
-def TrialSpawner(**states: Unpack[TrialSpawnerStates]) -> MinecraftBlockDescriptor: ...
-def TurtleEgg(**states: Unpack[TurtleEggStates]) -> MinecraftBlockDescriptor: ...
-def UnderwaterTorch(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def Vault(**states: Unpack[VaultStates]) -> MinecraftBlockDescriptor: ...
-def VerdantFroglight(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
-def Web() -> MinecraftBlockDescriptor: ...
-def WetSponge() -> MinecraftBlockDescriptor: ...
-
-# Bee & Honey
-def BeeNest(**states: Unpack[BeehiveStates]) -> MinecraftBlockDescriptor: ...
-def Beehive(**states: Unpack[BeehiveStates]) -> MinecraftBlockDescriptor: ...
-def HoneyBlock() -> MinecraftBlockDescriptor: ...
-def HoneycombBlock() -> MinecraftBlockDescriptor: ...
-
-# Mob Heads & Trophies
-def CreeperHead(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def DragonEgg() -> MinecraftBlockDescriptor: ...
-def DragonHead(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def PiglinHead(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def PlayerHead(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def SkeletonSkull(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def WitherSkeletonSkull(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def ZombieHead(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-
-# COLOR SETS
-
-# Beds
-def Bed(**states: Unpack[BedStates]) -> MinecraftBlockDescriptor: ...
-def Bedrock(**states: Unpack[BedrockStates]) -> MinecraftBlockDescriptor: ...
-def StrawBed(**states: Unpack[StrawBedStates]) -> MinecraftBlockDescriptor: ...
-
-# Candles
-def BlackCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def BlackCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def BlueCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def BlueCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def BrownCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def BrownCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def Candle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def CandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def CyanCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def CyanCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def GrayCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def GrayCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def GreenCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def GreenCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def LightBlueCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def LightBlueCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def LightGrayCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def LightGrayCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def LimeCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def LimeCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def MagentaCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def MagentaCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def OrangeCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def OrangeCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def PinkCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def PinkCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def PurpleCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def PurpleCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def RedCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def RedCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def WhiteCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def WhiteCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-def YellowCandle(**states: Unpack[CandleStates]) -> MinecraftBlockDescriptor: ...
-def YellowCandleCake(**states: Unpack[LitStates]) -> MinecraftBlockDescriptor: ...
-
-# Carpet
-def BlackCarpet() -> MinecraftBlockDescriptor: ...
-def BlueCarpet() -> MinecraftBlockDescriptor: ...
-def BrownCarpet() -> MinecraftBlockDescriptor: ...
-def CyanCarpet() -> MinecraftBlockDescriptor: ...
-def GrayCarpet() -> MinecraftBlockDescriptor: ...
-def GreenCarpet() -> MinecraftBlockDescriptor: ...
-def LightBlueCarpet() -> MinecraftBlockDescriptor: ...
-def LightGrayCarpet() -> MinecraftBlockDescriptor: ...
-def LimeCarpet() -> MinecraftBlockDescriptor: ...
-def MagentaCarpet() -> MinecraftBlockDescriptor: ...
-def MossCarpet() -> MinecraftBlockDescriptor: ...
-def OrangeCarpet() -> MinecraftBlockDescriptor: ...
-def PinkCarpet() -> MinecraftBlockDescriptor: ...
-def PurpleCarpet() -> MinecraftBlockDescriptor: ...
-def RedCarpet() -> MinecraftBlockDescriptor: ...
-def WhiteCarpet() -> MinecraftBlockDescriptor: ...
-def YellowCarpet() -> MinecraftBlockDescriptor: ...
-
-# Concrete & Concrete Powder
-def BlackConcrete() -> MinecraftBlockDescriptor: ...
-def BlackConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def BlackConcretePowder() -> MinecraftBlockDescriptor: ...
-def BlackConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlackConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BlueConcrete() -> MinecraftBlockDescriptor: ...
-def BlueConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def BlueConcretePowder() -> MinecraftBlockDescriptor: ...
-def BlueConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlueConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BrownConcrete() -> MinecraftBlockDescriptor: ...
-def BrownConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def BrownConcretePowder() -> MinecraftBlockDescriptor: ...
-def BrownConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BrownConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def CyanConcrete() -> MinecraftBlockDescriptor: ...
-def CyanConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def CyanConcretePowder() -> MinecraftBlockDescriptor: ...
-def CyanConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CyanConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def GrayConcrete() -> MinecraftBlockDescriptor: ...
-def GrayConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def GrayConcretePowder() -> MinecraftBlockDescriptor: ...
-def GrayConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GrayConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def GreenConcrete() -> MinecraftBlockDescriptor: ...
-def GreenConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def GreenConcretePowder() -> MinecraftBlockDescriptor: ...
-def GreenConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GreenConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def LightBlueConcrete() -> MinecraftBlockDescriptor: ...
-def LightBlueConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def LightBlueConcretePowder() -> MinecraftBlockDescriptor: ...
-def LightBlueConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LightBlueConcreteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def LightGrayConcrete() -> MinecraftBlockDescriptor: ...
-def LightGrayConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def LightGrayConcretePowder() -> MinecraftBlockDescriptor: ...
-def LightGrayConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LightGrayConcreteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def LimeConcrete() -> MinecraftBlockDescriptor: ...
-def LimeConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def LimeConcretePowder() -> MinecraftBlockDescriptor: ...
-def LimeConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LimeConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def MagentaConcrete() -> MinecraftBlockDescriptor: ...
-def MagentaConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def MagentaConcretePowder() -> MinecraftBlockDescriptor: ...
-def MagentaConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MagentaConcreteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def OrangeConcrete() -> MinecraftBlockDescriptor: ...
-def OrangeConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def OrangeConcretePowder() -> MinecraftBlockDescriptor: ...
-def OrangeConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def OrangeConcreteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def PinkConcrete() -> MinecraftBlockDescriptor: ...
-def PinkConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PinkConcretePowder() -> MinecraftBlockDescriptor: ...
-def PinkConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PinkConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PurpleConcrete() -> MinecraftBlockDescriptor: ...
-def PurpleConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def PurpleConcretePowder() -> MinecraftBlockDescriptor: ...
-def PurpleConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PurpleConcreteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-def RedConcrete() -> MinecraftBlockDescriptor: ...
-def RedConcreteDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedConcretePowder() -> MinecraftBlockDescriptor: ...
-def RedConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def WhiteConcrete() -> MinecraftBlockDescriptor: ...
-def WhiteConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def WhiteConcretePowder() -> MinecraftBlockDescriptor: ...
-def WhiteConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def WhiteConcreteStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def YellowConcrete() -> MinecraftBlockDescriptor: ...
-def YellowConcreteDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def YellowConcretePowder() -> MinecraftBlockDescriptor: ...
-def YellowConcreteSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def YellowConcreteStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Terracotta & Glazed Terracotta
-def BlackGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def BlackTerracotta() -> MinecraftBlockDescriptor: ...
-def BlueGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def BlueTerracotta() -> MinecraftBlockDescriptor: ...
-def BrownGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def BrownTerracotta() -> MinecraftBlockDescriptor: ...
-def CyanGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def CyanTerracotta() -> MinecraftBlockDescriptor: ...
-def GrayGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def GrayTerracotta() -> MinecraftBlockDescriptor: ...
-def GreenGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def GreenTerracotta() -> MinecraftBlockDescriptor: ...
-def HardenedClay() -> MinecraftBlockDescriptor: ...
-def LightBlueGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def LightBlueTerracotta() -> MinecraftBlockDescriptor: ...
-def LightGrayTerracotta() -> MinecraftBlockDescriptor: ...
-def LimeGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def LimeTerracotta() -> MinecraftBlockDescriptor: ...
-def MagentaGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def MagentaTerracotta() -> MinecraftBlockDescriptor: ...
-def OrangeGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def OrangeTerracotta() -> MinecraftBlockDescriptor: ...
-def PinkGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def PinkTerracotta() -> MinecraftBlockDescriptor: ...
-def PurpleGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def PurpleTerracotta() -> MinecraftBlockDescriptor: ...
-def RedGlazedTerracotta(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-def RedTerracotta() -> MinecraftBlockDescriptor: ...
-def SilverGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def WhiteGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def WhiteTerracotta() -> MinecraftBlockDescriptor: ...
-def YellowGlazedTerracotta(
-    **states: Unpack[FacingStates],
-) -> MinecraftBlockDescriptor: ...
-def YellowTerracotta() -> MinecraftBlockDescriptor: ...
-
-# Shulker Boxes
-def BlackShulkerBox() -> MinecraftBlockDescriptor: ...
-def BlueShulkerBox() -> MinecraftBlockDescriptor: ...
-def BrownShulkerBox() -> MinecraftBlockDescriptor: ...
-def CyanShulkerBox() -> MinecraftBlockDescriptor: ...
-def GrayShulkerBox() -> MinecraftBlockDescriptor: ...
-def GreenShulkerBox() -> MinecraftBlockDescriptor: ...
-def LightBlueShulkerBox() -> MinecraftBlockDescriptor: ...
-def LightGrayShulkerBox() -> MinecraftBlockDescriptor: ...
-def LimeShulkerBox() -> MinecraftBlockDescriptor: ...
-def MagentaShulkerBox() -> MinecraftBlockDescriptor: ...
-def OrangeShulkerBox() -> MinecraftBlockDescriptor: ...
-def PinkShulkerBox() -> MinecraftBlockDescriptor: ...
-def PurpleShulkerBox() -> MinecraftBlockDescriptor: ...
-def RedShulkerBox() -> MinecraftBlockDescriptor: ...
-def UndyedShulkerBox() -> MinecraftBlockDescriptor: ...
-def WhiteShulkerBox() -> MinecraftBlockDescriptor: ...
-def YellowShulkerBox() -> MinecraftBlockDescriptor: ...
-
-# Glass & Stained Glass
-def BlackStainedGlass() -> MinecraftBlockDescriptor: ...
-def BlackStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def BlueStainedGlass() -> MinecraftBlockDescriptor: ...
-def BlueStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def BrownStainedGlass() -> MinecraftBlockDescriptor: ...
-def BrownStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def CyanStainedGlass() -> MinecraftBlockDescriptor: ...
-def CyanStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def Glass() -> MinecraftBlockDescriptor: ...
-def GlassPane(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def GrayStainedGlass() -> MinecraftBlockDescriptor: ...
-def GrayStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def GreenStainedGlass() -> MinecraftBlockDescriptor: ...
-def GreenStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardBlackStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardBlackStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardBlueStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardBlueStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardBrownStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardBrownStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardCyanStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardCyanStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardGlass() -> MinecraftBlockDescriptor: ...
-def HardGlassPane(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def HardGrayStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardGrayStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardGreenStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardGreenStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardLightBlueStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardLightBlueStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardLightGrayStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardLightGrayStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardLimeStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardLimeStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardMagentaStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardMagentaStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardOrangeStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardOrangeStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardPinkStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardPinkStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardPurpleStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardPurpleStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardRedStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardRedStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardWhiteStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardWhiteStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def HardYellowStainedGlass() -> MinecraftBlockDescriptor: ...
-def HardYellowStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def LightBlueStainedGlass() -> MinecraftBlockDescriptor: ...
-def LightBlueStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def LightGrayStainedGlass() -> MinecraftBlockDescriptor: ...
-def LightGrayStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def LimeStainedGlass() -> MinecraftBlockDescriptor: ...
-def LimeStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def MagentaStainedGlass() -> MinecraftBlockDescriptor: ...
-def MagentaStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def OrangeStainedGlass() -> MinecraftBlockDescriptor: ...
-def OrangeStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def PinkStainedGlass() -> MinecraftBlockDescriptor: ...
-def PinkStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def PurpleStainedGlass() -> MinecraftBlockDescriptor: ...
-def PurpleStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def RedStainedGlass() -> MinecraftBlockDescriptor: ...
-def RedStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def TintedGlass() -> MinecraftBlockDescriptor: ...
-def WhiteStainedGlass() -> MinecraftBlockDescriptor: ...
-def WhiteStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-def YellowStainedGlass() -> MinecraftBlockDescriptor: ...
-def YellowStainedGlassPane(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Wool
-def BlackWool() -> MinecraftBlockDescriptor: ...
-def BlackWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlackWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlackWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BlueWool() -> MinecraftBlockDescriptor: ...
-def BlueWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlueWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BlueWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def BrownWool() -> MinecraftBlockDescriptor: ...
-def BrownWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BrownWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def BrownWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def CyanWool() -> MinecraftBlockDescriptor: ...
-def CyanWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CyanWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CyanWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def GrayWool() -> MinecraftBlockDescriptor: ...
-def GrayWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GrayWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GrayWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def GreenWool() -> MinecraftBlockDescriptor: ...
-def GreenWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GreenWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def GreenWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def LightBlueWool() -> MinecraftBlockDescriptor: ...
-def LightBlueWoolDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def LightBlueWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LightBlueWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def LightGrayWool() -> MinecraftBlockDescriptor: ...
-def LightGrayWoolDoubleSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def LightGrayWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LightGrayWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def LimeWool() -> MinecraftBlockDescriptor: ...
-def LimeWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LimeWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LimeWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def MagentaWool() -> MinecraftBlockDescriptor: ...
-def MagentaWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MagentaWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def MagentaWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def OrangeWool() -> MinecraftBlockDescriptor: ...
-def OrangeWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def OrangeWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def OrangeWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PinkWool() -> MinecraftBlockDescriptor: ...
-def PinkWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PinkWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PinkWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def PurpleWool() -> MinecraftBlockDescriptor: ...
-def PurpleWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PurpleWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def PurpleWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def RedWool() -> MinecraftBlockDescriptor: ...
-def RedWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def RedWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def WhiteWool() -> MinecraftBlockDescriptor: ...
-def WhiteWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def WhiteWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def WhiteWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def YellowWool() -> MinecraftBlockDescriptor: ...
-def YellowWoolDoubleSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def YellowWoolSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def YellowWoolStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-
-# Banners
-def StandingBanner(
-    **states: Unpack[StandingSignStates],
-) -> MinecraftBlockDescriptor: ...
-def WallBanner(**states: Unpack[FacingStates]) -> MinecraftBlockDescriptor: ...
-
-# NATURAL TERRAIN & ENVIRONMENT
-
-# Ice & Snow
-def BlueIce() -> MinecraftBlockDescriptor: ...
-def FrostedIce(**states: Unpack[CactusStates]) -> MinecraftBlockDescriptor: ...
-def Ice() -> MinecraftBlockDescriptor: ...
-def PackedIce() -> MinecraftBlockDescriptor: ...
-def PowderSnow() -> MinecraftBlockDescriptor: ...
-def Snow() -> MinecraftBlockDescriptor: ...
-def SnowLayer(**states: Unpack[SnowLayerStates]) -> MinecraftBlockDescriptor: ...
-
-# Fluids
-def BubbleColumn(**states: Unpack[BubbleColumnStates]) -> MinecraftBlockDescriptor: ...
-def FlowingLava(**states: Unpack[LiquidDepthStates]) -> MinecraftBlockDescriptor: ...
-def FlowingWater(**states: Unpack[LiquidDepthStates]) -> MinecraftBlockDescriptor: ...
-def Lava(**states: Unpack[LiquidDepthStates]) -> MinecraftBlockDescriptor: ...
-def Water(**states: Unpack[LiquidDepthStates]) -> MinecraftBlockDescriptor: ...
-
-# Terrain & Soil
-def Clay() -> MinecraftBlockDescriptor: ...
-def CoarseDirt() -> MinecraftBlockDescriptor: ...
-def Dirt() -> MinecraftBlockDescriptor: ...
-def DirtWithRoots() -> MinecraftBlockDescriptor: ...
-def Farmland(**states: Unpack[FarmlandStates]) -> MinecraftBlockDescriptor: ...
-def GrassBlock() -> MinecraftBlockDescriptor: ...
-def GrassPath() -> MinecraftBlockDescriptor: ...
-def Gravel() -> MinecraftBlockDescriptor: ...
-def Magma() -> MinecraftBlockDescriptor: ...
-def Mycelium() -> MinecraftBlockDescriptor: ...
-def Netherrack() -> MinecraftBlockDescriptor: ...
-def Podzol() -> MinecraftBlockDescriptor: ...
-def RedSand() -> MinecraftBlockDescriptor: ...
-def Sand() -> MinecraftBlockDescriptor: ...
-def SoulSand() -> MinecraftBlockDescriptor: ...
-def SoulSoil() -> MinecraftBlockDescriptor: ...
-def SuspiciousGravel(
-    **states: Unpack[SuspiciousGravelStates],
-) -> MinecraftBlockDescriptor: ...
-def SuspiciousSand(
-    **states: Unpack[SuspiciousGravelStates],
-) -> MinecraftBlockDescriptor: ...
-
-# EDUCATION EDITION CHEMISTRY
-
-# Elements & Chemistry Apparatus
-def ChemicalHeat() -> MinecraftBlockDescriptor: ...
+) -> Identifier | BlockDescriptor: ...
+def ChiseledCinnabar() -> Identifier: ...
+def ChiseledCopper() -> Identifier: ...
+def ChiseledDeepslate() -> Identifier: ...
+def ChiseledNetherBricks() -> Identifier: ...
+def ChiseledPolishedBlackstone() -> Identifier: ...
+def ChiseledQuartzBlock(
+    **states: Unpack[ChiseledQuartzBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def ChiseledRedSandstone() -> Identifier: ...
+def ChiseledResinBricks() -> Identifier: ...
+def ChiseledSandstone() -> Identifier: ...
+def ChiseledStoneBricks() -> Identifier: ...
+def ChiseledSulfur() -> Identifier: ...
+def ChiseledTuff() -> Identifier: ...
+def ChiseledTuffBricks() -> Identifier: ...
+def ChorusFlower(
+    **states: Unpack[ChorusFlowerStates],
+) -> Identifier | BlockDescriptor: ...
+def ChorusPlant(
+    **states: Unpack[ChorusPlantStates],
+) -> Identifier | BlockDescriptor: ...
+def Cinnabar() -> Identifier: ...
+def CinnabarBrickDoubleSlab(
+    **states: Unpack[CinnabarBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarBrickSlab(
+    **states: Unpack[CinnabarBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarBrickStairs(
+    **states: Unpack[CinnabarBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarBrickWall(
+    **states: Unpack[CinnabarBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarBricks() -> Identifier: ...
+def CinnabarDoubleSlab(
+    **states: Unpack[CinnabarDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarSlab(
+    **states: Unpack[CinnabarSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarStairs(
+    **states: Unpack[CinnabarStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CinnabarWall(
+    **states: Unpack[CinnabarWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Clay() -> Identifier: ...
+def ClosedEyeblossom() -> Identifier: ...
+def CoalBlock() -> Identifier: ...
+def CoalOre() -> Identifier: ...
+def CoarseDirt() -> Identifier: ...
+def CobbledDeepslate() -> Identifier: ...
+def CobbledDeepslateDoubleSlab(
+    **states: Unpack[CobbledDeepslateDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CobbledDeepslateSlab(
+    **states: Unpack[CobbledDeepslateSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CobbledDeepslateStairs(
+    **states: Unpack[CobbledDeepslateStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CobbledDeepslateWall(
+    **states: Unpack[CobbledDeepslateWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Cobblestone() -> Identifier: ...
+def CobblestoneDoubleSlab(
+    **states: Unpack[CobblestoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CobblestoneSlab(
+    **states: Unpack[CobblestoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CobblestoneWall(
+    **states: Unpack[CobblestoneWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Cocoa(**states: Unpack[CocoaStates]) -> Identifier | BlockDescriptor: ...
+def ColoredTorchBlue(
+    **states: Unpack[ColoredTorchBlueStates],
+) -> Identifier | BlockDescriptor: ...
+def ColoredTorchGreen(
+    **states: Unpack[ColoredTorchGreenStates],
+) -> Identifier | BlockDescriptor: ...
+def ColoredTorchPurple(
+    **states: Unpack[ColoredTorchPurpleStates],
+) -> Identifier | BlockDescriptor: ...
+def ColoredTorchRed(
+    **states: Unpack[ColoredTorchRedStates],
+) -> Identifier | BlockDescriptor: ...
+def CommandBlock(
+    **states: Unpack[CommandBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def Composter(**states: Unpack[ComposterStates]) -> Identifier | BlockDescriptor: ...
 def CompoundCreator(
     **states: Unpack[CompoundCreatorStates],
-) -> MinecraftBlockDescriptor: ...
-def Element0() -> MinecraftBlockDescriptor: ...
-def Element1() -> MinecraftBlockDescriptor: ...
-def Element10() -> MinecraftBlockDescriptor: ...
-def Element100() -> MinecraftBlockDescriptor: ...
-def Element101() -> MinecraftBlockDescriptor: ...
-def Element102() -> MinecraftBlockDescriptor: ...
-def Element103() -> MinecraftBlockDescriptor: ...
-def Element104() -> MinecraftBlockDescriptor: ...
-def Element105() -> MinecraftBlockDescriptor: ...
-def Element106() -> MinecraftBlockDescriptor: ...
-def Element107() -> MinecraftBlockDescriptor: ...
-def Element108() -> MinecraftBlockDescriptor: ...
-def Element109() -> MinecraftBlockDescriptor: ...
-def Element11() -> MinecraftBlockDescriptor: ...
-def Element110() -> MinecraftBlockDescriptor: ...
-def Element111() -> MinecraftBlockDescriptor: ...
-def Element112() -> MinecraftBlockDescriptor: ...
-def Element113() -> MinecraftBlockDescriptor: ...
-def Element114() -> MinecraftBlockDescriptor: ...
-def Element115() -> MinecraftBlockDescriptor: ...
-def Element116() -> MinecraftBlockDescriptor: ...
-def Element117() -> MinecraftBlockDescriptor: ...
-def Element118() -> MinecraftBlockDescriptor: ...
-def Element12() -> MinecraftBlockDescriptor: ...
-def Element13() -> MinecraftBlockDescriptor: ...
-def Element14() -> MinecraftBlockDescriptor: ...
-def Element15() -> MinecraftBlockDescriptor: ...
-def Element16() -> MinecraftBlockDescriptor: ...
-def Element17() -> MinecraftBlockDescriptor: ...
-def Element18() -> MinecraftBlockDescriptor: ...
-def Element19() -> MinecraftBlockDescriptor: ...
-def Element2() -> MinecraftBlockDescriptor: ...
-def Element20() -> MinecraftBlockDescriptor: ...
-def Element21() -> MinecraftBlockDescriptor: ...
-def Element22() -> MinecraftBlockDescriptor: ...
-def Element23() -> MinecraftBlockDescriptor: ...
-def Element24() -> MinecraftBlockDescriptor: ...
-def Element25() -> MinecraftBlockDescriptor: ...
-def Element26() -> MinecraftBlockDescriptor: ...
-def Element27() -> MinecraftBlockDescriptor: ...
-def Element28() -> MinecraftBlockDescriptor: ...
-def Element29() -> MinecraftBlockDescriptor: ...
-def Element3() -> MinecraftBlockDescriptor: ...
-def Element30() -> MinecraftBlockDescriptor: ...
-def Element31() -> MinecraftBlockDescriptor: ...
-def Element32() -> MinecraftBlockDescriptor: ...
-def Element33() -> MinecraftBlockDescriptor: ...
-def Element34() -> MinecraftBlockDescriptor: ...
-def Element35() -> MinecraftBlockDescriptor: ...
-def Element36() -> MinecraftBlockDescriptor: ...
-def Element37() -> MinecraftBlockDescriptor: ...
-def Element38() -> MinecraftBlockDescriptor: ...
-def Element39() -> MinecraftBlockDescriptor: ...
-def Element4() -> MinecraftBlockDescriptor: ...
-def Element40() -> MinecraftBlockDescriptor: ...
-def Element41() -> MinecraftBlockDescriptor: ...
-def Element42() -> MinecraftBlockDescriptor: ...
-def Element43() -> MinecraftBlockDescriptor: ...
-def Element44() -> MinecraftBlockDescriptor: ...
-def Element45() -> MinecraftBlockDescriptor: ...
-def Element46() -> MinecraftBlockDescriptor: ...
-def Element47() -> MinecraftBlockDescriptor: ...
-def Element48() -> MinecraftBlockDescriptor: ...
-def Element49() -> MinecraftBlockDescriptor: ...
-def Element5() -> MinecraftBlockDescriptor: ...
-def Element50() -> MinecraftBlockDescriptor: ...
-def Element51() -> MinecraftBlockDescriptor: ...
-def Element52() -> MinecraftBlockDescriptor: ...
-def Element53() -> MinecraftBlockDescriptor: ...
-def Element54() -> MinecraftBlockDescriptor: ...
-def Element55() -> MinecraftBlockDescriptor: ...
-def Element56() -> MinecraftBlockDescriptor: ...
-def Element57() -> MinecraftBlockDescriptor: ...
-def Element58() -> MinecraftBlockDescriptor: ...
-def Element59() -> MinecraftBlockDescriptor: ...
-def Element6() -> MinecraftBlockDescriptor: ...
-def Element60() -> MinecraftBlockDescriptor: ...
-def Element61() -> MinecraftBlockDescriptor: ...
-def Element62() -> MinecraftBlockDescriptor: ...
-def Element63() -> MinecraftBlockDescriptor: ...
-def Element64() -> MinecraftBlockDescriptor: ...
-def Element65() -> MinecraftBlockDescriptor: ...
-def Element66() -> MinecraftBlockDescriptor: ...
-def Element67() -> MinecraftBlockDescriptor: ...
-def Element68() -> MinecraftBlockDescriptor: ...
-def Element69() -> MinecraftBlockDescriptor: ...
-def Element7() -> MinecraftBlockDescriptor: ...
-def Element70() -> MinecraftBlockDescriptor: ...
-def Element71() -> MinecraftBlockDescriptor: ...
-def Element72() -> MinecraftBlockDescriptor: ...
-def Element73() -> MinecraftBlockDescriptor: ...
-def Element74() -> MinecraftBlockDescriptor: ...
-def Element75() -> MinecraftBlockDescriptor: ...
-def Element76() -> MinecraftBlockDescriptor: ...
-def Element77() -> MinecraftBlockDescriptor: ...
-def Element78() -> MinecraftBlockDescriptor: ...
-def Element79() -> MinecraftBlockDescriptor: ...
-def Element8() -> MinecraftBlockDescriptor: ...
-def Element80() -> MinecraftBlockDescriptor: ...
-def Element81() -> MinecraftBlockDescriptor: ...
-def Element82() -> MinecraftBlockDescriptor: ...
-def Element83() -> MinecraftBlockDescriptor: ...
-def Element84() -> MinecraftBlockDescriptor: ...
-def Element85() -> MinecraftBlockDescriptor: ...
-def Element86() -> MinecraftBlockDescriptor: ...
-def Element87() -> MinecraftBlockDescriptor: ...
-def Element88() -> MinecraftBlockDescriptor: ...
-def Element89() -> MinecraftBlockDescriptor: ...
-def Element9() -> MinecraftBlockDescriptor: ...
-def Element90() -> MinecraftBlockDescriptor: ...
-def Element91() -> MinecraftBlockDescriptor: ...
-def Element92() -> MinecraftBlockDescriptor: ...
-def Element93() -> MinecraftBlockDescriptor: ...
-def Element94() -> MinecraftBlockDescriptor: ...
-def Element95() -> MinecraftBlockDescriptor: ...
-def Element96() -> MinecraftBlockDescriptor: ...
-def Element97() -> MinecraftBlockDescriptor: ...
-def Element98() -> MinecraftBlockDescriptor: ...
-def Element99() -> MinecraftBlockDescriptor: ...
-def ElementConstructor(
-    **states: Unpack[CompoundCreatorStates],
-) -> MinecraftBlockDescriptor: ...
-def MaterialReducer(
-    **states: Unpack[CompoundCreatorStates],
-) -> MinecraftBlockDescriptor: ...
-
-# COPPER SETS
-
-# Copper Blocks & Components
-def ChiseledCopper() -> MinecraftBlockDescriptor: ...
-def CopperBars(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def CopperBlock() -> MinecraftBlockDescriptor: ...
-def CopperBulb(**states: Unpack[CopperBulbStates]) -> MinecraftBlockDescriptor: ...
-def CopperChain(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
+) -> Identifier | BlockDescriptor: ...
+def Conduit() -> Identifier: ...
+def CopperBars(**states: Unpack[CopperBarsStates]) -> Identifier | BlockDescriptor: ...
+def CopperBlock() -> Identifier: ...
+def CopperBulb(**states: Unpack[CopperBulbStates]) -> Identifier | BlockDescriptor: ...
+def CopperChain(
+    **states: Unpack[CopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def CopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def CopperDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[CopperChestStates],
+) -> Identifier | BlockDescriptor: ...
+def CopperDoor(**states: Unpack[CopperDoorStates]) -> Identifier | BlockDescriptor: ...
 def CopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def CopperGrate() -> MinecraftBlockDescriptor: ...
-def CopperLantern(**states: Unpack[LanternStates]) -> MinecraftBlockDescriptor: ...
-def CopperOre() -> MinecraftBlockDescriptor: ...
-def CopperTorch(**states: Unpack[TorchStates]) -> MinecraftBlockDescriptor: ...
-def CopperTrapdoor(**states: Unpack[TrapdoorStates]) -> MinecraftBlockDescriptor: ...
-def CutCopper() -> MinecraftBlockDescriptor: ...
-def CutCopperSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def CutCopperStairs(**states: Unpack[StairsStates]) -> MinecraftBlockDescriptor: ...
-def DeepslateCopperOre() -> MinecraftBlockDescriptor: ...
-def DoubleCutCopperSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
-def LightningRod(**states: Unpack[LightningRodStates]) -> MinecraftBlockDescriptor: ...
-def RawCopperBlock() -> MinecraftBlockDescriptor: ...
-
-# Exposed Copper
-def ExposedChiseledCopper() -> MinecraftBlockDescriptor: ...
-def ExposedCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[CopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def CopperGrate() -> Identifier: ...
+def CopperLantern(
+    **states: Unpack[CopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
+def CopperOre() -> Identifier: ...
+def CopperTorch(
+    **states: Unpack[CopperTorchStates],
+) -> Identifier | BlockDescriptor: ...
+def CopperTrapdoor(
+    **states: Unpack[CopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def Cornflower() -> Identifier: ...
+def CrackedDeepslateBricks() -> Identifier: ...
+def CrackedDeepslateTiles() -> Identifier: ...
+def CrackedNetherBricks() -> Identifier: ...
+def CrackedPolishedBlackstoneBricks() -> Identifier: ...
+def CrackedStoneBricks() -> Identifier: ...
+def Crafter(**states: Unpack[CrafterStates]) -> Identifier | BlockDescriptor: ...
+def CraftingTable() -> Identifier: ...
+def CreakingHeart(
+    **states: Unpack[CreakingHeartStates],
+) -> Identifier | BlockDescriptor: ...
+def CreeperHead(
+    **states: Unpack[CreeperHeadStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonButton(
+    **states: Unpack[CrimsonButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonDoor(
+    **states: Unpack[CrimsonDoorStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonDoubleSlab(
+    **states: Unpack[CrimsonDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonFence(
+    **states: Unpack[CrimsonFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonFenceGate(
+    **states: Unpack[CrimsonFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonFungus() -> Identifier: ...
+def CrimsonHangingSign(
+    **states: Unpack[CrimsonHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonHyphae(
+    **states: Unpack[CrimsonHyphaeStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonNylium() -> Identifier: ...
+def CrimsonPlanks() -> Identifier: ...
+def CrimsonPressurePlate(
+    **states: Unpack[CrimsonPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonRoots() -> Identifier: ...
+def CrimsonShelf(
+    **states: Unpack[CrimsonShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonSlab(
+    **states: Unpack[CrimsonSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonStairs(
+    **states: Unpack[CrimsonStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonStandingSign(
+    **states: Unpack[CrimsonStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonStem(
+    **states: Unpack[CrimsonStemStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonTrapdoor(
+    **states: Unpack[CrimsonTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def CrimsonWallSign(
+    **states: Unpack[CrimsonWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def CryingObsidian() -> Identifier: ...
+def CutCopper() -> Identifier: ...
+def CutCopperSlab(
+    **states: Unpack[CutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CutCopperStairs(
+    **states: Unpack[CutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CutRedSandstone() -> Identifier: ...
+def CutRedSandstoneDoubleSlab(
+    **states: Unpack[CutRedSandstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CutRedSandstoneSlab(
+    **states: Unpack[CutRedSandstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CutSandstone() -> Identifier: ...
+def CutSandstoneDoubleSlab(
+    **states: Unpack[CutSandstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CutSandstoneSlab(
+    **states: Unpack[CutSandstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanCandle(**states: Unpack[CyanCandleStates]) -> Identifier | BlockDescriptor: ...
+def CyanCandleCake(
+    **states: Unpack[CyanCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanCarpet() -> Identifier: ...
+def CyanConcrete() -> Identifier: ...
+def CyanConcreteDoubleSlab(
+    **states: Unpack[CyanConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanConcretePowder() -> Identifier: ...
+def CyanConcreteSlab(
+    **states: Unpack[CyanConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanConcreteStairs(
+    **states: Unpack[CyanConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanGlazedTerracotta(
+    **states: Unpack[CyanGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanShulkerBox() -> Identifier: ...
+def CyanStainedGlass() -> Identifier: ...
+def CyanStainedGlassPane(
+    **states: Unpack[CyanStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanTerracotta() -> Identifier: ...
+def CyanWool() -> Identifier: ...
+def CyanWoolDoubleSlab(
+    **states: Unpack[CyanWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanWoolSlab(
+    **states: Unpack[CyanWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def CyanWoolStairs(
+    **states: Unpack[CyanWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def DamagedAnvil(
+    **states: Unpack[DamagedAnvilStates],
+) -> Identifier | BlockDescriptor: ...
+def Dandelion() -> Identifier: ...
+def DarkOakButton(
+    **states: Unpack[DarkOakButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakDoor(
+    **states: Unpack[DarkOakDoorStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakDoubleSlab(
+    **states: Unpack[DarkOakDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakFence(
+    **states: Unpack[DarkOakFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakFenceGate(
+    **states: Unpack[DarkOakFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakHangingSign(
+    **states: Unpack[DarkOakHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakLeaves(
+    **states: Unpack[DarkOakLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakLog(**states: Unpack[DarkOakLogStates]) -> Identifier | BlockDescriptor: ...
+def DarkOakPlanks() -> Identifier: ...
+def DarkOakPressurePlate(
+    **states: Unpack[DarkOakPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakSapling(
+    **states: Unpack[DarkOakSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakShelf(
+    **states: Unpack[DarkOakShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakSlab(
+    **states: Unpack[DarkOakSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakStairs(
+    **states: Unpack[DarkOakStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakTrapdoor(
+    **states: Unpack[DarkOakTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkOakWood(
+    **states: Unpack[DarkOakWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkPrismarine() -> Identifier: ...
+def DarkPrismarineDoubleSlab(
+    **states: Unpack[DarkPrismarineDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkPrismarineSlab(
+    **states: Unpack[DarkPrismarineSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkPrismarineStairs(
+    **states: Unpack[DarkPrismarineStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkoakStandingSign(
+    **states: Unpack[DarkoakStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def DarkoakWallSign(
+    **states: Unpack[DarkoakWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def DaylightDetector(
+    **states: Unpack[DaylightDetectorStates],
+) -> Identifier | BlockDescriptor: ...
+def DaylightDetectorInverted(
+    **states: Unpack[DaylightDetectorInvertedStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadBrainCoral() -> Identifier: ...
+def DeadBrainCoralBlock() -> Identifier: ...
+def DeadBrainCoralFan(
+    **states: Unpack[DeadBrainCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadBrainCoralWallFan(
+    **states: Unpack[DeadBrainCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadBubbleCoral() -> Identifier: ...
+def DeadBubbleCoralBlock() -> Identifier: ...
+def DeadBubbleCoralFan(
+    **states: Unpack[DeadBubbleCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadBubbleCoralWallFan(
+    **states: Unpack[DeadBubbleCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadFireCoral() -> Identifier: ...
+def DeadFireCoralBlock() -> Identifier: ...
+def DeadFireCoralFan(
+    **states: Unpack[DeadFireCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadFireCoralWallFan(
+    **states: Unpack[DeadFireCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadHornCoral() -> Identifier: ...
+def DeadHornCoralBlock() -> Identifier: ...
+def DeadHornCoralFan(
+    **states: Unpack[DeadHornCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadHornCoralWallFan(
+    **states: Unpack[DeadHornCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadTubeCoral() -> Identifier: ...
+def DeadTubeCoralBlock() -> Identifier: ...
+def DeadTubeCoralFan(
+    **states: Unpack[DeadTubeCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def DeadTubeCoralWallFan(
+    **states: Unpack[DeadTubeCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def Deadbush() -> Identifier: ...
+def DecoratedPot(
+    **states: Unpack[DecoratedPotStates],
+) -> Identifier | BlockDescriptor: ...
+def Deepslate(**states: Unpack[DeepslateStates]) -> Identifier | BlockDescriptor: ...
+def DeepslateBrickDoubleSlab(
+    **states: Unpack[DeepslateBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateBrickSlab(
+    **states: Unpack[DeepslateBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateBrickStairs(
+    **states: Unpack[DeepslateBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateBrickWall(
+    **states: Unpack[DeepslateBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateBricks() -> Identifier: ...
+def DeepslateCoalOre() -> Identifier: ...
+def DeepslateCopperOre() -> Identifier: ...
+def DeepslateDiamondOre() -> Identifier: ...
+def DeepslateEmeraldOre() -> Identifier: ...
+def DeepslateGoldOre() -> Identifier: ...
+def DeepslateIronOre() -> Identifier: ...
+def DeepslateLapisOre() -> Identifier: ...
+def DeepslateRedstoneOre() -> Identifier: ...
+def DeepslateTileDoubleSlab(
+    **states: Unpack[DeepslateTileDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateTileSlab(
+    **states: Unpack[DeepslateTileSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateTileStairs(
+    **states: Unpack[DeepslateTileStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateTileWall(
+    **states: Unpack[DeepslateTileWallStates],
+) -> Identifier | BlockDescriptor: ...
+def DeepslateTiles() -> Identifier: ...
+def Deny() -> Identifier: ...
+def DetectorRail(
+    **states: Unpack[DetectorRailStates],
+) -> Identifier | BlockDescriptor: ...
+def DiamondBlock() -> Identifier: ...
+def DiamondOre() -> Identifier: ...
+def Diorite() -> Identifier: ...
+def DioriteDoubleSlab(
+    **states: Unpack[DioriteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DioriteSlab(
+    **states: Unpack[DioriteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DioriteStairs(
+    **states: Unpack[DioriteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def DioriteWall(
+    **states: Unpack[DioriteWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Dirt() -> Identifier: ...
+def DirtWithRoots() -> Identifier: ...
+def Dispenser(**states: Unpack[DispenserStates]) -> Identifier | BlockDescriptor: ...
+def DoubleCutCopperSlab(
+    **states: Unpack[DoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def DragonEgg() -> Identifier: ...
+def DragonHead(**states: Unpack[DragonHeadStates]) -> Identifier | BlockDescriptor: ...
+def DriedGhast(**states: Unpack[DriedGhastStates]) -> Identifier | BlockDescriptor: ...
+def DriedKelpBlock() -> Identifier: ...
+def DripstoneBlock() -> Identifier: ...
+def Dropper(**states: Unpack[DropperStates]) -> Identifier | BlockDescriptor: ...
+def Element0() -> Identifier: ...
+def Element1() -> Identifier: ...
+def Element10() -> Identifier: ...
+def Element100() -> Identifier: ...
+def Element101() -> Identifier: ...
+def Element102() -> Identifier: ...
+def Element103() -> Identifier: ...
+def Element104() -> Identifier: ...
+def Element105() -> Identifier: ...
+def Element106() -> Identifier: ...
+def Element107() -> Identifier: ...
+def Element108() -> Identifier: ...
+def Element109() -> Identifier: ...
+def Element11() -> Identifier: ...
+def Element110() -> Identifier: ...
+def Element111() -> Identifier: ...
+def Element112() -> Identifier: ...
+def Element113() -> Identifier: ...
+def Element114() -> Identifier: ...
+def Element115() -> Identifier: ...
+def Element116() -> Identifier: ...
+def Element117() -> Identifier: ...
+def Element118() -> Identifier: ...
+def Element12() -> Identifier: ...
+def Element13() -> Identifier: ...
+def Element14() -> Identifier: ...
+def Element15() -> Identifier: ...
+def Element16() -> Identifier: ...
+def Element17() -> Identifier: ...
+def Element18() -> Identifier: ...
+def Element19() -> Identifier: ...
+def Element2() -> Identifier: ...
+def Element20() -> Identifier: ...
+def Element21() -> Identifier: ...
+def Element22() -> Identifier: ...
+def Element23() -> Identifier: ...
+def Element24() -> Identifier: ...
+def Element25() -> Identifier: ...
+def Element26() -> Identifier: ...
+def Element27() -> Identifier: ...
+def Element28() -> Identifier: ...
+def Element29() -> Identifier: ...
+def Element3() -> Identifier: ...
+def Element30() -> Identifier: ...
+def Element31() -> Identifier: ...
+def Element32() -> Identifier: ...
+def Element33() -> Identifier: ...
+def Element34() -> Identifier: ...
+def Element35() -> Identifier: ...
+def Element36() -> Identifier: ...
+def Element37() -> Identifier: ...
+def Element38() -> Identifier: ...
+def Element39() -> Identifier: ...
+def Element4() -> Identifier: ...
+def Element40() -> Identifier: ...
+def Element41() -> Identifier: ...
+def Element42() -> Identifier: ...
+def Element43() -> Identifier: ...
+def Element44() -> Identifier: ...
+def Element45() -> Identifier: ...
+def Element46() -> Identifier: ...
+def Element47() -> Identifier: ...
+def Element48() -> Identifier: ...
+def Element49() -> Identifier: ...
+def Element5() -> Identifier: ...
+def Element50() -> Identifier: ...
+def Element51() -> Identifier: ...
+def Element52() -> Identifier: ...
+def Element53() -> Identifier: ...
+def Element54() -> Identifier: ...
+def Element55() -> Identifier: ...
+def Element56() -> Identifier: ...
+def Element57() -> Identifier: ...
+def Element58() -> Identifier: ...
+def Element59() -> Identifier: ...
+def Element6() -> Identifier: ...
+def Element60() -> Identifier: ...
+def Element61() -> Identifier: ...
+def Element62() -> Identifier: ...
+def Element63() -> Identifier: ...
+def Element64() -> Identifier: ...
+def Element65() -> Identifier: ...
+def Element66() -> Identifier: ...
+def Element67() -> Identifier: ...
+def Element68() -> Identifier: ...
+def Element69() -> Identifier: ...
+def Element7() -> Identifier: ...
+def Element70() -> Identifier: ...
+def Element71() -> Identifier: ...
+def Element72() -> Identifier: ...
+def Element73() -> Identifier: ...
+def Element74() -> Identifier: ...
+def Element75() -> Identifier: ...
+def Element76() -> Identifier: ...
+def Element77() -> Identifier: ...
+def Element78() -> Identifier: ...
+def Element79() -> Identifier: ...
+def Element8() -> Identifier: ...
+def Element80() -> Identifier: ...
+def Element81() -> Identifier: ...
+def Element82() -> Identifier: ...
+def Element83() -> Identifier: ...
+def Element84() -> Identifier: ...
+def Element85() -> Identifier: ...
+def Element86() -> Identifier: ...
+def Element87() -> Identifier: ...
+def Element88() -> Identifier: ...
+def Element89() -> Identifier: ...
+def Element9() -> Identifier: ...
+def Element90() -> Identifier: ...
+def Element91() -> Identifier: ...
+def Element92() -> Identifier: ...
+def Element93() -> Identifier: ...
+def Element94() -> Identifier: ...
+def Element95() -> Identifier: ...
+def Element96() -> Identifier: ...
+def Element97() -> Identifier: ...
+def Element98() -> Identifier: ...
+def Element99() -> Identifier: ...
+def ElementConstructor(
+    **states: Unpack[ElementConstructorStates],
+) -> Identifier | BlockDescriptor: ...
+def EmeraldBlock() -> Identifier: ...
+def EmeraldOre() -> Identifier: ...
+def EnchantingTable() -> Identifier: ...
+def EndBrickStairs(
+    **states: Unpack[EndBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def EndBricks() -> Identifier: ...
+def EndPortal() -> Identifier: ...
+def EndPortalFrame(
+    **states: Unpack[EndPortalFrameStates],
+) -> Identifier | BlockDescriptor: ...
+def EndRod(**states: Unpack[EndRodStates]) -> Identifier | BlockDescriptor: ...
+def EndStone() -> Identifier: ...
+def EndStoneBrickDoubleSlab(
+    **states: Unpack[EndStoneBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def EndStoneBrickSlab(
+    **states: Unpack[EndStoneBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def EndStoneBrickWall(
+    **states: Unpack[EndStoneBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def EnderChest(**states: Unpack[EnderChestStates]) -> Identifier | BlockDescriptor: ...
+def ExposedChiseledCopper() -> Identifier: ...
+def ExposedCopper() -> Identifier: ...
 def ExposedCopperBars(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedCopperBulb(
-    **states: Unpack[CopperBulbStates],
-) -> MinecraftBlockDescriptor: ...
-def ExposedCopperChain(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
+def ExposedCopperChain(
+    **states: Unpack[ExposedCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def ExposedCopperDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
+def ExposedCopperDoor(
+    **states: Unpack[ExposedCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def ExposedCopperGrate() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def ExposedCopperGrate() -> Identifier: ...
 def ExposedCopperLantern(
-    **states: Unpack[LanternStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def ExposedCutCopper() -> MinecraftBlockDescriptor: ...
-def ExposedCutCopperSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def ExposedCutCopper() -> Identifier: ...
+def ExposedCutCopperSlab(
+    **states: Unpack[ExposedCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[ExposedDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def ExposedLightningRod(
+    **states: Unpack[ExposedLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
+def Farmland(**states: Unpack[FarmlandStates]) -> Identifier | BlockDescriptor: ...
+def FenceGate(**states: Unpack[FenceGateStates]) -> Identifier | BlockDescriptor: ...
+def Fern() -> Identifier: ...
+def Fire(**states: Unpack[FireStates]) -> Identifier | BlockDescriptor: ...
+def FireCoral() -> Identifier: ...
+def FireCoralBlock() -> Identifier: ...
+def FireCoralFan(
+    **states: Unpack[FireCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def FireCoralWallFan(
+    **states: Unpack[FireCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def FireflyBush() -> Identifier: ...
+def FletchingTable() -> Identifier: ...
+def FlowerPot(**states: Unpack[FlowerPotStates]) -> Identifier | BlockDescriptor: ...
+def FloweringAzalea() -> Identifier: ...
+def FlowingLava(
+    **states: Unpack[FlowingLavaStates],
+) -> Identifier | BlockDescriptor: ...
+def FlowingWater(
+    **states: Unpack[FlowingWaterStates],
+) -> Identifier | BlockDescriptor: ...
+def Frame(**states: Unpack[FrameStates]) -> Identifier | BlockDescriptor: ...
+def FrogSpawn() -> Identifier: ...
+def FrostedIce(**states: Unpack[FrostedIceStates]) -> Identifier | BlockDescriptor: ...
+def Furnace(**states: Unpack[FurnaceStates]) -> Identifier | BlockDescriptor: ...
+def GildedBlackstone() -> Identifier: ...
+def Glass() -> Identifier: ...
+def GlassPane(**states: Unpack[GlassPaneStates]) -> Identifier | BlockDescriptor: ...
+def GlowFrame(**states: Unpack[GlowFrameStates]) -> Identifier | BlockDescriptor: ...
+def GlowLichen(**states: Unpack[GlowLichenStates]) -> Identifier | BlockDescriptor: ...
+def Glowstone() -> Identifier: ...
+def GoldBlock() -> Identifier: ...
+def GoldOre() -> Identifier: ...
+def GoldenDandelion() -> Identifier: ...
+def GoldenRail(**states: Unpack[GoldenRailStates]) -> Identifier | BlockDescriptor: ...
+def Granite() -> Identifier: ...
+def GraniteDoubleSlab(
+    **states: Unpack[GraniteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GraniteSlab(
+    **states: Unpack[GraniteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GraniteStairs(
+    **states: Unpack[GraniteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def GraniteWall(
+    **states: Unpack[GraniteWallStates],
+) -> Identifier | BlockDescriptor: ...
+def GrassBlock() -> Identifier: ...
+def GrassPath() -> Identifier: ...
+def Gravel() -> Identifier: ...
+def GrayCandle(**states: Unpack[GrayCandleStates]) -> Identifier | BlockDescriptor: ...
+def GrayCandleCake(
+    **states: Unpack[GrayCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayCarpet() -> Identifier: ...
+def GrayConcrete() -> Identifier: ...
+def GrayConcreteDoubleSlab(
+    **states: Unpack[GrayConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayConcretePowder() -> Identifier: ...
+def GrayConcreteSlab(
+    **states: Unpack[GrayConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayConcreteStairs(
+    **states: Unpack[GrayConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayGlazedTerracotta(
+    **states: Unpack[GrayGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayShulkerBox() -> Identifier: ...
+def GrayStainedGlass() -> Identifier: ...
+def GrayStainedGlassPane(
+    **states: Unpack[GrayStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayTerracotta() -> Identifier: ...
+def GrayWool() -> Identifier: ...
+def GrayWoolDoubleSlab(
+    **states: Unpack[GrayWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayWoolSlab(
+    **states: Unpack[GrayWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GrayWoolStairs(
+    **states: Unpack[GrayWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenCandle(
+    **states: Unpack[GreenCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenCandleCake(
+    **states: Unpack[GreenCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenCarpet() -> Identifier: ...
+def GreenConcrete() -> Identifier: ...
+def GreenConcreteDoubleSlab(
+    **states: Unpack[GreenConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenConcretePowder() -> Identifier: ...
+def GreenConcreteSlab(
+    **states: Unpack[GreenConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenConcreteStairs(
+    **states: Unpack[GreenConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenGlazedTerracotta(
+    **states: Unpack[GreenGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenShulkerBox() -> Identifier: ...
+def GreenStainedGlass() -> Identifier: ...
+def GreenStainedGlassPane(
+    **states: Unpack[GreenStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenTerracotta() -> Identifier: ...
+def GreenWool() -> Identifier: ...
+def GreenWoolDoubleSlab(
+    **states: Unpack[GreenWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenWoolSlab(
+    **states: Unpack[GreenWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def GreenWoolStairs(
+    **states: Unpack[GreenWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Grindstone(**states: Unpack[GrindstoneStates]) -> Identifier | BlockDescriptor: ...
+def HangingRoots() -> Identifier: ...
+def HardBlackStainedGlass() -> Identifier: ...
+def HardBlackStainedGlassPane(
+    **states: Unpack[HardBlackStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardBlueStainedGlass() -> Identifier: ...
+def HardBlueStainedGlassPane(
+    **states: Unpack[HardBlueStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardBrownStainedGlass() -> Identifier: ...
+def HardBrownStainedGlassPane(
+    **states: Unpack[HardBrownStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardCyanStainedGlass() -> Identifier: ...
+def HardCyanStainedGlassPane(
+    **states: Unpack[HardCyanStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardGlass() -> Identifier: ...
+def HardGlassPane(
+    **states: Unpack[HardGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardGrayStainedGlass() -> Identifier: ...
+def HardGrayStainedGlassPane(
+    **states: Unpack[HardGrayStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardGreenStainedGlass() -> Identifier: ...
+def HardGreenStainedGlassPane(
+    **states: Unpack[HardGreenStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardLightBlueStainedGlass() -> Identifier: ...
+def HardLightBlueStainedGlassPane(
+    **states: Unpack[HardLightBlueStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardLightGrayStainedGlass() -> Identifier: ...
+def HardLightGrayStainedGlassPane(
+    **states: Unpack[HardLightGrayStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardLimeStainedGlass() -> Identifier: ...
+def HardLimeStainedGlassPane(
+    **states: Unpack[HardLimeStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardMagentaStainedGlass() -> Identifier: ...
+def HardMagentaStainedGlassPane(
+    **states: Unpack[HardMagentaStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardOrangeStainedGlass() -> Identifier: ...
+def HardOrangeStainedGlassPane(
+    **states: Unpack[HardOrangeStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardPinkStainedGlass() -> Identifier: ...
+def HardPinkStainedGlassPane(
+    **states: Unpack[HardPinkStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardPurpleStainedGlass() -> Identifier: ...
+def HardPurpleStainedGlassPane(
+    **states: Unpack[HardPurpleStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardRedStainedGlass() -> Identifier: ...
+def HardRedStainedGlassPane(
+    **states: Unpack[HardRedStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardWhiteStainedGlass() -> Identifier: ...
+def HardWhiteStainedGlassPane(
+    **states: Unpack[HardWhiteStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardYellowStainedGlass() -> Identifier: ...
+def HardYellowStainedGlassPane(
+    **states: Unpack[HardYellowStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def HardenedClay() -> Identifier: ...
+def HayBlock(**states: Unpack[HayBlockStates]) -> Identifier | BlockDescriptor: ...
+def HeavyCore() -> Identifier: ...
+def HeavyWeightedPressurePlate(
+    **states: Unpack[HeavyWeightedPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def HoneyBlock() -> Identifier: ...
+def HoneycombBlock() -> Identifier: ...
+def Hopper(**states: Unpack[HopperStates]) -> Identifier | BlockDescriptor: ...
+def HornCoral() -> Identifier: ...
+def HornCoralBlock() -> Identifier: ...
+def HornCoralFan(
+    **states: Unpack[HornCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def HornCoralWallFan(
+    **states: Unpack[HornCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def Ice() -> Identifier: ...
+def InfestedChiseledStoneBricks() -> Identifier: ...
+def InfestedCobblestone() -> Identifier: ...
+def InfestedCrackedStoneBricks() -> Identifier: ...
+def InfestedDeepslate(
+    **states: Unpack[InfestedDeepslateStates],
+) -> Identifier | BlockDescriptor: ...
+def InfestedMossyStoneBricks() -> Identifier: ...
+def InfestedStone() -> Identifier: ...
+def InfestedStoneBricks() -> Identifier: ...
+def IronBars(**states: Unpack[IronBarsStates]) -> Identifier | BlockDescriptor: ...
+def IronBlock() -> Identifier: ...
+def IronChain(**states: Unpack[IronChainStates]) -> Identifier | BlockDescriptor: ...
+def IronDoor(**states: Unpack[IronDoorStates]) -> Identifier | BlockDescriptor: ...
+def IronOre() -> Identifier: ...
+def IronTrapdoor(
+    **states: Unpack[IronTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def Jigsaw(**states: Unpack[JigsawStates]) -> Identifier | BlockDescriptor: ...
+def Jukebox() -> Identifier: ...
+def JungleButton(
+    **states: Unpack[JungleButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleDoor(**states: Unpack[JungleDoorStates]) -> Identifier | BlockDescriptor: ...
+def JungleDoubleSlab(
+    **states: Unpack[JungleDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleFence(
+    **states: Unpack[JungleFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleFenceGate(
+    **states: Unpack[JungleFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleHangingSign(
+    **states: Unpack[JungleHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleLeaves(
+    **states: Unpack[JungleLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleLog(**states: Unpack[JungleLogStates]) -> Identifier | BlockDescriptor: ...
+def JunglePlanks() -> Identifier: ...
+def JunglePressurePlate(
+    **states: Unpack[JunglePressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleSapling(
+    **states: Unpack[JungleSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleShelf(
+    **states: Unpack[JungleShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleSlab(**states: Unpack[JungleSlabStates]) -> Identifier | BlockDescriptor: ...
+def JungleStairs(
+    **states: Unpack[JungleStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleStandingSign(
+    **states: Unpack[JungleStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleTrapdoor(
+    **states: Unpack[JungleTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleWallSign(
+    **states: Unpack[JungleWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def JungleWood(**states: Unpack[JungleWoodStates]) -> Identifier | BlockDescriptor: ...
+def Kelp(**states: Unpack[KelpStates]) -> Identifier | BlockDescriptor: ...
+def LabTable(**states: Unpack[LabTableStates]) -> Identifier | BlockDescriptor: ...
+def Ladder(**states: Unpack[LadderStates]) -> Identifier | BlockDescriptor: ...
+def Lantern(**states: Unpack[LanternStates]) -> Identifier | BlockDescriptor: ...
+def LapisBlock() -> Identifier: ...
+def LapisOre() -> Identifier: ...
+def LargeAmethystBud(
+    **states: Unpack[LargeAmethystBudStates],
+) -> Identifier | BlockDescriptor: ...
+def LargeFern(**states: Unpack[LargeFernStates]) -> Identifier | BlockDescriptor: ...
+def Lava(**states: Unpack[LavaStates]) -> Identifier | BlockDescriptor: ...
+def LeafLitter(**states: Unpack[LeafLitterStates]) -> Identifier | BlockDescriptor: ...
+def Lectern(**states: Unpack[LecternStates]) -> Identifier | BlockDescriptor: ...
+def Lever(**states: Unpack[LeverStates]) -> Identifier | BlockDescriptor: ...
+def LightBlock0() -> Identifier: ...
+def LightBlock1() -> Identifier: ...
+def LightBlock10() -> Identifier: ...
+def LightBlock11() -> Identifier: ...
+def LightBlock12() -> Identifier: ...
+def LightBlock13() -> Identifier: ...
+def LightBlock14() -> Identifier: ...
+def LightBlock15() -> Identifier: ...
+def LightBlock2() -> Identifier: ...
+def LightBlock3() -> Identifier: ...
+def LightBlock4() -> Identifier: ...
+def LightBlock5() -> Identifier: ...
+def LightBlock6() -> Identifier: ...
+def LightBlock7() -> Identifier: ...
+def LightBlock8() -> Identifier: ...
+def LightBlock9() -> Identifier: ...
+def LightBlueCandle(
+    **states: Unpack[LightBlueCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueCandleCake(
+    **states: Unpack[LightBlueCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueCarpet() -> Identifier: ...
+def LightBlueConcrete() -> Identifier: ...
+def LightBlueConcreteDoubleSlab(
+    **states: Unpack[LightBlueConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueConcretePowder() -> Identifier: ...
+def LightBlueConcreteSlab(
+    **states: Unpack[LightBlueConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueConcreteStairs(
+    **states: Unpack[LightBlueConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueGlazedTerracotta(
+    **states: Unpack[LightBlueGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueShulkerBox() -> Identifier: ...
+def LightBlueStainedGlass() -> Identifier: ...
+def LightBlueStainedGlassPane(
+    **states: Unpack[LightBlueStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueTerracotta() -> Identifier: ...
+def LightBlueWool() -> Identifier: ...
+def LightBlueWoolDoubleSlab(
+    **states: Unpack[LightBlueWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueWoolSlab(
+    **states: Unpack[LightBlueWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightBlueWoolStairs(
+    **states: Unpack[LightBlueWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayCandle(
+    **states: Unpack[LightGrayCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayCandleCake(
+    **states: Unpack[LightGrayCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayCarpet() -> Identifier: ...
+def LightGrayConcrete() -> Identifier: ...
+def LightGrayConcreteDoubleSlab(
+    **states: Unpack[LightGrayConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayConcretePowder() -> Identifier: ...
+def LightGrayConcreteSlab(
+    **states: Unpack[LightGrayConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayConcreteStairs(
+    **states: Unpack[LightGrayConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayShulkerBox() -> Identifier: ...
+def LightGrayStainedGlass() -> Identifier: ...
+def LightGrayStainedGlassPane(
+    **states: Unpack[LightGrayStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayTerracotta() -> Identifier: ...
+def LightGrayWool() -> Identifier: ...
+def LightGrayWoolDoubleSlab(
+    **states: Unpack[LightGrayWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayWoolSlab(
+    **states: Unpack[LightGrayWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LightGrayWoolStairs(
+    **states: Unpack[LightGrayWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def LightWeightedPressurePlate(
+    **states: Unpack[LightWeightedPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def LightningRod(
     **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Oxidized Copper
-def OxidizedChiseledCopper() -> MinecraftBlockDescriptor: ...
-def OxidizedCopper() -> MinecraftBlockDescriptor: ...
+) -> Identifier | BlockDescriptor: ...
+def Lilac(**states: Unpack[LilacStates]) -> Identifier | BlockDescriptor: ...
+def LilyOfTheValley() -> Identifier: ...
+def LimeCandle(**states: Unpack[LimeCandleStates]) -> Identifier | BlockDescriptor: ...
+def LimeCandleCake(
+    **states: Unpack[LimeCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeCarpet() -> Identifier: ...
+def LimeConcrete() -> Identifier: ...
+def LimeConcreteDoubleSlab(
+    **states: Unpack[LimeConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeConcretePowder() -> Identifier: ...
+def LimeConcreteSlab(
+    **states: Unpack[LimeConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeConcreteStairs(
+    **states: Unpack[LimeConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeGlazedTerracotta(
+    **states: Unpack[LimeGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeShulkerBox() -> Identifier: ...
+def LimeStainedGlass() -> Identifier: ...
+def LimeStainedGlassPane(
+    **states: Unpack[LimeStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeTerracotta() -> Identifier: ...
+def LimeWool() -> Identifier: ...
+def LimeWoolDoubleSlab(
+    **states: Unpack[LimeWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeWoolSlab(
+    **states: Unpack[LimeWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def LimeWoolStairs(
+    **states: Unpack[LimeWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def LitBlastFurnace(
+    **states: Unpack[LitBlastFurnaceStates],
+) -> Identifier | BlockDescriptor: ...
+def LitDeepslateRedstoneOre() -> Identifier: ...
+def LitFurnace(**states: Unpack[LitFurnaceStates]) -> Identifier | BlockDescriptor: ...
+def LitPumpkin(**states: Unpack[LitPumpkinStates]) -> Identifier | BlockDescriptor: ...
+def LitRedstoneLamp() -> Identifier: ...
+def LitRedstoneOre() -> Identifier: ...
+def LitSmoker(**states: Unpack[LitSmokerStates]) -> Identifier | BlockDescriptor: ...
+def Lodestone() -> Identifier: ...
+def Loom(**states: Unpack[LoomStates]) -> Identifier | BlockDescriptor: ...
+def MagentaCandle(
+    **states: Unpack[MagentaCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaCandleCake(
+    **states: Unpack[MagentaCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaCarpet() -> Identifier: ...
+def MagentaConcrete() -> Identifier: ...
+def MagentaConcreteDoubleSlab(
+    **states: Unpack[MagentaConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaConcretePowder() -> Identifier: ...
+def MagentaConcreteSlab(
+    **states: Unpack[MagentaConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaConcreteStairs(
+    **states: Unpack[MagentaConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaGlazedTerracotta(
+    **states: Unpack[MagentaGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaShulkerBox() -> Identifier: ...
+def MagentaStainedGlass() -> Identifier: ...
+def MagentaStainedGlassPane(
+    **states: Unpack[MagentaStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaTerracotta() -> Identifier: ...
+def MagentaWool() -> Identifier: ...
+def MagentaWoolDoubleSlab(
+    **states: Unpack[MagentaWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaWoolSlab(
+    **states: Unpack[MagentaWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MagentaWoolStairs(
+    **states: Unpack[MagentaWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Magma() -> Identifier: ...
+def MangroveButton(
+    **states: Unpack[MangroveButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveDoor(
+    **states: Unpack[MangroveDoorStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveDoubleSlab(
+    **states: Unpack[MangroveDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveFence(
+    **states: Unpack[MangroveFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveFenceGate(
+    **states: Unpack[MangroveFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveHangingSign(
+    **states: Unpack[MangroveHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveLeaves(
+    **states: Unpack[MangroveLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveLog(
+    **states: Unpack[MangroveLogStates],
+) -> Identifier | BlockDescriptor: ...
+def MangrovePlanks() -> Identifier: ...
+def MangrovePressurePlate(
+    **states: Unpack[MangrovePressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def MangrovePropagule(
+    **states: Unpack[MangrovePropaguleStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveRoots() -> Identifier: ...
+def MangroveShelf(
+    **states: Unpack[MangroveShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveSlab(
+    **states: Unpack[MangroveSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveStairs(
+    **states: Unpack[MangroveStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveStandingSign(
+    **states: Unpack[MangroveStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveTrapdoor(
+    **states: Unpack[MangroveTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveWallSign(
+    **states: Unpack[MangroveWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def MangroveWood(
+    **states: Unpack[MangroveWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def MaterialReducer(
+    **states: Unpack[MaterialReducerStates],
+) -> Identifier | BlockDescriptor: ...
+def MediumAmethystBud(
+    **states: Unpack[MediumAmethystBudStates],
+) -> Identifier | BlockDescriptor: ...
+def MelonBlock() -> Identifier: ...
+def MelonStem(**states: Unpack[MelonStemStates]) -> Identifier | BlockDescriptor: ...
+def MobSpawner() -> Identifier: ...
+def MossBlock() -> Identifier: ...
+def MossCarpet() -> Identifier: ...
+def MossyCobblestone() -> Identifier: ...
+def MossyCobblestoneDoubleSlab(
+    **states: Unpack[MossyCobblestoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyCobblestoneSlab(
+    **states: Unpack[MossyCobblestoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyCobblestoneStairs(
+    **states: Unpack[MossyCobblestoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyCobblestoneWall(
+    **states: Unpack[MossyCobblestoneWallStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyStoneBrickDoubleSlab(
+    **states: Unpack[MossyStoneBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyStoneBrickSlab(
+    **states: Unpack[MossyStoneBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyStoneBrickStairs(
+    **states: Unpack[MossyStoneBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyStoneBrickWall(
+    **states: Unpack[MossyStoneBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def MossyStoneBricks() -> Identifier: ...
+def Mud() -> Identifier: ...
+def MudBrickDoubleSlab(
+    **states: Unpack[MudBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MudBrickSlab(
+    **states: Unpack[MudBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def MudBrickStairs(
+    **states: Unpack[MudBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def MudBrickWall(
+    **states: Unpack[MudBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def MudBricks() -> Identifier: ...
+def MuddyMangroveRoots(
+    **states: Unpack[MuddyMangroveRootsStates],
+) -> Identifier | BlockDescriptor: ...
+def MushroomStem(
+    **states: Unpack[MushroomStemStates],
+) -> Identifier | BlockDescriptor: ...
+def Mycelium() -> Identifier: ...
+def NetherBrick() -> Identifier: ...
+def NetherBrickDoubleSlab(
+    **states: Unpack[NetherBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def NetherBrickFence(
+    **states: Unpack[NetherBrickFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def NetherBrickSlab(
+    **states: Unpack[NetherBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def NetherBrickStairs(
+    **states: Unpack[NetherBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def NetherBrickWall(
+    **states: Unpack[NetherBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def NetherGoldOre() -> Identifier: ...
+def NetherSprouts() -> Identifier: ...
+def NetherWart(**states: Unpack[NetherWartStates]) -> Identifier | BlockDescriptor: ...
+def NetherWartBlock() -> Identifier: ...
+def NetheriteBlock() -> Identifier: ...
+def Netherrack() -> Identifier: ...
+def NormalStoneDoubleSlab(
+    **states: Unpack[NormalStoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def NormalStoneSlab(
+    **states: Unpack[NormalStoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def NormalStoneStairs(
+    **states: Unpack[NormalStoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Noteblock() -> Identifier: ...
+def OakDoubleSlab(
+    **states: Unpack[OakDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def OakFence(**states: Unpack[OakFenceStates]) -> Identifier | BlockDescriptor: ...
+def OakHangingSign(
+    **states: Unpack[OakHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def OakLeaves(**states: Unpack[OakLeavesStates]) -> Identifier | BlockDescriptor: ...
+def OakLog(**states: Unpack[OakLogStates]) -> Identifier | BlockDescriptor: ...
+def OakPlanks() -> Identifier: ...
+def OakSapling(**states: Unpack[OakSaplingStates]) -> Identifier | BlockDescriptor: ...
+def OakShelf(**states: Unpack[OakShelfStates]) -> Identifier | BlockDescriptor: ...
+def OakSlab(**states: Unpack[OakSlabStates]) -> Identifier | BlockDescriptor: ...
+def OakStairs(**states: Unpack[OakStairsStates]) -> Identifier | BlockDescriptor: ...
+def OakWood(**states: Unpack[OakWoodStates]) -> Identifier | BlockDescriptor: ...
+def Observer(**states: Unpack[ObserverStates]) -> Identifier | BlockDescriptor: ...
+def Obsidian() -> Identifier: ...
+def OchreFroglight(
+    **states: Unpack[OchreFroglightStates],
+) -> Identifier | BlockDescriptor: ...
+def OpenEyeblossom() -> Identifier: ...
+def OrangeCandle(
+    **states: Unpack[OrangeCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeCandleCake(
+    **states: Unpack[OrangeCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeCarpet() -> Identifier: ...
+def OrangeConcrete() -> Identifier: ...
+def OrangeConcreteDoubleSlab(
+    **states: Unpack[OrangeConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeConcretePowder() -> Identifier: ...
+def OrangeConcreteSlab(
+    **states: Unpack[OrangeConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeConcreteStairs(
+    **states: Unpack[OrangeConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeGlazedTerracotta(
+    **states: Unpack[OrangeGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangePoplarLeaves(
+    **states: Unpack[OrangePoplarLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeShulkerBox() -> Identifier: ...
+def OrangeStainedGlass() -> Identifier: ...
+def OrangeStainedGlassPane(
+    **states: Unpack[OrangeStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeTerracotta() -> Identifier: ...
+def OrangeTulip() -> Identifier: ...
+def OrangeWool() -> Identifier: ...
+def OrangeWoolDoubleSlab(
+    **states: Unpack[OrangeWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeWoolSlab(
+    **states: Unpack[OrangeWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def OrangeWoolStairs(
+    **states: Unpack[OrangeWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def OxeyeDaisy() -> Identifier: ...
+def OxidizedChiseledCopper() -> Identifier: ...
+def OxidizedCopper() -> Identifier: ...
 def OxidizedCopperBars(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedCopperBulb(
-    **states: Unpack[CopperBulbStates],
-) -> MinecraftBlockDescriptor: ...
-def OxidizedCopperChain(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
+def OxidizedCopperChain(
+    **states: Unpack[OxidizedCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def OxidizedCopperDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
+def OxidizedCopperDoor(
+    **states: Unpack[OxidizedCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def OxidizedCopperGrate() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def OxidizedCopperGrate() -> Identifier: ...
 def OxidizedCopperLantern(
-    **states: Unpack[LanternStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def OxidizedCutCopper() -> MinecraftBlockDescriptor: ...
-def OxidizedCutCopperSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def OxidizedCutCopper() -> Identifier: ...
+def OxidizedCutCopperSlab(
+    **states: Unpack[OxidizedCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def OxidizedLightningRod(
-    **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Waxed Copper Variants
-def WaxedChiseledCopper() -> MinecraftBlockDescriptor: ...
-def WaxedCopper() -> MinecraftBlockDescriptor: ...
-def WaxedCopperBars(**states: Unpack[ConnectionStates]) -> MinecraftBlockDescriptor: ...
-def WaxedCopperBulb(**states: Unpack[CopperBulbStates]) -> MinecraftBlockDescriptor: ...
-def WaxedCopperChain(**states: Unpack[PillarStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[OxidizedLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
+def PackedIce() -> Identifier: ...
+def PackedMud() -> Identifier: ...
+def PaleHangingMoss(
+    **states: Unpack[PaleHangingMossStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleMossBlock() -> Identifier: ...
+def PaleMossCarpet(
+    **states: Unpack[PaleMossCarpetStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakButton(
+    **states: Unpack[PaleOakButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakDoor(
+    **states: Unpack[PaleOakDoorStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakDoubleSlab(
+    **states: Unpack[PaleOakDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakFence(
+    **states: Unpack[PaleOakFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakFenceGate(
+    **states: Unpack[PaleOakFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakHangingSign(
+    **states: Unpack[PaleOakHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakLeaves(
+    **states: Unpack[PaleOakLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakLog(**states: Unpack[PaleOakLogStates]) -> Identifier | BlockDescriptor: ...
+def PaleOakPlanks() -> Identifier: ...
+def PaleOakPressurePlate(
+    **states: Unpack[PaleOakPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakSapling(
+    **states: Unpack[PaleOakSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakShelf(
+    **states: Unpack[PaleOakShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakSlab(
+    **states: Unpack[PaleOakSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakStairs(
+    **states: Unpack[PaleOakStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakStandingSign(
+    **states: Unpack[PaleOakStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakTrapdoor(
+    **states: Unpack[PaleOakTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakWallSign(
+    **states: Unpack[PaleOakWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def PaleOakWood(
+    **states: Unpack[PaleOakWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def PearlescentFroglight(
+    **states: Unpack[PearlescentFroglightStates],
+) -> Identifier | BlockDescriptor: ...
+def Peony(**states: Unpack[PeonyStates]) -> Identifier | BlockDescriptor: ...
+def PetrifiedOakDoubleSlab(
+    **states: Unpack[PetrifiedOakDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PetrifiedOakSlab(
+    **states: Unpack[PetrifiedOakSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PiglinHead(**states: Unpack[PiglinHeadStates]) -> Identifier | BlockDescriptor: ...
+def PinkCandle(**states: Unpack[PinkCandleStates]) -> Identifier | BlockDescriptor: ...
+def PinkCandleCake(
+    **states: Unpack[PinkCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkCarpet() -> Identifier: ...
+def PinkConcrete() -> Identifier: ...
+def PinkConcreteDoubleSlab(
+    **states: Unpack[PinkConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkConcretePowder() -> Identifier: ...
+def PinkConcreteSlab(
+    **states: Unpack[PinkConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkConcreteStairs(
+    **states: Unpack[PinkConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkGlazedTerracotta(
+    **states: Unpack[PinkGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkPetals(**states: Unpack[PinkPetalsStates]) -> Identifier | BlockDescriptor: ...
+def PinkShulkerBox() -> Identifier: ...
+def PinkStainedGlass() -> Identifier: ...
+def PinkStainedGlassPane(
+    **states: Unpack[PinkStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkTerracotta() -> Identifier: ...
+def PinkTulip() -> Identifier: ...
+def PinkWool() -> Identifier: ...
+def PinkWoolDoubleSlab(
+    **states: Unpack[PinkWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkWoolSlab(
+    **states: Unpack[PinkWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PinkWoolStairs(
+    **states: Unpack[PinkWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Piston(**states: Unpack[PistonStates]) -> Identifier | BlockDescriptor: ...
+def PistonArmCollision(
+    **states: Unpack[PistonArmCollisionStates],
+) -> Identifier | BlockDescriptor: ...
+def PitcherCrop(
+    **states: Unpack[PitcherCropStates],
+) -> Identifier | BlockDescriptor: ...
+def PitcherPlant(
+    **states: Unpack[PitcherPlantStates],
+) -> Identifier | BlockDescriptor: ...
+def PlayerHead(**states: Unpack[PlayerHeadStates]) -> Identifier | BlockDescriptor: ...
+def Podzol() -> Identifier: ...
+def PointedDripstone(
+    **states: Unpack[PointedDripstoneStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedAndesite() -> Identifier: ...
+def PolishedAndesiteDoubleSlab(
+    **states: Unpack[PolishedAndesiteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedAndesiteSlab(
+    **states: Unpack[PolishedAndesiteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedAndesiteStairs(
+    **states: Unpack[PolishedAndesiteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBasalt(
+    **states: Unpack[PolishedBasaltStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstone() -> Identifier: ...
+def PolishedBlackstoneBrickDoubleSlab(
+    **states: Unpack[PolishedBlackstoneBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneBrickSlab(
+    **states: Unpack[PolishedBlackstoneBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneBrickStairs(
+    **states: Unpack[PolishedBlackstoneBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneBrickWall(
+    **states: Unpack[PolishedBlackstoneBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneBricks() -> Identifier: ...
+def PolishedBlackstoneButton(
+    **states: Unpack[PolishedBlackstoneButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneDoubleSlab(
+    **states: Unpack[PolishedBlackstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstonePressurePlate(
+    **states: Unpack[PolishedBlackstonePressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneSlab(
+    **states: Unpack[PolishedBlackstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneStairs(
+    **states: Unpack[PolishedBlackstoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedBlackstoneWall(
+    **states: Unpack[PolishedBlackstoneWallStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedCinnabar() -> Identifier: ...
+def PolishedCinnabarDoubleSlab(
+    **states: Unpack[PolishedCinnabarDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedCinnabarSlab(
+    **states: Unpack[PolishedCinnabarSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedCinnabarStairs(
+    **states: Unpack[PolishedCinnabarStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedCinnabarWall(
+    **states: Unpack[PolishedCinnabarWallStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDeepslate() -> Identifier: ...
+def PolishedDeepslateDoubleSlab(
+    **states: Unpack[PolishedDeepslateDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDeepslateSlab(
+    **states: Unpack[PolishedDeepslateSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDeepslateStairs(
+    **states: Unpack[PolishedDeepslateStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDeepslateWall(
+    **states: Unpack[PolishedDeepslateWallStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDiorite() -> Identifier: ...
+def PolishedDioriteDoubleSlab(
+    **states: Unpack[PolishedDioriteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDioriteSlab(
+    **states: Unpack[PolishedDioriteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedDioriteStairs(
+    **states: Unpack[PolishedDioriteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedGranite() -> Identifier: ...
+def PolishedGraniteDoubleSlab(
+    **states: Unpack[PolishedGraniteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedGraniteSlab(
+    **states: Unpack[PolishedGraniteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedGraniteStairs(
+    **states: Unpack[PolishedGraniteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedSulfur() -> Identifier: ...
+def PolishedSulfurDoubleSlab(
+    **states: Unpack[PolishedSulfurDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedSulfurSlab(
+    **states: Unpack[PolishedSulfurSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedSulfurStairs(
+    **states: Unpack[PolishedSulfurStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedSulfurWall(
+    **states: Unpack[PolishedSulfurWallStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedTuff() -> Identifier: ...
+def PolishedTuffDoubleSlab(
+    **states: Unpack[PolishedTuffDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedTuffSlab(
+    **states: Unpack[PolishedTuffSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedTuffStairs(
+    **states: Unpack[PolishedTuffStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PolishedTuffWall(
+    **states: Unpack[PolishedTuffWallStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarButton(
+    **states: Unpack[PoplarButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarDoor(**states: Unpack[PoplarDoorStates]) -> Identifier | BlockDescriptor: ...
+def PoplarDoubleSlab(
+    **states: Unpack[PoplarDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarFence(
+    **states: Unpack[PoplarFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarFenceGate(
+    **states: Unpack[PoplarFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarHangingSign(
+    **states: Unpack[PoplarHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarLog(**states: Unpack[PoplarLogStates]) -> Identifier | BlockDescriptor: ...
+def PoplarPlanks() -> Identifier: ...
+def PoplarPressurePlate(
+    **states: Unpack[PoplarPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarSapling(
+    **states: Unpack[PoplarSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarShelf(
+    **states: Unpack[PoplarShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarSlab(**states: Unpack[PoplarSlabStates]) -> Identifier | BlockDescriptor: ...
+def PoplarStairs(
+    **states: Unpack[PoplarStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarStandingSign(
+    **states: Unpack[PoplarStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarTrapdoor(
+    **states: Unpack[PoplarTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarWallSign(
+    **states: Unpack[PoplarWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def PoplarWood(**states: Unpack[PoplarWoodStates]) -> Identifier | BlockDescriptor: ...
+def Poppy() -> Identifier: ...
+def Portal(**states: Unpack[PortalStates]) -> Identifier | BlockDescriptor: ...
+def Potatoes(**states: Unpack[PotatoesStates]) -> Identifier | BlockDescriptor: ...
+def PotentSulfur(
+    **states: Unpack[PotentSulfurStates],
+) -> Identifier | BlockDescriptor: ...
+def PowderSnow() -> Identifier: ...
+def PoweredComparator(
+    **states: Unpack[PoweredComparatorStates],
+) -> Identifier | BlockDescriptor: ...
+def PoweredRepeater(
+    **states: Unpack[PoweredRepeaterStates],
+) -> Identifier | BlockDescriptor: ...
+def Prismarine() -> Identifier: ...
+def PrismarineBrickDoubleSlab(
+    **states: Unpack[PrismarineBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PrismarineBrickSlab(
+    **states: Unpack[PrismarineBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PrismarineBricks() -> Identifier: ...
+def PrismarineBricksStairs(
+    **states: Unpack[PrismarineBricksStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PrismarineDoubleSlab(
+    **states: Unpack[PrismarineDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PrismarineSlab(
+    **states: Unpack[PrismarineSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PrismarineStairs(
+    **states: Unpack[PrismarineStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PrismarineWall(
+    **states: Unpack[PrismarineWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Pumpkin(**states: Unpack[PumpkinStates]) -> Identifier | BlockDescriptor: ...
+def PumpkinStem(
+    **states: Unpack[PumpkinStemStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleCandle(
+    **states: Unpack[PurpleCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleCandleCake(
+    **states: Unpack[PurpleCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleCarpet() -> Identifier: ...
+def PurpleConcrete() -> Identifier: ...
+def PurpleConcreteDoubleSlab(
+    **states: Unpack[PurpleConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleConcretePowder() -> Identifier: ...
+def PurpleConcreteSlab(
+    **states: Unpack[PurpleConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleConcreteStairs(
+    **states: Unpack[PurpleConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleGlazedTerracotta(
+    **states: Unpack[PurpleGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleShulkerBox() -> Identifier: ...
+def PurpleStainedGlass() -> Identifier: ...
+def PurpleStainedGlassPane(
+    **states: Unpack[PurpleStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleTerracotta() -> Identifier: ...
+def PurpleWool() -> Identifier: ...
+def PurpleWoolDoubleSlab(
+    **states: Unpack[PurpleWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleWoolSlab(
+    **states: Unpack[PurpleWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpleWoolStairs(
+    **states: Unpack[PurpleWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpurBlock(
+    **states: Unpack[PurpurBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpurDoubleSlab(
+    **states: Unpack[PurpurDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpurPillar(
+    **states: Unpack[PurpurPillarStates],
+) -> Identifier | BlockDescriptor: ...
+def PurpurSlab(**states: Unpack[PurpurSlabStates]) -> Identifier | BlockDescriptor: ...
+def PurpurStairs(
+    **states: Unpack[PurpurStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def QuartzBlock(
+    **states: Unpack[QuartzBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def QuartzBricks() -> Identifier: ...
+def QuartzDoubleSlab(
+    **states: Unpack[QuartzDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def QuartzOre() -> Identifier: ...
+def QuartzPillar(
+    **states: Unpack[QuartzPillarStates],
+) -> Identifier | BlockDescriptor: ...
+def QuartzSlab(**states: Unpack[QuartzSlabStates]) -> Identifier | BlockDescriptor: ...
+def QuartzStairs(
+    **states: Unpack[QuartzStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Rail(**states: Unpack[RailStates]) -> Identifier | BlockDescriptor: ...
+def RawCopperBlock() -> Identifier: ...
+def RawGoldBlock() -> Identifier: ...
+def RawIronBlock() -> Identifier: ...
+def RedCandle(**states: Unpack[RedCandleStates]) -> Identifier | BlockDescriptor: ...
+def RedCandleCake(
+    **states: Unpack[RedCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def RedCarpet() -> Identifier: ...
+def RedConcrete() -> Identifier: ...
+def RedConcreteDoubleSlab(
+    **states: Unpack[RedConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedConcretePowder() -> Identifier: ...
+def RedConcreteSlab(
+    **states: Unpack[RedConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedConcreteStairs(
+    **states: Unpack[RedConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def RedGlazedTerracotta(
+    **states: Unpack[RedGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def RedMushroom() -> Identifier: ...
+def RedMushroomBlock(
+    **states: Unpack[RedMushroomBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def RedNetherBrick() -> Identifier: ...
+def RedNetherBrickDoubleSlab(
+    **states: Unpack[RedNetherBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedNetherBrickSlab(
+    **states: Unpack[RedNetherBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedNetherBrickStairs(
+    **states: Unpack[RedNetherBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def RedNetherBrickWall(
+    **states: Unpack[RedNetherBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def RedPoplarLeaves(
+    **states: Unpack[RedPoplarLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def RedSand() -> Identifier: ...
+def RedSandstone() -> Identifier: ...
+def RedSandstoneDoubleSlab(
+    **states: Unpack[RedSandstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedSandstoneSlab(
+    **states: Unpack[RedSandstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedSandstoneStairs(
+    **states: Unpack[RedSandstoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def RedSandstoneWall(
+    **states: Unpack[RedSandstoneWallStates],
+) -> Identifier | BlockDescriptor: ...
+def RedShrub() -> Identifier: ...
+def RedShulkerBox() -> Identifier: ...
+def RedStainedGlass() -> Identifier: ...
+def RedStainedGlassPane(
+    **states: Unpack[RedStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def RedTerracotta() -> Identifier: ...
+def RedTulip() -> Identifier: ...
+def RedWool() -> Identifier: ...
+def RedWoolDoubleSlab(
+    **states: Unpack[RedWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedWoolSlab(
+    **states: Unpack[RedWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def RedWoolStairs(
+    **states: Unpack[RedWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def RedstoneBlock() -> Identifier: ...
+def RedstoneLamp() -> Identifier: ...
+def RedstoneOre() -> Identifier: ...
+def RedstoneTorch(
+    **states: Unpack[RedstoneTorchStates],
+) -> Identifier | BlockDescriptor: ...
+def RedstoneWire(
+    **states: Unpack[RedstoneWireStates],
+) -> Identifier | BlockDescriptor: ...
+def Reeds(**states: Unpack[ReedsStates]) -> Identifier | BlockDescriptor: ...
+def ReinforcedDeepslate() -> Identifier: ...
+def RepeatingCommandBlock(
+    **states: Unpack[RepeatingCommandBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def ResinBlock() -> Identifier: ...
+def ResinBrickDoubleSlab(
+    **states: Unpack[ResinBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def ResinBrickSlab(
+    **states: Unpack[ResinBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def ResinBrickStairs(
+    **states: Unpack[ResinBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def ResinBrickWall(
+    **states: Unpack[ResinBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def ResinBricks() -> Identifier: ...
+def ResinClump(**states: Unpack[ResinClumpStates]) -> Identifier | BlockDescriptor: ...
+def RespawnAnchor(
+    **states: Unpack[RespawnAnchorStates],
+) -> Identifier | BlockDescriptor: ...
+def RoseBush(**states: Unpack[RoseBushStates]) -> Identifier | BlockDescriptor: ...
+def Sand() -> Identifier: ...
+def Sandstone() -> Identifier: ...
+def SandstoneDoubleSlab(
+    **states: Unpack[SandstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SandstoneSlab(
+    **states: Unpack[SandstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SandstoneStairs(
+    **states: Unpack[SandstoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SandstoneWall(
+    **states: Unpack[SandstoneWallStates],
+) -> Identifier | BlockDescriptor: ...
+def Scaffolding(
+    **states: Unpack[ScaffoldingStates],
+) -> Identifier | BlockDescriptor: ...
+def Sculk() -> Identifier: ...
+def SculkCatalyst(
+    **states: Unpack[SculkCatalystStates],
+) -> Identifier | BlockDescriptor: ...
+def SculkSensor(
+    **states: Unpack[SculkSensorStates],
+) -> Identifier | BlockDescriptor: ...
+def SculkShrieker(
+    **states: Unpack[SculkShriekerStates],
+) -> Identifier | BlockDescriptor: ...
+def SculkVein(**states: Unpack[SculkVeinStates]) -> Identifier | BlockDescriptor: ...
+def SeaLantern() -> Identifier: ...
+def SeaPickle(**states: Unpack[SeaPickleStates]) -> Identifier | BlockDescriptor: ...
+def Seagrass(**states: Unpack[SeagrassStates]) -> Identifier | BlockDescriptor: ...
+def ShelfMushroom(
+    **states: Unpack[ShelfMushroomStates],
+) -> Identifier | BlockDescriptor: ...
+def ShortDryGrass() -> Identifier: ...
+def ShortGrass() -> Identifier: ...
+def Shroomlight() -> Identifier: ...
+def SilverGlazedTerracotta(
+    **states: Unpack[SilverGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def SkeletonSkull(
+    **states: Unpack[SkeletonSkullStates],
+) -> Identifier | BlockDescriptor: ...
+def Slime() -> Identifier: ...
+def SmallAmethystBud(
+    **states: Unpack[SmallAmethystBudStates],
+) -> Identifier | BlockDescriptor: ...
+def SmallDripleafBlock(
+    **states: Unpack[SmallDripleafBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def SmithingTable() -> Identifier: ...
+def Smoker(**states: Unpack[SmokerStates]) -> Identifier | BlockDescriptor: ...
+def SmoothBasalt() -> Identifier: ...
+def SmoothQuartz(
+    **states: Unpack[SmoothQuartzStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothQuartzDoubleSlab(
+    **states: Unpack[SmoothQuartzDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothQuartzSlab(
+    **states: Unpack[SmoothQuartzSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothQuartzStairs(
+    **states: Unpack[SmoothQuartzStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothRedSandstone() -> Identifier: ...
+def SmoothRedSandstoneDoubleSlab(
+    **states: Unpack[SmoothRedSandstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothRedSandstoneSlab(
+    **states: Unpack[SmoothRedSandstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothRedSandstoneStairs(
+    **states: Unpack[SmoothRedSandstoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothSandstone() -> Identifier: ...
+def SmoothSandstoneDoubleSlab(
+    **states: Unpack[SmoothSandstoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothSandstoneSlab(
+    **states: Unpack[SmoothSandstoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothSandstoneStairs(
+    **states: Unpack[SmoothSandstoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothStone() -> Identifier: ...
+def SmoothStoneDoubleSlab(
+    **states: Unpack[SmoothStoneDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SmoothStoneSlab(
+    **states: Unpack[SmoothStoneSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SnifferEgg(**states: Unpack[SnifferEggStates]) -> Identifier | BlockDescriptor: ...
+def Snow() -> Identifier: ...
+def SnowLayer(**states: Unpack[SnowLayerStates]) -> Identifier | BlockDescriptor: ...
+def SoulCampfire(
+    **states: Unpack[SoulCampfireStates],
+) -> Identifier | BlockDescriptor: ...
+def SoulFire(**states: Unpack[SoulFireStates]) -> Identifier | BlockDescriptor: ...
+def SoulLantern(
+    **states: Unpack[SoulLanternStates],
+) -> Identifier | BlockDescriptor: ...
+def SoulSand() -> Identifier: ...
+def SoulSoil() -> Identifier: ...
+def SoulTorch(**states: Unpack[SoulTorchStates]) -> Identifier | BlockDescriptor: ...
+def Sponge() -> Identifier: ...
+def SporeBlossom() -> Identifier: ...
+def SpruceButton(
+    **states: Unpack[SpruceButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceDoor(**states: Unpack[SpruceDoorStates]) -> Identifier | BlockDescriptor: ...
+def SpruceDoubleSlab(
+    **states: Unpack[SpruceDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceFence(
+    **states: Unpack[SpruceFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceFenceGate(
+    **states: Unpack[SpruceFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceHangingSign(
+    **states: Unpack[SpruceHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceLeaves(
+    **states: Unpack[SpruceLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceLog(**states: Unpack[SpruceLogStates]) -> Identifier | BlockDescriptor: ...
+def SprucePlanks() -> Identifier: ...
+def SprucePressurePlate(
+    **states: Unpack[SprucePressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceSapling(
+    **states: Unpack[SpruceSaplingStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceShelf(
+    **states: Unpack[SpruceShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceSlab(**states: Unpack[SpruceSlabStates]) -> Identifier | BlockDescriptor: ...
+def SpruceStairs(
+    **states: Unpack[SpruceStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceStandingSign(
+    **states: Unpack[SpruceStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceTrapdoor(
+    **states: Unpack[SpruceTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceWallSign(
+    **states: Unpack[SpruceWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def SpruceWood(**states: Unpack[SpruceWoodStates]) -> Identifier | BlockDescriptor: ...
+def StandingBanner(
+    **states: Unpack[StandingBannerStates],
+) -> Identifier | BlockDescriptor: ...
+def StandingSign(
+    **states: Unpack[StandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def StickyPiston(
+    **states: Unpack[StickyPistonStates],
+) -> Identifier | BlockDescriptor: ...
+def StickyPistonArmCollision(
+    **states: Unpack[StickyPistonArmCollisionStates],
+) -> Identifier | BlockDescriptor: ...
+def Stone() -> Identifier: ...
+def StoneBrickDoubleSlab(
+    **states: Unpack[StoneBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def StoneBrickSlab(
+    **states: Unpack[StoneBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def StoneBrickStairs(
+    **states: Unpack[StoneBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def StoneBrickWall(
+    **states: Unpack[StoneBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def StoneBricks() -> Identifier: ...
+def StoneButton(
+    **states: Unpack[StoneButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def StonePressurePlate(
+    **states: Unpack[StonePressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def StoneStairs(
+    **states: Unpack[StoneStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def StonecutterBlock(
+    **states: Unpack[StonecutterBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def StrawBed(**states: Unpack[StrawBedStates]) -> Identifier | BlockDescriptor: ...
+def StrippedAcaciaLog(
+    **states: Unpack[StrippedAcaciaLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedAcaciaWood(
+    **states: Unpack[StrippedAcaciaWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedBambooBlock(
+    **states: Unpack[StrippedBambooBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedBirchLog(
+    **states: Unpack[StrippedBirchLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedBirchWood(
+    **states: Unpack[StrippedBirchWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedCherryLog(
+    **states: Unpack[StrippedCherryLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedCherryWood(
+    **states: Unpack[StrippedCherryWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedCrimsonHyphae(
+    **states: Unpack[StrippedCrimsonHyphaeStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedCrimsonStem(
+    **states: Unpack[StrippedCrimsonStemStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedDarkOakLog(
+    **states: Unpack[StrippedDarkOakLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedDarkOakWood(
+    **states: Unpack[StrippedDarkOakWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedJungleLog(
+    **states: Unpack[StrippedJungleLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedJungleWood(
+    **states: Unpack[StrippedJungleWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedMangroveLog(
+    **states: Unpack[StrippedMangroveLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedMangroveWood(
+    **states: Unpack[StrippedMangroveWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedOakLog(
+    **states: Unpack[StrippedOakLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedOakWood(
+    **states: Unpack[StrippedOakWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedPaleOakLog(
+    **states: Unpack[StrippedPaleOakLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedPaleOakWood(
+    **states: Unpack[StrippedPaleOakWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedPoplarLog(
+    **states: Unpack[StrippedPoplarLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedPoplarWood(
+    **states: Unpack[StrippedPoplarWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedSpruceLog(
+    **states: Unpack[StrippedSpruceLogStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedSpruceWood(
+    **states: Unpack[StrippedSpruceWoodStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedWarpedHyphae(
+    **states: Unpack[StrippedWarpedHyphaeStates],
+) -> Identifier | BlockDescriptor: ...
+def StrippedWarpedStem(
+    **states: Unpack[StrippedWarpedStemStates],
+) -> Identifier | BlockDescriptor: ...
+def StructureBlock(
+    **states: Unpack[StructureBlockStates],
+) -> Identifier | BlockDescriptor: ...
+def StructureVoid() -> Identifier: ...
+def Sulfur() -> Identifier: ...
+def SulfurBrickDoubleSlab(
+    **states: Unpack[SulfurBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurBrickSlab(
+    **states: Unpack[SulfurBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurBrickStairs(
+    **states: Unpack[SulfurBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurBrickWall(
+    **states: Unpack[SulfurBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurBricks() -> Identifier: ...
+def SulfurDoubleSlab(
+    **states: Unpack[SulfurDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurSlab(**states: Unpack[SulfurSlabStates]) -> Identifier | BlockDescriptor: ...
+def SulfurSpike(
+    **states: Unpack[SulfurSpikeStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurStairs(
+    **states: Unpack[SulfurStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SulfurWall(**states: Unpack[SulfurWallStates]) -> Identifier | BlockDescriptor: ...
+def Sunflower(**states: Unpack[SunflowerStates]) -> Identifier | BlockDescriptor: ...
+def SuspiciousGravel(
+    **states: Unpack[SuspiciousGravelStates],
+) -> Identifier | BlockDescriptor: ...
+def SuspiciousSand(
+    **states: Unpack[SuspiciousSandStates],
+) -> Identifier | BlockDescriptor: ...
+def SweetBerryBush(
+    **states: Unpack[SweetBerryBushStates],
+) -> Identifier | BlockDescriptor: ...
+def TallDryGrass() -> Identifier: ...
+def TallGrass(**states: Unpack[TallGrassStates]) -> Identifier | BlockDescriptor: ...
+def Target() -> Identifier: ...
+def TintedGlass() -> Identifier: ...
+def Tnt(**states: Unpack[TntStates]) -> Identifier | BlockDescriptor: ...
+def Torch(**states: Unpack[TorchStates]) -> Identifier | BlockDescriptor: ...
+def Torchflower() -> Identifier: ...
+def TorchflowerCrop(
+    **states: Unpack[TorchflowerCropStates],
+) -> Identifier | BlockDescriptor: ...
+def Trapdoor(**states: Unpack[TrapdoorStates]) -> Identifier | BlockDescriptor: ...
+def TrappedChest(
+    **states: Unpack[TrappedChestStates],
+) -> Identifier | BlockDescriptor: ...
+def TrialSpawner(
+    **states: Unpack[TrialSpawnerStates],
+) -> Identifier | BlockDescriptor: ...
+def TripWire(**states: Unpack[TripWireStates]) -> Identifier | BlockDescriptor: ...
+def TripwireHook(
+    **states: Unpack[TripwireHookStates],
+) -> Identifier | BlockDescriptor: ...
+def TubeCoral() -> Identifier: ...
+def TubeCoralBlock() -> Identifier: ...
+def TubeCoralFan(
+    **states: Unpack[TubeCoralFanStates],
+) -> Identifier | BlockDescriptor: ...
+def TubeCoralWallFan(
+    **states: Unpack[TubeCoralWallFanStates],
+) -> Identifier | BlockDescriptor: ...
+def Tuff() -> Identifier: ...
+def TuffBrickDoubleSlab(
+    **states: Unpack[TuffBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def TuffBrickSlab(
+    **states: Unpack[TuffBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def TuffBrickStairs(
+    **states: Unpack[TuffBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def TuffBrickWall(
+    **states: Unpack[TuffBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def TuffBricks() -> Identifier: ...
+def TuffDoubleSlab(
+    **states: Unpack[TuffDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def TuffSlab(**states: Unpack[TuffSlabStates]) -> Identifier | BlockDescriptor: ...
+def TuffStairs(**states: Unpack[TuffStairsStates]) -> Identifier | BlockDescriptor: ...
+def TuffWall(**states: Unpack[TuffWallStates]) -> Identifier | BlockDescriptor: ...
+def TurtleEgg(**states: Unpack[TurtleEggStates]) -> Identifier | BlockDescriptor: ...
+def TwistingVines(
+    **states: Unpack[TwistingVinesStates],
+) -> Identifier | BlockDescriptor: ...
+def UnderwaterTnt(
+    **states: Unpack[UnderwaterTntStates],
+) -> Identifier | BlockDescriptor: ...
+def UnderwaterTorch(
+    **states: Unpack[UnderwaterTorchStates],
+) -> Identifier | BlockDescriptor: ...
+def UndyedShulkerBox() -> Identifier: ...
+def Unknown() -> Identifier: ...
+def UnlitRedstoneTorch(
+    **states: Unpack[UnlitRedstoneTorchStates],
+) -> Identifier | BlockDescriptor: ...
+def UnpoweredComparator(
+    **states: Unpack[UnpoweredComparatorStates],
+) -> Identifier | BlockDescriptor: ...
+def UnpoweredRepeater(
+    **states: Unpack[UnpoweredRepeaterStates],
+) -> Identifier | BlockDescriptor: ...
+def Vault(**states: Unpack[VaultStates]) -> Identifier | BlockDescriptor: ...
+def VerdantFroglight(
+    **states: Unpack[VerdantFroglightStates],
+) -> Identifier | BlockDescriptor: ...
+def Vine(**states: Unpack[VineStates]) -> Identifier | BlockDescriptor: ...
+def WallBanner(**states: Unpack[WallBannerStates]) -> Identifier | BlockDescriptor: ...
+def WallSign(**states: Unpack[WallSignStates]) -> Identifier | BlockDescriptor: ...
+def WarpedButton(
+    **states: Unpack[WarpedButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedDoor(**states: Unpack[WarpedDoorStates]) -> Identifier | BlockDescriptor: ...
+def WarpedDoubleSlab(
+    **states: Unpack[WarpedDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedFence(
+    **states: Unpack[WarpedFenceStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedFenceGate(
+    **states: Unpack[WarpedFenceGateStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedFungus() -> Identifier: ...
+def WarpedHangingSign(
+    **states: Unpack[WarpedHangingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedHyphae(
+    **states: Unpack[WarpedHyphaeStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedNylium() -> Identifier: ...
+def WarpedPlanks() -> Identifier: ...
+def WarpedPressurePlate(
+    **states: Unpack[WarpedPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedRoots() -> Identifier: ...
+def WarpedShelf(
+    **states: Unpack[WarpedShelfStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedSlab(**states: Unpack[WarpedSlabStates]) -> Identifier | BlockDescriptor: ...
+def WarpedStairs(
+    **states: Unpack[WarpedStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedStandingSign(
+    **states: Unpack[WarpedStandingSignStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedStem(**states: Unpack[WarpedStemStates]) -> Identifier | BlockDescriptor: ...
+def WarpedTrapdoor(
+    **states: Unpack[WarpedTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedWallSign(
+    **states: Unpack[WarpedWallSignStates],
+) -> Identifier | BlockDescriptor: ...
+def WarpedWartBlock() -> Identifier: ...
+def Water(**states: Unpack[WaterStates]) -> Identifier | BlockDescriptor: ...
+def Waterlily() -> Identifier: ...
+def WaxedChiseledCopper() -> Identifier: ...
+def WaxedCopper() -> Identifier: ...
+def WaxedCopperBars(
+    **states: Unpack[WaxedCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedCopperBulb(
+    **states: Unpack[WaxedCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedCopperChain(
+    **states: Unpack[WaxedCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedCopperDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedCopperDoor(
+    **states: Unpack[WaxedCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedCopperGrate() -> MinecraftBlockDescriptor: ...
-def WaxedCopperLantern(**states: Unpack[LanternStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedCopperGrate() -> Identifier: ...
+def WaxedCopperLantern(
+    **states: Unpack[WaxedCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedCutCopper() -> MinecraftBlockDescriptor: ...
-def WaxedCutCopperSlab(**states: Unpack[SlabStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedCutCopper() -> Identifier: ...
+def WaxedCutCopperSlab(
+    **states: Unpack[WaxedCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedExposedChiseledCopper() -> MinecraftBlockDescriptor: ...
-def WaxedExposedCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedExposedChiseledCopper() -> Identifier: ...
+def WaxedExposedCopper() -> Identifier: ...
 def WaxedExposedCopperBars(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCopperBulb(
-    **states: Unpack[CopperBulbStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCopperChain(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCopperDoor(
-    **states: Unpack[DoorStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedExposedCopperGrate() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedExposedCopperGrate() -> Identifier: ...
 def WaxedExposedCopperLantern(
-    **states: Unpack[LanternStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedExposedCutCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedExposedCutCopper() -> Identifier: ...
 def WaxedExposedCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedExposedLightningRod(
-    **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedExposedLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedLightningRod(
-    **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedOxidizedChiseledCopper() -> MinecraftBlockDescriptor: ...
-def WaxedOxidizedCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedOxidizedChiseledCopper() -> Identifier: ...
+def WaxedOxidizedCopper() -> Identifier: ...
 def WaxedOxidizedCopperBars(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCopperBulb(
-    **states: Unpack[CopperBulbStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCopperChain(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCopperDoor(
-    **states: Unpack[DoorStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedOxidizedCopperGrate() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedOxidizedCopperGrate() -> Identifier: ...
 def WaxedOxidizedCopperLantern(
-    **states: Unpack[LanternStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedOxidizedCutCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedOxidizedCutCopper() -> Identifier: ...
 def WaxedOxidizedCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedOxidizedLightningRod(
-    **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedWeatheredChiseledCopper() -> MinecraftBlockDescriptor: ...
-def WaxedWeatheredCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedOxidizedLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedWeatheredChiseledCopper() -> Identifier: ...
+def WaxedWeatheredCopper() -> Identifier: ...
 def WaxedWeatheredCopperBars(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCopperBulb(
-    **states: Unpack[CopperBulbStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCopperChain(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCopperDoor(
-    **states: Unpack[DoorStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedWeatheredCopperGrate() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedWeatheredCopperGrate() -> Identifier: ...
 def WaxedWeatheredCopperLantern(
-    **states: Unpack[LanternStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def WaxedWeatheredCutCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def WaxedWeatheredCutCopper() -> Identifier: ...
 def WaxedWeatheredCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WaxedWeatheredLightningRod(
-    **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
-
-# Weathered Copper
-def WeatheredChiseledCopper() -> MinecraftBlockDescriptor: ...
-def WeatheredCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WaxedWeatheredLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
+def WeatheredChiseledCopper() -> Identifier: ...
+def WeatheredCopper() -> Identifier: ...
 def WeatheredCopperBars(
-    **states: Unpack[ConnectionStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperBarsStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredCopperBulb(
-    **states: Unpack[CopperBulbStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperBulbStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredCopperChain(
-    **states: Unpack[PillarStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperChainStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredCopperChest(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WeatheredCopperDoor(**states: Unpack[DoorStates]) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperChestStates],
+) -> Identifier | BlockDescriptor: ...
+def WeatheredCopperDoor(
+    **states: Unpack[WeatheredCopperDoorStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredCopperGolemStatue(
-    **states: Unpack[CardinalDirectionStates],
-) -> MinecraftBlockDescriptor: ...
-def WeatheredCopperGrate() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperGolemStatueStates],
+) -> Identifier | BlockDescriptor: ...
+def WeatheredCopperGrate() -> Identifier: ...
 def WeatheredCopperLantern(
-    **states: Unpack[LanternStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperLanternStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredCopperTrapdoor(
-    **states: Unpack[TrapdoorStates],
-) -> MinecraftBlockDescriptor: ...
-def WeatheredCutCopper() -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCopperTrapdoorStates],
+) -> Identifier | BlockDescriptor: ...
+def WeatheredCutCopper() -> Identifier: ...
 def WeatheredCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredCutCopperStairs(
-    **states: Unpack[StairsStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredCutCopperStairsStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredDoubleCutCopperSlab(
-    **states: Unpack[SlabStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredDoubleCutCopperSlabStates],
+) -> Identifier | BlockDescriptor: ...
 def WeatheredLightningRod(
-    **states: Unpack[LightningRodStates],
-) -> MinecraftBlockDescriptor: ...
+    **states: Unpack[WeatheredLightningRodStates],
+) -> Identifier | BlockDescriptor: ...
+def Web() -> Identifier: ...
+def WeepingVines(
+    **states: Unpack[WeepingVinesStates],
+) -> Identifier | BlockDescriptor: ...
+def WetSponge() -> Identifier: ...
+def Wheat(**states: Unpack[WheatStates]) -> Identifier | BlockDescriptor: ...
+def WhiteCandle(
+    **states: Unpack[WhiteCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteCandleCake(
+    **states: Unpack[WhiteCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteCarpet() -> Identifier: ...
+def WhiteConcrete() -> Identifier: ...
+def WhiteConcreteDoubleSlab(
+    **states: Unpack[WhiteConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteConcretePowder() -> Identifier: ...
+def WhiteConcreteSlab(
+    **states: Unpack[WhiteConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteConcreteStairs(
+    **states: Unpack[WhiteConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteGlazedTerracotta(
+    **states: Unpack[WhiteGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteShulkerBox() -> Identifier: ...
+def WhiteStainedGlass() -> Identifier: ...
+def WhiteStainedGlassPane(
+    **states: Unpack[WhiteStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteTerracotta() -> Identifier: ...
+def WhiteTulip() -> Identifier: ...
+def WhiteWool() -> Identifier: ...
+def WhiteWoolDoubleSlab(
+    **states: Unpack[WhiteWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteWoolSlab(
+    **states: Unpack[WhiteWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def WhiteWoolStairs(
+    **states: Unpack[WhiteWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def Wildflowers(
+    **states: Unpack[WildflowersStates],
+) -> Identifier | BlockDescriptor: ...
+def WitherRose() -> Identifier: ...
+def WitherSkeletonSkull(
+    **states: Unpack[WitherSkeletonSkullStates],
+) -> Identifier | BlockDescriptor: ...
+def WoodenButton(
+    **states: Unpack[WoodenButtonStates],
+) -> Identifier | BlockDescriptor: ...
+def WoodenDoor(**states: Unpack[WoodenDoorStates]) -> Identifier | BlockDescriptor: ...
+def WoodenPressurePlate(
+    **states: Unpack[WoodenPressurePlateStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowCandle(
+    **states: Unpack[YellowCandleStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowCandleCake(
+    **states: Unpack[YellowCandleCakeStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowCarpet() -> Identifier: ...
+def YellowConcrete() -> Identifier: ...
+def YellowConcreteDoubleSlab(
+    **states: Unpack[YellowConcreteDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowConcretePowder() -> Identifier: ...
+def YellowConcreteSlab(
+    **states: Unpack[YellowConcreteSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowConcreteStairs(
+    **states: Unpack[YellowConcreteStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowGlazedTerracotta(
+    **states: Unpack[YellowGlazedTerracottaStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowPoplarLeaves(
+    **states: Unpack[YellowPoplarLeavesStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowShulkerBox() -> Identifier: ...
+def YellowStainedGlass() -> Identifier: ...
+def YellowStainedGlassPane(
+    **states: Unpack[YellowStainedGlassPaneStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowTerracotta() -> Identifier: ...
+def YellowWool() -> Identifier: ...
+def YellowWoolDoubleSlab(
+    **states: Unpack[YellowWoolDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowWoolSlab(
+    **states: Unpack[YellowWoolSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def YellowWoolStairs(
+    **states: Unpack[YellowWoolStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def ZombieHead(**states: Unpack[ZombieHeadStates]) -> Identifier | BlockDescriptor: ...

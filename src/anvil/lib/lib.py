@@ -1,26 +1,25 @@
 """A collection of useful functions and classes used throughout the program."""
 
-import inspect
-import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 import zipfile
 from datetime import datetime
 from enum import StrEnum
-from functools import wraps
-from typing import Any, Dict, List
+from pathlib import Path, PurePosixPath
+from typing import TYPE_CHECKING, Any
 
 import click
-import commentjson
 import orjson
 import requests
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
+
 from anvil.lib.format_versions import MANIFEST_BUILD
 
 from ..__version__ import __version__
+
+if TYPE_CHECKING:
+    from anvil.lib.jsonmodel.types import Color
 
 
 def validate_platform() -> None:
@@ -37,85 +36,81 @@ def validate_platform() -> None:
 validate_platform()
 
 
-USERPROFILE: str = os.getenv("USERPROFILE", os.path.expanduser("~"))
-APPDATA: str = os.getenv("APPDATA", os.path.join(USERPROFILE, "AppData", "Roaming"))
+USERPROFILE: Path = Path(os.getenv("USERPROFILE", Path.home()))
+APPDATA: Path = Path(os.getenv("APPDATA", USERPROFILE / "AppData" / "Roaming"))
 
-RELEASE_COM_MOJANG = os.path.join(
-    APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
+RELEASE_COM_MOJANG: Path = (
+    APPDATA / "Minecraft Bedrock" / "Users" / "Shared" / "games" / "com.mojang"
 )
-PREVIEW_COM_MOJANG = os.path.join(
-    APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
+PREVIEW_COM_MOJANG: Path = (
+    APPDATA / "Minecraft Bedrock Preview" / "Users" / "Shared" / "games" / "com.mojang"
 )
 
-DESKTOP: str = os.path.join(USERPROFILE, "Desktop")
+DESKTOP: Path = USERPROFILE / "Desktop"
+OUTPUT = Path("output")
+"""The project's output folder, for packages and local exports."""
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 
 
 class Directory:
     @classmethod
-    def create(cls, path: str):
+    def create(cls, path: str | Path):
         """
-        Creates a new directory.
+        Creates a new directory, with its missing parents.
 
-        Parameters:
-            path (str): The path to the new directory.
+        Args:
+            path (str | Path): The path to the new directory. A relative path is relative to
+                the current folder.
         """
-        if not path:
-            return
-        if os.path.isabs(path):
-            os.makedirs(path, exist_ok=True)
-        else:
-            this_path = os.path.join("./", path.lstrip("/"))
-            os.makedirs(this_path, exist_ok=True)
+        Path(path).mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def copy_files(
-        cls, old_dir: str, new_dir: str, target_file: str, rename: str | None = None
+        cls,
+        old_dir: str | Path,
+        new_dir: str | Path,
+        target_file: str,
+        rename: str | None = None,
     ):
         """
         Copies a file from one directory to another.
 
-        Parameters:
-            old_dir (str): The path to the source directory.
-            new_dir (str): The path to the destination directory.
+        Args:
+            old_dir (str | Path): The path to the source directory.
+            new_dir (str | Path): The path to the destination directory.
             target_file (str): The name of the file to be copied.
             rename (str | None, optional): The new name for the copied file. Defaults to None.
         """
         cls.create(new_dir)
-        if rename is None:
-            shutil.copyfile(
-                os.path.join(old_dir, target_file), os.path.join(new_dir, target_file)
-            )
-        else:
-            shutil.copyfile(
-                os.path.join(old_dir, target_file), os.path.join(new_dir, rename)
-            )
-
-    @classmethod
-    def copy_folder(cls, old_dir: str, new_dir: str):
-        """
-        Copies a folder and all its contents to a new location.
-
-        Parameters:
-            old_dir (str): The path to the source directory.
-            new_dir (str): The path to the destination directory.
-        """
-        cls.create(new_dir)
-        shutil.copytree(
-            os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True
+        shutil.copyfile(
+            Path(old_dir) / target_file, Path(new_dir) / (rename or target_file)
         )
 
     @classmethod
-    def move_folder(cls, old_dir: str, new_dir: str) -> None:
+    def copy_folder(cls, old_dir: str | Path, new_dir: str | Path):
+        """
+        Copies a folder and all its contents to a new location.
+
+        Args:
+            old_dir (str | Path): The path to the source directory.
+            new_dir (str | Path): The path to the destination directory.
+        """
+        cls.create(new_dir)
+        shutil.copytree(
+            Path(old_dir).resolve(), Path(new_dir).resolve(), dirs_exist_ok=True
+        )
+
+    @classmethod
+    def move_folder(cls, old_dir: str | Path, new_dir: str | Path) -> None:
         """
         Moves a folder and all its contents to a new location.
 
-        Parameters:
-            old_dir (str): The path to the source directory.
-            new_dir (str): The path to the destination directory.
+        Args:
+            old_dir (str | Path): The path to the source directory.
+            new_dir (str | Path): The path to the destination directory.
         """
         cls.create(new_dir)
-        shutil.move(os.path.realpath(old_dir), os.path.realpath(new_dir))
+        shutil.move(Path(old_dir).resolve(), Path(new_dir).resolve())
 
 
 class AnvilIO:
@@ -127,14 +122,10 @@ class AnvilIO:
         "mcfunction": "#",
         "lang": "##",
     }
-    _BLOCK_DESCRIPTOR_NAMES = frozenset(
-        {"MinecraftBlockDescriptor", "Block", "NoiseDescriptor", "NoiseBlockSpecifier"}
-    )
     _IDENTIFIER_NAMES = frozenset(
         {
-            "MinecraftItemDescriptor",
-            "MinecraftEntityDescriptor",
-            "MinecraftBiomeDescriptor",
+            "Biome",
+            "Block",
             "Item",
             "Entity",
         }
@@ -154,10 +145,14 @@ class AnvilIO:
         if isinstance(value, dict):
             shortened = {}
 
+            from anvil.lib.jsonmodel.jsontypes import KeptObject
+
             for key, item in value.items():
                 key_str = str(key)
                 shortened_value = cls._normalize_json_like(item)
-                if cls._should_keep_shortened_value(key_str, shortened_value):
+                if isinstance(item, KeptObject) or cls._should_keep_shortened_value(
+                    key_str, shortened_value
+                ):
                     shortened[key_str] = shortened_value
 
             return shortened
@@ -186,27 +181,21 @@ class AnvilIO:
         if isinstance(value, Filter):
             return cls._normalize_json_like(value.__export_dict__())
 
-        from anvil.api.core.components import Component
+        from anvil.lib.jsonmodel import JsonComponent, JsonObject
 
-        if isinstance(value, Component):
-            return cls._normalize_json_like(value.__export__())
+        if isinstance(value, JsonObject):
+            return cls._normalize_json_like(value.__json__())
 
-        if isinstance(value, type) and issubclass(value, Component):
-            return cls._normalize_json_like(value.__component_identifier__())
+        if isinstance(value, type) and issubclass(value, JsonComponent):
+            return cls._normalize_json_like(value.identifier)
 
         class_name = value.__class__.__name__
-
-        if class_name in cls._BLOCK_DESCRIPTOR_NAMES:
-            return cls._normalize_json_like(value.descriptor())
 
         if class_name in cls._IDENTIFIER_NAMES:
             return cls._normalize_json_like(value.identifier)
 
         if class_name == "LootTable":
             return cls._normalize_json_like(value.table_path)
-
-        if class_name == "_UIElement":
-            return cls._normalize_json_like(value.queue())
 
         return value
 
@@ -237,7 +226,7 @@ class AnvilIO:
 
     @classmethod
     def _parse_json_like(
-        cls, content: str | bytes | Dict | List, minify: bool = False
+        cls, content: str | bytes | dict | list, minify: bool = False
     ) -> bytes:
         return cls._dump_json_like(content, minify=minify)
 
@@ -245,20 +234,18 @@ class AnvilIO:
     def file(
         cls,
         name: str,
-        content: str | bytes | Dict | List,
-        directory: str,
+        content: str | bytes | dict | list,
+        directory: str | Path,
         mode: str,
-        **parameters,
     ):
         """
         Create or modify a file with the given content.
 
-        Parameters:
+        Args:
             name (str): The name of the file.
             content (Any): The content of the file.
-            directory (str): The directory path where the file should be created or modified.
+            directory (str | Path): The folder where the file is created or modified.
             mode (str): The file mode, either "w" (write) or "a" (append).
-            **parameters (Any): Additional keyword arguments.
 
         Note:
             The file content is converted to the appropriate format based on the file extension.
@@ -267,7 +254,7 @@ class AnvilIO:
         from anvil.lib.config import CONFIG
 
         Directory.create(directory)
-        path = os.path.normpath(os.path.join(directory, name))
+        path = Path(directory) / name
         type = name.split(".")[-1]
 
         if type in ["json", "material", "code-workspace"]:
@@ -290,11 +277,11 @@ class AnvilIO:
 
         if isinstance(content, bytes):
             binary_mode = mode if "b" in mode else f"{mode}b"
-            with open(path, binary_mode) as file:
+            with path.open(binary_mode) as file:
                 file.write(content)
             return
 
-        with open(path, mode, encoding="utf-8") as file:
+        with path.open(mode, encoding="utf-8") as file:
             file.write(content)
 
 
@@ -305,32 +292,34 @@ class AnvilArchive:
 
     @classmethod
     def write_entry(
-        cls, ziph: zipfile.ZipFile, file_path: str, archive_path: str
+        cls, ziph: zipfile.ZipFile, file_path: Path, archive_path: PurePosixPath
     ) -> None:
-        file_path_lower = file_path.lower()
-        if any(file_path_lower.endswith(ext) for ext in cls._EXCLUDED_EXTENSIONS):
+        file_name = file_path.name.lower()
+        if any(file_name.endswith(ext) for ext in cls._EXCLUDED_EXTENSIONS):
             return
 
-        extension = os.path.splitext(file_path)[1].lower()
-        if extension in cls._STORED_EXTENSIONS:
-            ziph.write(file_path, archive_path, compress_type=zipfile.ZIP_STORED)
+        if file_path.suffix.lower() in cls._STORED_EXTENSIONS:
+            ziph.write(
+                file_path, archive_path.as_posix(), compress_type=zipfile.ZIP_STORED
+            )
             return
 
         ziph.write(
             file_path,
-            archive_path,
+            archive_path.as_posix(),
             compress_type=zipfile.ZIP_DEFLATED,
             compresslevel=cls._FAST_COMPRESS_LEVEL,
         )
 
     @classmethod
-    def from_mapping(cls, zip_name: str, dir_list: dict) -> None:
+    def from_mapping(cls, zip_name: Path, dir_list: dict[Path, PurePosixPath]) -> None:
         """
         Create a ZIP archive containing multiple directories and files.
 
-        Parameters:
-            zip_name (str): The name of the ZIP archive.
-            dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
+        Args:
+            zip_name (Path): The ZIP archive to write.
+            dir_list (dict[Path, PurePosixPath]): The folders and files to add, each mapped to
+                the folder it goes in inside the archive.
 
         Note:
             The target directories represent the structure inside the ZIP archive.
@@ -343,39 +332,34 @@ class AnvilArchive:
             compresslevel=cls._FAST_COMPRESS_LEVEL,
         ) as zipf:
             for source, target in dir_list.items():
-                if os.path.isdir(source):
-                    source_root = os.path.realpath(source)
-                    for root, _, files in os.walk(source_root):
+                if source.is_dir():
+                    source_root = source.resolve()
+                    for root, _, files in source_root.walk():
                         for file_name in files:
-                            file_path = os.path.join(root, file_name)
-                            relative_path = os.path.relpath(file_path, source_root)
-                            archive_path = os.path.join(target, relative_path)
+                            file_path = root / file_name
+                            relative_path = file_path.relative_to(source_root)
+                            archive_path = target / relative_path.as_posix()
                             cls.write_entry(zipf, file_path, archive_path)
                 else:
-                    archive_path = os.path.join(target, os.path.basename(source))
-                    cls.write_entry(zipf, source, archive_path)
+                    cls.write_entry(zipf, source, target / source.name)
 
     @classmethod
     def marketplace_zip(cls):
         from anvil.lib.config import CONFIG, ConfigPackageTarget
 
-        Directory.create("output")
+        Directory.create(OUTPUT)
 
         content_structure = {
-            os.path.join("output", "Store Art"): os.path.join("Store Art"),
-            os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
+            OUTPUT / "Store Art": PurePosixPath("Store Art"),
+            OUTPUT / "Marketing Art": PurePosixPath("Marketing Art"),
         }
 
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            ZIP_RP_PATH = os.path.join(
-                "Content",
-                "resource_packs",
-                f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+            ZIP_RP_PATH = PurePosixPath(
+                "Content", "resource_packs", f"RP_{CONFIG._PASCAL_PROJECT_NAME}"
             )
-            ZIP_BP_PATH = os.path.join(
-                "Content",
-                "behavior_packs",
-                f"BP_{CONFIG._PASCAL_PROJECT_NAME}",
+            ZIP_BP_PATH = PurePosixPath(
+                "Content", "behavior_packs", f"BP_{CONFIG._PASCAL_PROJECT_NAME}"
             )
             content_structure.update(
                 {
@@ -387,52 +371,48 @@ class AnvilArchive:
         else:
             content_structure.update(
                 {
-                    CONFIG.RP_PATH: os.path.join(
+                    CONFIG.RP_PATH: PurePosixPath(
                         "Content",
                         "world_template",
                         "resource_packs",
                         f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
                     ),
-                    CONFIG.BP_PATH: os.path.join(
+                    CONFIG.BP_PATH: PurePosixPath(
                         "Content",
                         "world_template",
                         "behavior_packs",
                         f"BP_{CONFIG._PASCAL_PROJECT_NAME}",
                     ),
-                    os.path.join(CONFIG._WORLD_PATH, "texts"): os.path.join(
-                        "Content", "world_template", "texts"
-                    ),
-                    os.path.join(CONFIG._WORLD_PATH, "level.dat"): os.path.join(
+                    CONFIG._WORLD_PATH
+                    / "texts": PurePosixPath("Content", "world_template", "texts"),
+                    CONFIG._WORLD_PATH
+                    / "level.dat": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "levelname.txt": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "manifest.json": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "world_icon.jpeg": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "world_behavior_packs.json": PurePosixPath(
                         "Content", "world_template"
                     ),
-                    os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): os.path.join(
+                    CONFIG._WORLD_PATH
+                    / "world_resource_packs.json": PurePosixPath(
                         "Content", "world_template"
                     ),
-                    os.path.join(CONFIG._WORLD_PATH, "manifest.json"): os.path.join(
-                        "Content", "world_template"
-                    ),
-                    os.path.join(CONFIG._WORLD_PATH, "world_icon.jpeg"): os.path.join(
-                        "Content", "world_template"
-                    ),
-                    os.path.join(
-                        CONFIG._WORLD_PATH, "world_behavior_packs.json"
-                    ): os.path.join("Content", "world_template"),
-                    os.path.join(
-                        CONFIG._WORLD_PATH, "world_resource_packs.json"
-                    ): os.path.join("Content", "world_template"),
                 }
             )
             if not CONFIG._RANDOM_SEED:
                 content_structure.update(
                     {
-                        os.path.join(CONFIG._WORLD_PATH, "db"): os.path.join(
-                            "Content", "world_template", "db"
-                        ),
+                        CONFIG._WORLD_PATH
+                        / "db": PurePosixPath("Content", "world_template", "db"),
                     }
                 )
 
         AnvilArchive.from_mapping(
-            os.path.join("output", f"{CONFIG.PROJECT_NAME}.zip"),
+            OUTPUT / f"{CONFIG.PROJECT_NAME}.zip",
             content_structure,
         )
 
@@ -440,23 +420,27 @@ class AnvilArchive:
     def mcworld(cls):
         from anvil.api.core.core import CONFIG
 
-        Directory.create("output")
+        Directory.create(OUTPUT)
 
         content_structure = {
-            CONFIG.RP_PATH: os.path.join("resource_packs", f"RP_{CONFIG.PROJECT_NAME}"),
-            CONFIG.BP_PATH: os.path.join("behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"),
-            os.path.join(CONFIG._WORLD_PATH, "texts"): "texts",
-            os.path.join(CONFIG._WORLD_PATH, "db"): "db",
-            os.path.join(CONFIG._WORLD_PATH, "level.dat"): "",
-            os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): "",
-            os.path.join(CONFIG._WORLD_PATH, "manifest.json"): "",
-            os.path.join(CONFIG._WORLD_PATH, "world_icon.jpeg"): "",
-            os.path.join(CONFIG._WORLD_PATH, "world_behavior_packs.json"): "",
-            os.path.join(CONFIG._WORLD_PATH, "world_resource_packs.json"): "",
+            CONFIG.RP_PATH: PurePosixPath(
+                "resource_packs", f"RP_{CONFIG.PROJECT_NAME}"
+            ),
+            CONFIG.BP_PATH: PurePosixPath(
+                "behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"
+            ),
+            CONFIG._WORLD_PATH / "texts": PurePosixPath("texts"),
+            CONFIG._WORLD_PATH / "db": PurePosixPath("db"),
+            CONFIG._WORLD_PATH / "level.dat": PurePosixPath(),
+            CONFIG._WORLD_PATH / "levelname.txt": PurePosixPath(),
+            CONFIG._WORLD_PATH / "manifest.json": PurePosixPath(),
+            CONFIG._WORLD_PATH / "world_icon.jpeg": PurePosixPath(),
+            CONFIG._WORLD_PATH / "world_behavior_packs.json": PurePosixPath(),
+            CONFIG._WORLD_PATH / "world_resource_packs.json": PurePosixPath(),
         }
 
         AnvilArchive.from_mapping(
-            os.path.join("output", f"{CONFIG.PROJECT_NAME}.mcworld"),
+            OUTPUT / f"{CONFIG.PROJECT_NAME}.mcworld",
             content_structure,
         )
 
@@ -464,15 +448,15 @@ class AnvilArchive:
     def mcaddon(cls) -> None:
         from anvil.api.core.core import CONFIG
 
-        Directory.create("output")
+        Directory.create(OUTPUT)
 
         content_structure = {
-            CONFIG.RP_PATH: f"RP_{CONFIG.PROJECT_NAME}",
-            CONFIG.BP_PATH: f"BP_{CONFIG.PROJECT_NAME}",
+            CONFIG.RP_PATH: PurePosixPath(f"RP_{CONFIG.PROJECT_NAME}"),
+            CONFIG.BP_PATH: PurePosixPath(f"BP_{CONFIG.PROJECT_NAME}"),
         }
 
         AnvilArchive.from_mapping(
-            os.path.join("output", f"{CONFIG.PROJECT_NAME}.mcaddon"),
+            OUTPUT / f"{CONFIG.PROJECT_NAME}.mcaddon",
             content_structure,
         )
 
@@ -612,7 +596,15 @@ class AnvilFormatter:
             >>> convert_color((128, 64, 32))  # No target, normalizes to RGB255
             (128.0, 64.0, 32.0)
         """
-        # Type validation first
+        from anvil.lib.jsonmodel.types import (
+            RGB,
+            RGB255,
+            RGBA,
+            RGBA255,
+            HexRGB,
+            HexRGBA,
+        )
+
         if isinstance(color, str):
             if not color.startswith("#"):
                 raise ValueError("Hex color must start with '#'")
@@ -633,7 +625,6 @@ class AnvilFormatter:
                 f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list."
             )
 
-        # Determine target from source if not specified
         convert_target = None
         if target is None:
             if is_str:
@@ -649,9 +640,7 @@ class AnvilFormatter:
         else:
             convert_target = target
 
-        # Parse input color to normalized RGBA (0-1 range with alpha)
         if is_str:
-            # Expand short hex format (#RGB or #RGBA) to full format
             if len(hex_color) in [3, 4]:
                 hex_color = "".join([c * 2 for c in hex_color])
 
@@ -660,11 +649,9 @@ class AnvilFormatter:
             b = int(hex_color[4:6], 16) / 255.0
             a = int(hex_color[6:8], 16) / 255.0 if len(hex_color) == 8 else 1.0
         else:
-            # Determine if values are in 0-1 or 0-255 range
             max_val = float(max(color[:3]))
 
             if max_val > 1.0:
-                # Assume 0-255 range
                 r = clamp(float(color[0]), 0.0, 255.0) / 255.0
                 g = clamp(float(color[1]), 0.0, 255.0) / 255.0
                 b = clamp(float(color[2]), 0.0, 255.0) / 255.0
@@ -674,15 +661,12 @@ class AnvilFormatter:
                     else 1.0
                 )
             else:
-                # Assume 0-1 range
                 r = clamp(float(color[0]), 0.0, 1.0)
                 g = clamp(float(color[1]), 0.0, 1.0)
                 b = clamp(float(color[2]), 0.0, 1.0)
                 a = clamp(float(color[3]), 0.0, 1.0) if len(color) == 4 else 1.0
 
-        # Convert to target format
         if convert_target in (HexRGB, HexRGBA):
-            # Convert to hex (pre-compute once)
             hex_r = int(round(r * 255))
             hex_g = int(round(g * 255))
             hex_b = int(round(b * 255))
@@ -712,49 +696,10 @@ class AnvilFormatter:
 
 class AnvilValidator:
     @classmethod
-    def validate_namespace_project_name(
-        cls, namespace: str, project_name: str, is_addon: bool = False
-    ):
-        """Validates namespace and project name according to Minecraft requirements.
-
-        Args:
-            namespace (str): The namespace to validate.
-            project_name (str): The project name to validate.
-            is_addon (bool, optional): Whether this is for an addon. Defaults to False.
-
-        Raises:
-            ValueError: If validation fails for any requirement.
-        """
-        pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
-
-        if namespace == "minecraft":
-            raise ValueError(
-                "The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace."
-            )
-
-        if len(namespace) > 8:
-            raise ValueError(
-                f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long."
-            )
-
-        if len(project_name) > 16:
-            raise ValueError(
-                f"Project name must be 16 characters or less. '{project_name}' is {len(project_name)} characters long."
-            )
-
-        if is_addon:
-            model_name = f"{namespace}_{pascal_project_name}"
-            if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-                raise ValueError(
-                    f"Every namespace must be unique to the pack ending with project name initials. For this pack it should be {model_name}."
-                )
-
-    @classmethod
     def check_new_versions(cls):
         click.echo(click.style("Checking for package updates...", fg="cyan"))
-        outdated_packages: List[Dict[str, str]] = []
+        outdated_packages: list[dict[str, str]] = []
 
-        # Check npm updates
         try:
             res = subprocess.run(
                 "npm outdated --json",
@@ -764,7 +709,7 @@ class AnvilValidator:
             )
             if res.stdout and res.stdout.strip():
                 try:
-                    npm_data = json.loads(res.stdout)
+                    npm_data = orjson.loads(res.stdout)
                     for pkg_name, pkg_info in npm_data.items():
                         if isinstance(pkg_info, dict):
                             outdated_packages.append(
@@ -779,7 +724,7 @@ class AnvilValidator:
                                     ),
                                 }
                             )
-                except json.JSONDecodeError:
+                except orjson.JSONDecodeError:
                     for line in res.stdout.splitlines():
                         parts = line.split()
                         if len(parts) >= 4 and not line.startswith("Package"):
@@ -791,10 +736,9 @@ class AnvilValidator:
                                     "latest": parts[3],
                                 }
                             )
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             pass
 
-        # Check pip updates for mcanvil
         try:
             res = subprocess.run(
                 [sys.executable, "-m", "pip", "list", "--outdated", "--format=json"],
@@ -803,7 +747,7 @@ class AnvilValidator:
             )
             if res.stdout and res.stdout.strip():
                 try:
-                    pip_data = json.loads(res.stdout)
+                    pip_data = orjson.loads(res.stdout)
                     for pkg in pip_data:
                         if (
                             isinstance(pkg, dict)
@@ -817,7 +761,7 @@ class AnvilValidator:
                                     "latest": str(pkg.get("latest_version", "N/A")),
                                 }
                             )
-                except json.JSONDecodeError:
+                except orjson.JSONDecodeError:
                     for line in res.stdout.splitlines():
                         if "mcanvil" in line.lower():
                             parts = line.split()
@@ -830,7 +774,7 @@ class AnvilValidator:
                                         "latest": parts[2],
                                     }
                                 )
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             pass
 
         if outdated_packages:
@@ -861,10 +805,8 @@ class AnvilValidator:
             request = requests.get(
                 "https://raw.githubusercontent.com/Mojang/bedrock-samples/refs/heads/main/version.json"
             )
-            vanilla_latest_build: str = commentjson.loads(request.text)["latest"][
-                "version"
-            ]
-        except Exception:
+            vanilla_latest_build: str = orjson.loads(request.text)["latest"]["version"]
+        except (requests.RequestException, orjson.JSONDecodeError, KeyError, TypeError):
             click.echo(
                 click.style(
                     "[WARN]: Could not fetch latest Minecraft version.", fg="yellow"
@@ -884,7 +826,6 @@ class AnvilValidator:
         if value is None:
             return False
 
-        # Check for tuple/list types (RGB, RGBA)
         if (
             isinstance(value, (tuple, list))
             and len(value) in (3, 4)
@@ -897,7 +838,6 @@ class AnvilValidator:
         ):
             return True
 
-        # Check for hex color strings (start with #)
         if isinstance(value, str) and value.startswith("#"):
             hex_val = value[1:]
             if len(hex_val) in (3, 4, 6, 8) and all(
@@ -905,7 +845,6 @@ class AnvilValidator:
             ):
                 return True
 
-        # Everything else (including plain strings) are treated as texture file names
         return False
 
 
@@ -939,14 +878,11 @@ class AnvilDisplay:
         )
 
 
-# --------------------------------------------------------------------------
-
-
 def clamp(value: float | int, _min: float | int, _max: float | int) -> float | int:
     """
     Clamps a value between a minimum and maximum limit.
 
-    Parameters:
+    Args:
         value (float | int): The value to be clamped.
         _min (float | int): The lower limit.
         _max (float | int): The upper limit.
@@ -961,7 +897,7 @@ def frange(start: int, stop: int, num: float = 1) -> list[float]:
     """
     Generate a list of interpolated float values between start and stop.
 
-    Parameters:
+    Args:
         start (int): The starting value.
         stop (int): The ending value.
         num (float, optional): The number of values to generate. Defaults to 1.
@@ -988,7 +924,7 @@ def process_subcommand(
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"{error_handle}: {e}")
+        click.echo(click.style(f"{error_handle}: {e}", fg="red"), err=True)
         if exit_on_error:
             sys.exit(e.returncode or 1)
 
@@ -1006,35 +942,3 @@ def salt_from_str(s: str) -> int:
     for ch in s:
         h = (h * 131 + ord(ch)) % 1_000_000
     return h
-
-
-def extract_ids_from_factory_class(cls) -> set[str]:
-    _IDENT_RE = re.compile(r'["\'](minecraft:[a-z0-9_]+)["\']')
-    ids: set[str] = set()
-    for _, fn in inspect.getmembers(cls, predicate=inspect.isfunction):
-        try:
-            src = inspect.getsource(fn)
-        except OSError:
-            # Builtins / C-extensions or unavailable source; skip cleanly
-            continue
-        ids.update(m.group(1) for m in _IDENT_RE.finditer(src))
-    return ids
-
-
-def experimental(func):
-    """
-    Decorator that ensures a function is only executed
-    if the CONFIG._EXPERIMENTAL flag is enabled.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        from anvil.lib.config import CONFIG
-
-        if not CONFIG._EXPERIMENTAL:
-            raise ValueError(
-                f"{func.__name__} requires experimental features to be enabled in the config."
-            )
-        return func(*args, **kwargs)
-
-    return wrapper

@@ -1,301 +1,342 @@
-import json
+"""Tests for the typed feature and feature rule files."""
+
 import pytest
 
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.core.filters import Filter
+from anvil.api.features import (
+    AggregateFeature,
+    CoordinateRange,
+    Feature,
+    FeatureRule,
+    GeodeFeature,
+    GrowingPlantFeature,
+    MultiBlockFeature,
+    OreFeature,
+    ScatterFeature,
+    SearchFeature,
+    SingleBlockFeature,
+    SnapToSurfaceFeature,
+    StructureTemplateFeature,
+    TreeFeature,
+    WeightedRandomFeature,
+)
+from anvil.lib.jsonmodel import Identifier
+from anvil.lib.jsonmodel.enums import BlockFaceValues, FeatureRulePlacementPass
+from anvil.lib.lib import AnvilIO
 
-def test_multi_block_feature(tmp_path, monkeypatch):
-    config_file = tmp_path / "anvilconfig.json"
-    config_file.write_text(
-        json.dumps(
-            {
-                "package": {
-                    "namespace": "test",
-                    "project_name": "test",
-                    "company": "test",
-                    "display_name": "Test Project",
-                    "project_description": "Test Description",
-                    "behavior_description": "Test BP",
-                    "resource_description": "Test RP",
-                }
-            }
-        )
+jsonschema = pytest.importorskip("jsonschema")
+
+
+def _json(value):
+    return AnvilIO._normalize_json_like(value)
+
+
+def _check(feature):
+    schema = type(feature).__schema__()
+    jsonschema.Draft202012Validator.check_schema(schema)
+    exported = _json(feature._document)
+    jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
+    return exported
+
+
+def _body(feature):
+    exported = _check(feature)
+    key = next(key for key in exported if key != "format_version")
+    return exported[key]
+
+
+def test_feature_base_cannot_be_created():
+    with pytest.raises(TypeError):
+        Feature("nothing")
+
+
+def test_single_block_feature():
+    feature = SingleBlockFeature("flower", randomize_rotation=True)
+    feature.place_block("minecraft:poppy").place_block(
+        BlockDescriptor(
+            name=Identifier.parse("minecraft:dandelion", vanilla=True), states={"a": 1}
+        ),
+        3,
     )
-    monkeypatch.chdir(tmp_path)
+    feature.may_replace(["minecraft:air"])
+    feature.may_attach_to(BlockFaceValues.Down, ["minecraft:grass_block"])
+    feature.may_attach_to(BlockFaceValues.Side, ["minecraft:stone"], auto_rotate=None)
+    feature.may_not_attach_to("diagonal", ["minecraft:water"])
 
-    from anvil.lib.config import CONFIG
+    body = _body(feature)
+    assert body["description"] == {"identifier": "test:flower"}
+    assert body["places_block"] == [
+        {"block": "minecraft:poppy", "weight": 1.0},
+        {"block": {"name": "minecraft:dandelion", "states": {"a": 1}}, "weight": 3},
+    ]
+    assert body["may_attach_to"] == {
+        "bottom": ["minecraft:grass_block"],
+        "sides": ["minecraft:stone"],
+        "min_sides_must_attach": 1,
+        "auto_rotate": False,
+    }
+    assert body["may_not_attach_to"] == {"diagonal": ["minecraft:water"]}
+    assert body["enforce_placement_rules"] is False
+    assert body["randomize_rotation"] is True
 
-    old_instance = CONFIG._instance
-    CONFIG._instance = (
-        None  # Reset singleton so it picks up the current dir's anvilconfig.json
+
+def test_single_block_feature_needs_a_block():
+    with pytest.raises(ValueError):
+        _json(SingleBlockFeature("empty")._document)
+
+
+def test_scatter_feature_and_rule_distribution():
+    flower = SingleBlockFeature("flower").place_block("minecraft:poppy")
+    spread = CoordinateRange("uniform", (-4, 4))
+    scatter = ScatterFeature("flowers", flower).distribution(
+        "math.random_integer(1, 3)", None, spread, 0, spread, "xzy"
     )
+    assert _body(scatter) == {
+        "description": {"identifier": "test:flowers"},
+        "places_feature": "test:flower",
+        "project_input_to_floor": False,
+        "distribution": {
+            "iterations": "math.random_integer(1, 3)",
+            "coordinate_eval_order": "xzy",
+            "x": {"distribution": "uniform", "extent": [-4, 4]},
+            "y": 0,
+            "z": {"distribution": "uniform", "extent": [-4, 4]},
+        },
+    }
 
-    try:
-        from anvil.api.features import MultiBlockFeature
-
-        feature = MultiBlockFeature(
-            name="test:horizontal_log_feature",
-            places_block="test:horizontal_log",
-            randomize_rotation=True,
-            enforce_placement_rules=True,
-        )
-        feature.may_replace(["minecraft:air", "minecraft:grass", "minecraft:dirt"])
-
-        content = feature._content["minecraft:multi_block_feature"]
-        assert content["description"]["identifier"] == "test:horizontal_log_feature"
-        assert content["places_block"] == "test:horizontal_log"
-        assert content["randomize_rotation"] is True
-        assert content["enforce_placement_rules"] is True
-        assert content["may_replace"] == [
-            "minecraft:air",
-            "minecraft:grass",
-            "minecraft:dirt",
-        ]
-    finally:
-        CONFIG._instance = old_instance
-
-
-def test_tree_feature(tmp_path, monkeypatch):
-    config_file = tmp_path / "anvilconfig.json"
-    config_file.write_text(
-        json.dumps(
-            {
-                "package": {
-                    "namespace": "test",
-                    "project_name": "test",
-                    "company": "test",
-                    "display_name": "Test Project",
-                    "project_description": "Test Description",
-                    "behavior_description": "Test BP",
-                    "resource_description": "Test RP",
-                }
-            }
-        )
+    rule = FeatureRule("flowers_rule", scatter, FeatureRulePlacementPass.SurfacePass)
+    rule.biome_filter([Filter.has_biome_tag("plains")])
+    rule.distribution(
+        1,
+        (1, 4),
+        CoordinateRange("fixed_grid", (0, 15), step_size=4),
+        "q.heightmap(v.worldx, v.worldz)",
+        0,
     )
-    monkeypatch.chdir(tmp_path)
-
-    from anvil.lib.config import CONFIG
-
-    old_instance = CONFIG._instance
-    CONFIG._instance = None
-
-    try:
-        from anvil.api.features import TreeFeature
-
-        tree = TreeFeature("test_tree")
-        tree.may_grow_on(["minecraft:dirt", "minecraft:grass_block"])
-        tree.may_replace(["minecraft:air", "minecraft:leaves"])
-        tree.may_grow_through(["minecraft:dirt"])
-        tree.trunk(
-            trunk_block="test:custom_log",
-            trunk_height=(4, 7),
-        )
-        tree.canopy(
-            leaf_block="test:custom_leaves",
-            canopy_offset_min=-3,
-            canopy_offset_max=0,
-            variation_chance=[(1, 2), (1, 1)],
-        )
-
-        content = tree._content["minecraft:tree_feature"]
-        assert content["description"]["identifier"] == str(tree.identifier)
-        assert content["may_grow_on"] == ["minecraft:dirt", "minecraft:grass_block"]
-        assert content["may_replace"] == ["minecraft:air", "minecraft:leaves"]
-        assert content["may_grow_through"] == ["minecraft:dirt"]
-        assert content["trunk"]["trunk_block"] == "test:custom_log"
-        assert content["canopy"]["leaf_block"] == "test:custom_leaves"
-    finally:
-        CONFIG._instance = old_instance
+    exported = _check(rule)
+    rules = exported["minecraft:feature_rules"]
+    assert rules["description"] == {
+        "identifier": "test:flowers_rule",
+        "places_feature": "test:flowers",
+    }
+    assert rules["conditions"]["placement_pass"] == "surface_pass"
+    assert rules["conditions"]["minecraft:biome_filter"][0]["test"] == "has_biome_tag"
+    assert rules["distribution"]["scatter_chance"] == {"numerator": 1, "denominator": 4}
+    assert rules["distribution"]["x"]["step_size"] == 4
 
 
-def test_tree_feature_trunk_types(tmp_path, monkeypatch):
-    config_file = tmp_path / "anvilconfig.json"
-    config_file.write_text(
-        json.dumps(
-            {
-                "package": {
-                    "namespace": "test",
-                    "project_name": "test",
-                    "company": "test",
-                    "display_name": "Test Project",
-                    "project_description": "Test Description",
-                    "behavior_description": "Test BP",
-                    "resource_description": "Test RP",
-                }
-            }
-        )
+def test_scatter_feature_needs_a_distribution():
+    with pytest.raises(ValueError):
+        _json(ScatterFeature("flowers", "test:flower")._document)
+
+
+def test_coordinate_range_grid_options_need_a_grid():
+    with pytest.raises(ValueError):
+        _json(CoordinateRange("uniform", (0, 15), step_size=4))
+    with pytest.raises(ValueError):
+        _json(CoordinateRange("sideways", (0, 15)))
+
+
+def test_scatter_chance_denominator_must_be_positive():
+    rule = FeatureRule("rule", "test:flower", FeatureRulePlacementPass.FirstPass)
+    rule.distribution(1, (1, 0), 0, 0, 0)
+    with pytest.raises(ValueError):
+        _json(rule._document)
+
+
+def test_feature_lists():
+    aggregate = (
+        AggregateFeature("both").features(["test:a", "test:b"]).early_out("none")
     )
-    monkeypatch.chdir(tmp_path)
+    assert _body(aggregate)["features"] == ["test:a", "test:b"]
+    with pytest.raises(ValueError):
+        _json(AggregateFeature("none")._document)
 
-    from anvil.lib.config import CONFIG
+    weighted = (
+        WeightedRandomFeature("pick").add_feature("test:a", 2).features([("test:b", 1)])
+    )
+    assert _body(weighted)["features"] == [["test:a", 2], ["test:b", 1]]
 
-    old_instance = CONFIG._instance
-    CONFIG._instance = None
 
-    try:
-        from anvil.api.features import TreeFeature
+def test_values_raise_instead_of_being_clamped():
+    with pytest.raises(ValueError):
+        _json(OreFeature("ore", 0)._document)
+    with pytest.raises(ValueError):
+        _json(SnapToSurfaceFeature("snap", "test:a", 8, surface="sideways")._document)
 
-        # 1. trunk with tuple range and can_be_submerged
-        tree1 = TreeFeature("t1").trunk(
-            trunk_block="minecraft:oak_log",
-            trunk_height=(4, 7),
-            height_modifier=(0, 2),
-            can_be_submerged=1,
-        )
-        assert tree1._content["minecraft:tree_feature"]["trunk"] == {
-            "trunk_block": "minecraft:oak_log",
-            "trunk_height": {"range_min": 4, "range_max": 7},
-            "height_modifier": {"range_min": 0, "range_max": 2},
-            "can_be_submerged": {"max_depth": 1},
-        }
 
-        # 2. fancy_trunk with strict plain arguments
-        tree2 = TreeFeature("t2").fancy_trunk(
-            trunk_block="minecraft:oak_log",
-            base_height=5,
-            height_variance=12,
-            height_scale=0.618,
-            trunk_width=1,
-            width_scale=1.0,
-            foliage_altitude_factor=0.3,
-            branch_slope=0.381,
-            branch_density=1.0,
-            branch_min_altitude_factor=0.2,
-        )
-        assert tree2._content["minecraft:tree_feature"]["fancy_trunk"] == {
-            "trunk_block": "minecraft:oak_log",
-            "trunk_height": {"base": 5, "variance": 12, "scale": 0.618},
-            "trunk_width": 1,
-            "width_scale": 1.0,
-            "foliage_altitude_factor": 0.3,
-            "branches": {"slope": 0.381, "density": 1.0, "min_altitude_factor": 0.2},
-        }
+def test_ore_and_search_features():
+    ore = OreFeature("ore", 8).add_replace_rule(
+        "minecraft:coal_ore", ["minecraft:stone"]
+    )
+    assert _body(ore)["replace_rules"] == [
+        {"places_block": "minecraft:coal_ore", "may_replace": ["minecraft:stone"]}
+    ]
 
-        # 3. acacia_trunk with strict plain arguments
-        tree3 = TreeFeature("t3").acacia_trunk(
-            trunk_block="minecraft:acacia_log",
-            trunk_width=1,
-            base_height=4,
-            height_intervals=[2],
-            min_height_for_canopy=3,
-            allow_diagonal_growth=True,
-            lean_height=(2, 3),
-            lean_steps=(3, 4),
-            lean_length=(1, 2),
-        )
-        assert tree3._content["minecraft:tree_feature"]["acacia_trunk"] == {
-            "trunk_block": "minecraft:acacia_log",
-            "trunk_width": 1,
-            "trunk_height": {"base": 4, "intervals": [2], "min_height_for_canopy": 3},
-            "trunk_lean": {
-                "allow_diagonal_growth": True,
-                "lean_height": {"range_min": 2, "range_max": 3},
-                "lean_steps": {"range_min": 3, "range_max": 4},
-                "lean_length": {"range_min": 1, "range_max": 2},
-            },
-            "branches": {
-                "branch_chance": 0.0,
-                "branch_length": {"range_min": 1, "range_max": 4},
-                "branch_position": {"range_min": 1, "range_max": 3},
-            },
-        }
+    search = SearchFeature("search", "test:a", "+y", (0, 0, 0), (0, 8, 0))
+    assert _body(search)["search_volume"] == {"min": [0, 0, 0], "max": [0, 8, 0]}
+    search.search_volume((0, 9, 0), (0, 8, 0))
+    with pytest.raises(ValueError):
+        _json(search._document)
 
-        # 4. cherry_trunk with strict plain arguments
-        tree4 = TreeFeature("t4").cherry_trunk(
-            trunk_block="minecraft:cherry_log",
-            base_height=7,
-            height_intervals=[1],
-            one_branch_weight=10,
-            two_branches_weight=10,
-            two_branches_and_trunk_weight=10,
-            branch_horizontal_length=(2, 4),
-            branch_start_offset_from_top=(-4, -3),
-            branch_end_offset_from_top=(-1, 0),
-        )
-        assert tree4._content["minecraft:tree_feature"]["cherry_trunk"] == {
-            "trunk_block": "minecraft:cherry_log",
-            "trunk_height": {"base": 7, "intervals": [1]},
-            "branches": {
-                "tree_type_weights": {
-                    "one_branch": 10,
-                    "two_branches": 10,
-                    "two_branches_and_trunk": 10,
-                },
-                "branch_horizontal_length": {"range_min": 2, "range_max": 4},
-                "branch_start_offset_from_top": {"range_min": -4, "range_max": -3},
-                "branch_end_offset_from_top": {"range_min": -1, "range_max": 0},
-            },
-        }
 
-        # 5. fallen_trunk with tuple ranges
-        tree5 = TreeFeature("t5").fallen_trunk(
-            trunk_block="minecraft:birch_log",
-            log_length=(5, 8),
-            stump_height=(1, 2),
-            height_modifier=(0, 1),
-            log_decoration_feature="minecraft:optional_log_mushrooms_feature",
-        )
-        assert tree5._content["minecraft:tree_feature"]["fallen_trunk"] == {
-            "trunk_block": "minecraft:birch_log",
-            "log_length": {"range_min": 5, "range_max": 8},
-            "stump_height": {"range_min": 1, "range_max": 2},
-            "height_modifier": {"range_min": 0, "range_max": 1},
-            "log_decoration_feature": "minecraft:optional_log_mushrooms_feature",
-        }
+def test_structure_template_constraints_are_kept_when_empty():
+    feature = StructureTemplateFeature("hut", "test:hut", 4, "random")
+    feature.grounded().unburied().leveled().block_allowlist(["minecraft:air"])
+    assert _body(feature)["constraints"] == {
+        "grounded": {},
+        "unburied": {},
+        "leveled": {},
+        "block_intersection": {"block_allowlist": ["minecraft:air"]},
+    }
 
-        # 6. mangrove_trunk with strict plain arguments
-        tree6 = TreeFeature("t6").mangrove_trunk(
-            trunk_block="minecraft:mangrove_log",
-            trunk_width=1,
-            base_height=2,
-            height_rand_a=1,
-            height_rand_b=4,
-            branch_chance=100.0,
-            branch_length=(0, 1),
-            branch_steps=(1, 4),
-        )
-        assert tree6._content["minecraft:tree_feature"]["mangrove_trunk"] == {
-            "trunk_block": "minecraft:mangrove_log",
-            "trunk_width": 1,
-            "trunk_height": {"base": 2, "height_rand_a": 1, "height_rand_b": 4},
-            "branches": {
-                "branch_chance": 100.0,
-                "branch_length": {"range_min": 0, "range_max": 1},
-                "branch_steps": {"range_min": 1, "range_max": 4},
-            },
-        }
 
-        # 7. mega_trunk with strict plain arguments
-        tree7 = TreeFeature("t7").mega_trunk(
-            trunk_block="minecraft:jungle_log",
-            trunk_width=2,
-            base_height=10,
-            height_intervals=[3, 20],
-            height_modifier=(0, 2),
-            branch_length=5,
-        )
-        assert tree7._content["minecraft:tree_feature"]["mega_trunk"] == {
-            "trunk_block": "minecraft:jungle_log",
-            "trunk_width": 2,
-            "trunk_height": {"base": 10, "intervals": [3, 20]},
-            "height_modifier": {"range_min": 0, "range_max": 2},
-            "branches": {
-                "branch_length": 5,
-            },
-        }
+def test_multi_block_and_growing_plant():
+    feature = MultiBlockFeature("log", "test:horizontal_log", True, True)
+    feature.may_replace(["minecraft:air"])
+    assert _body(feature) == {
+        "description": {"identifier": "test:log"},
+        "places_block": "test:horizontal_log",
+        "enforce_placement_rules": True,
+        "randomize_rotation": True,
+        "may_replace": ["minecraft:air"],
+    }
 
-        # 8. poplar_trunk with tuple ranges
-        tree8 = TreeFeature("t8").poplar_trunk(
-            trunk_block="minecraft:birch_log",
-            trunk_height=(8, 12),
-            remaining_trunk_height_above_branches=2,
-            amount_of_foliage_support_branches=3,
-            height_modifier=(0, 1),
-        )
-        assert tree8._content["minecraft:tree_feature"]["poplar_trunk"] == {
-            "trunk_block": "minecraft:birch_log",
-            "trunk_height": {"range_min": 8, "range_max": 12},
-            "remaining_trunk_height_above_branches": {"range_min": 2, "range_max": 2},
-            "amount_of_foliage_support_branches": 3,
-            "height_modifier": {"range_min": 0, "range_max": 1},
-        }
-    finally:
-        CONFIG._instance = old_instance
+    vine = GrowingPlantFeature("vine", "DOWN", age=(17, 26))
+    vine.add_height((1, 13), 2).add_body_block("minecraft:cave_vines", 4)
+    vine.add_head_block("minecraft:cave_vines", 4)
+    body = _body(vine)
+    assert body["height_distribution"] == [[{"range_min": 1, "range_max": 13}, 2]]
+    assert body["age"] == {"range_min": 17, "range_max": 26}
+
+
+def test_geode_ranges_raise():
+    options = dict(
+        filler="minecraft:air",
+        inner_layer="minecraft:amethyst_block",
+        alternate_inner_layer="minecraft:budding_amethyst",
+        middle_layer="minecraft:calcite",
+        outer_layer="minecraft:smooth_basalt",
+        min_outer_wall_distance=4,
+        max_outer_wall_distance=7,
+        min_distribution_points=3,
+        max_distribution_points=5,
+        min_point_offset=1,
+        max_point_offset=3,
+        max_radius=16,
+        crack_point_offset=2,
+        generate_crack_chance=0.95,
+        base_crack_size=2,
+        noise_multiplier=0.025,
+        use_potential_placements_chance=0.35,
+        use_alternate_layer0_chance=0.083,
+        placements_require_layer0_alternate=True,
+        invalid_blocks_threshold=1,
+    )
+    assert _body(GeodeFeature("geode", **options))["max_radius"] == 16
+    with pytest.raises(ValueError):
+        _json(GeodeFeature("bad", **(options | {"generate_crack_chance": 2}))._document)
+
+
+def test_tree_feature():
+    tree = TreeFeature("tree")
+    tree.may_grow_on(["minecraft:dirt"]).may_replace(["minecraft:air"])
+    tree.trunk(
+        "test:log", trunk_height=(4, 7), height_modifier=(0, 2), can_be_submerged=1
+    )
+    tree.trunk_decoration((1, 4), "minecraft:vine", 2, "down")
+    tree.canopy(
+        "test:leaves",
+        canopy_offset_min=-3,
+        canopy_offset_max=0,
+        variation_chance=[(1, 2), 1.0],
+    )
+    body = _body(tree)
+    assert body["trunk"] == {
+        "trunk_block": "test:log",
+        "trunk_height": {"range_min": 4, "range_max": 7},
+        "height_modifier": {"range_min": 0, "range_max": 2},
+        "can_be_submerged": {"max_depth": 1},
+        "trunk_decoration": {
+            "decoration_chance": {"numerator": 1, "denominator": 4},
+            "decoration_block": "minecraft:vine",
+            "num_steps": 2,
+            "step_direction": "down",
+        },
+    }
+    assert body["canopy"] == {
+        "canopy_offset": {"min": -3, "max": 0},
+        "variation_chance": [{"numerator": 1, "denominator": 2}, 1.0],
+        "leaf_block": "test:leaves",
+    }
+
+
+def test_tree_has_one_trunk_and_needs_one():
+    with pytest.raises(ValueError):
+        _json(TreeFeature("bare")._document)
+    tree = TreeFeature("tree").trunk("test:log").fancy_trunk("test:log")
+    body = _body(tree)
+    assert "trunk" not in body and "fancy_trunk" in body
+
+
+def test_tree_branch_canopies_follow_the_trunk_in_any_order():
+    tree = TreeFeature("cherry")
+    tree.cherry_canopy("test:leaves", height=5)
+    tree.cherry_trunk("test:log")
+    tree.branch_fancy_canopy("test:leaves", height=2)
+    body = _body(tree)
+    branch_canopy = body["cherry_trunk"]["branches"]["branch_canopy"]
+    assert branch_canopy["cherry_canopy"]["height"] == {"range_min": 5, "range_max": 5}
+    assert branch_canopy["fancy_canopy"]["height"] == 2
+    assert body["cherry_canopy"] == branch_canopy["cherry_canopy"]
+
+
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda tree: tree.acacia_trunk("test:log", height_intervals=[2]).acacia_canopy(
+            "test:leaves"
+        ),
+        lambda tree: tree.fallen_trunk("test:log", stump_height=1),
+        lambda tree: tree.mangrove_trunk("test:log")
+        .mangrove_canopy(["test:leaves", ("test:flowers", 2)])
+        .mangrove_roots("test:roots", above_root_chance=(1, 2)),
+        lambda tree: tree.mega_trunk(
+            "test:log", branch_altitude_factor=(0.2, 0.5)
+        ).mega_canopy("test:leaves"),
+        lambda tree: tree.poplar_trunk("test:log").poplar_canopy(
+            "test:leaves", radius=[(2, 1)]
+        ),
+        lambda tree: tree.trunk("test:log", 5).roofed_canopy("test:leaves"),
+        lambda tree: tree.trunk("test:log").spruce_canopy("test:leaves"),
+        lambda tree: tree.trunk("test:log").pine_canopy("test:leaves"),
+        lambda tree: tree.trunk("test:log").mega_pine_canopy("test:leaves"),
+        lambda tree: tree.trunk("test:log").random_spread_canopy(["test:leaves"]),
+    ],
+)
+def test_tree_trunks_and_canopies_match_the_schema(build):
+    tree = TreeFeature("tree")
+    build(tree)
+    _check(tree)
+
+
+def test_tree_cherry_trunk_base_must_be_two():
+    tree = TreeFeature("tree").cherry_trunk("test:log", base_height=1)
+    with pytest.raises(ValueError):
+        _json(tree._document)
+
+
+def test_tree_mega_trunk_width_takes_a_range():
+    tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=(3, 2))
+    tree.mega_canopy("test:leaves")
+    assert _body(tree)["mega_trunk"]["trunk_width"] == {"range_min": 2, "range_max": 3}
+    tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=2)
+    tree.mega_canopy("test:leaves")
+    assert _body(tree)["mega_trunk"]["trunk_width"] == 2
+
+
+def test_tree_mega_trunk_width_range_must_be_at_least_one():
+    tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=(0, 2))
+    with pytest.raises(ValueError):
+        _json(tree._document)

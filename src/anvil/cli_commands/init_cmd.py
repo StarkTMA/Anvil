@@ -2,12 +2,21 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 import click
-from anvil.lib.config import Config, ConfigOption, ConfigSection
+
+from anvil.lib import scaffold
+from anvil.lib.config import (
+    Config,
+    ConfigOption,
+    ConfigSection,
+    validate_namespace_project_name,
+)
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     DESKTOP,
+    OUTPUT,
     PREVIEW_COM_MOJANG,
     RELEASE_COM_MOJANG,
     AnvilDisplay,
@@ -16,164 +25,6 @@ from anvil.lib.lib import (
     Directory,
     process_subcommand,
 )
-from anvil.lib.templater import load_file
-
-from ..__version__ import __version__
-
-
-class JsonSchemes:
-    """Collection of static methods for generating various project templates and configurations."""
-
-    @staticmethod
-    def python():
-        """Generates a Python template.
-
-        Returns:
-            str: The Python template content.
-        """
-        return load_file("python.jsont")
-
-    @staticmethod
-    def package_json(project_name, version, description, author):
-        """Generates a package.json template.
-
-        Args:
-            project_name (str): The name of the project.
-            version (str): The version of the project.
-            description (str): The project description.
-            author (str): The project author.
-
-        Returns:
-            dict: The package.json template data.
-        """
-        return load_file(
-            "package_json.jsont",
-            {
-                "project_name": project_name,
-                "version": version,
-                "description": description,
-                "author": author,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def vscode(path, wkspc, script_uuid, project_name):
-        """Generates a VSCode configuration template.
-
-        Args:
-            path (str): The project path.
-            wkspc (str): The workspace path.
-            script_uuid (str): The script UUID.
-            project_name (str): The project name.
-
-        Returns:
-            dict: The VSCode configuration data.
-        """
-        return load_file(
-            "vscode.jsont",
-            {
-                "script_uuid": script_uuid,
-                "wkspc": wkspc,
-                "path": path,
-                "project_name": project_name,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def gitignore():
-        """Generates a .gitignore template.
-
-        Returns:
-            str: The .gitignore template content.
-        """
-        return load_file("gitignore.jsont")
-
-    @staticmethod
-    def code_workspace(
-        name,
-        path,
-        preview=False,
-        dev_res_path=None,
-        dev_beh_path=None,
-    ):
-        """Generates a VS Code workspace configuration.
-
-        Args:
-            name (str): The workspace name.
-            path (str): The workspace path.
-            preview (bool, optional): Whether this is for preview mode. Defaults to False.
-            dev_res_path (str, optional): Custom development resource packs path.
-            dev_beh_path (str, optional): Custom development behavior packs path.
-
-        Returns:
-            dict: The workspace configuration data.
-        """
-        DEV_RES_DIR = dev_res_path or os.path.join(
-            PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG,
-            "development_resource_packs",
-        )
-        DEV_BEH_DIR = dev_beh_path or os.path.join(
-            PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG,
-            "development_behavior_packs",
-        )
-
-        DEV_PREV_RES_DIR = os.path.join(
-            PREVIEW_COM_MOJANG, "development_resource_packs"
-        )
-        DEV_PREV_BEH_DIR = os.path.join(
-            PREVIEW_COM_MOJANG, "development_behavior_packs"
-        )
-
-        return load_file(
-            "code_workspace.jsont",
-            {
-                "name": name,
-                "path": path,
-                "dev_res_path": DEV_RES_DIR,
-                "dev_beh_path": DEV_BEH_DIR,
-                "dev_prev_res_path": DEV_PREV_RES_DIR,
-                "dev_prev_beh_path": DEV_PREV_BEH_DIR,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def tsconfig(out_dir):
-        return load_file(
-            "tsconfig.jsont",
-            {"out_dir": os.path.join(out_dir, "scripts")},
-            is_json=True,
-        )
-
-    @staticmethod
-    def esbuild_config_js(outDir, minify: bool = False):
-        return load_file(
-            "esbuild.jsont",
-            {
-                "out_dir": outDir,
-                "minify": minify,
-            },
-        )
-
-    @staticmethod
-    def tsconstants(namespace: str, project_name: str):
-        return load_file(
-            "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
-        )
-
-    @staticmethod
-    def github_release_workflow(project_name: str, display_name: str):
-        return load_file(
-            "github_release_workflow.ymlt",
-            {
-                "project_name": project_name,
-                "display_name": display_name,
-                "gha": "${{",
-                "end": "}}",
-            },
-        )
 
 
 def handle_configuration(
@@ -185,10 +36,6 @@ def handle_configuration(
     addon: bool,
 ):
     config = Config(allow_missing=True)
-
-    config.add_option(
-        ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
-    )
 
     config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
@@ -211,42 +58,41 @@ def handle_configuration(
         ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world"
     )
 
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.RELEASE, "1.0.0")
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.PACK_UUID, str(uuid.uuid4()))
     config.add_option(
-        ConfigSection.ANVIL,
-        ConfigOption.PASCAL_PROJECT_NAME,
-        "".join(x[0] for x in project_name.split("_")).upper(),
+        ConfigSection.MANIFEST, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
     )
+    config.add_option(
+        ConfigSection.MANIFEST, ConfigOption.RESOURCE_MODULE_UUID, str(uuid.uuid4())
+    )
+
+    config.add_option(ConfigSection.FEATURES, ConfigOption.SCRIPT_API, scriptapi)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.SCRIPT_UI, scriptapi)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.PBR, False)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.RANDOM_SEED, False)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.EXPERIMENTAL, False)
+
+    config.add_option(ConfigSection.BUILD, ConfigOption.PREVIEW, preview)
+    config.add_option(
+        ConfigSection.BUILD, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
+    )
+    config.add_option(ConfigSection.BUILD, ConfigOption.MINIFY, False)
+    config.add_option(ConfigSection.BUILD, ConfigOption.ADD_STAMP, True)
+    config.add_option(
+        ConfigSection.BUILD,
+        ConfigOption.LOCAL_EXPORT,
+        sys.platform != "win32",
+    )
+
     config.add_option(
         ConfigSection.ANVIL,
         ConfigOption.LAST_CHECK,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
-    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, scriptapi)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
-    )
-    config.add_option(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.ADD_STAMP, True)
-    config.add_option(
-        ConfigSection.ANVIL,
-        ConfigOption.LOCAL_EXPORT,
-        sys.platform != "win32",
-    )
-
-    config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
-    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-    config.add_option(
-        ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
-    )
-
-    config.add_section(namespace)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
 
     return config
 
@@ -255,20 +101,20 @@ def create_directories_from_tree(tree: dict) -> None:
     """
     Recursively creates directories based on the structure of a tree.
 
-    Parameters:
+    Args:
         tree (dict): The tree structure representing the directories.
 
     Returns:
         None
     """
 
-    def find_key(tree: dict, path: str, a: list) -> list:
+    def find_key(tree: dict, path: Path, a: list) -> list:
         """
         Recursively finds keys in the tree structure.
 
-        Parameters:
+        Args:
             tree (dict): The tree structure.
-            path (str): The current path.
+            path (Path): The current path.
             a (list): The list to store the found keys.
 
         Returns:
@@ -276,12 +122,12 @@ def create_directories_from_tree(tree: dict) -> None:
         """
         for key, value in tree.items():
             if isinstance(value, dict):
-                find_key(value, f"{path}/{key}", a)
+                find_key(value, path / key, a)
             if value == {}:
-                a.append(f"{path}/{key}")
+                a.append(path / key)
         return a
 
-    directories = find_key(tree, "", a=[])
+    directories = find_key(tree, Path(), a=[])
     for directory in directories:
         Directory.create(directory)
 
@@ -290,8 +136,8 @@ def handle_script(
     config: Config,
     namespace: str,
     project_name: str,
-    DEV_BEH_DIR: str,
-    WORKING_DIR: str,
+    DEV_BEH_DIR: Path,
+    WORKING_DIR: Path,
     vscode: bool,
 ) -> None:
     click.echo("Initiating ScriptingAPI modules")
@@ -304,18 +150,20 @@ def handle_script(
     ]
 
     script_uuid = str(uuid.uuid4())
-    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, script_uuid)
     config.add_option(
-        ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
+        ConfigSection.MANIFEST, ConfigOption.DATA_MODULE_UUID, script_uuid
     )
-    DEV_BEH_DIR = os.path.join(
-        DEV_BEH_DIR,
-        f"BP_{config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)}",
+    config.add_option(
+        ConfigSection.BUILD, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
+    )
+    DEV_BEH_DIR = (
+        DEV_BEH_DIR
+        / f"BP_{config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)}"
     )
 
     AnvilIO.file(
         "package.json",
-        JsonSchemes.package_json(
+        scaffold.package_json(
             project_name,
             "1.0.0",
             str(config.get_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME))
@@ -324,48 +172,40 @@ def handle_script(
         ),
         "",
         "w",
-        True,
     )
-    AnvilIO.file("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
+    AnvilIO.file("tsconfig.json", scaffold.tsconfig(DEV_BEH_DIR), "", "w")
     AnvilIO.file(
         "esbuild.js",
-        JsonSchemes.esbuild_config_js(
-            os.path.join(DEV_BEH_DIR, "scripts"),
-            bool(config.get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)),
-        ),
+        scaffold.esbuild_js(),
         "",
         "w",
-        False,
     )
     AnvilIO.file(
         "constants.ts",
-        JsonSchemes.tsconstants(namespace, project_name),
-        os.path.join("scripts", "javascript"),
+        scaffold.ts_constants(namespace, project_name),
+        Path("scripts", "javascript"),
         "w",
-        False,
     )
     AnvilIO.file(
         "main.ts",
         'import { world, system } from "@minecraft/server";\n',
-        os.path.join("scripts", "javascript"),
+        Path("scripts", "javascript"),
         "w",
-        False,
     )
     if vscode:
         AnvilIO.file(
             "launch.json",
-            JsonSchemes.vscode(
-                os.path.join(DEV_BEH_DIR, "scripts"),
-                os.path.join(WORKING_DIR, "scripts", "javascript"),
+            scaffold.vscode_launch(
+                DEV_BEH_DIR / "scripts",
+                WORKING_DIR / "scripts" / "javascript",
                 script_uuid,
                 project_name,
             ),
             ".vscode",
             "w",
-            False,
         )
 
-    print(f"Installing npm packages... [{', '.join(install_dependencies)}]")
+    click.echo(f"Installing npm packages... [{', '.join(install_dependencies)}]")
     process_subcommand(
         f"npm init -y && npm install {' '.join(install_dependencies)}",
         f"Unable to initiate npm packages [{', '.join(install_dependencies)}].",
@@ -411,7 +251,7 @@ def init(
     addon: bool = False,
     vscode: bool = False,
 ) -> None:
-    AnvilValidator.validate_namespace_project_name(namespace, project_name, addon)
+    validate_namespace_project_name(namespace, project_name, addon)
     display_name = project_name.title().replace("-", " ").replace("_", " ")
     AnvilDisplay.copyright()
     click.echo(f"Initiating {display_name}")
@@ -442,26 +282,26 @@ def init(
     )
     os.chdir(project_name)
     config.save()
-    WORKING_DIR = os.getcwd()
+    WORKING_DIR = Path.cwd()
     local_export = (
-        bool(config.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT))
-        if config.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
+        bool(config.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT))
+        if config.has_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT)
         else (sys.platform != "win32")
     )
     if local_export or sys.platform != "win32":
-        COM_MOJANG = os.path.join(os.path.abspath("output"), "com.mojang")
+        COM_MOJANG = WORKING_DIR / OUTPUT / "com.mojang"
     else:
         COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
 
-    DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
-    DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
+    DEV_RES_DIR = COM_MOJANG / "development_resource_packs"
+    DEV_BEH_DIR = COM_MOJANG / "development_behavior_packs"
 
-    AnvilIO.file("main.py", JsonSchemes.python(), "scripts/python/", "w")
-    AnvilIO.file(".gitignore", JsonSchemes.gitignore(), "", "w")
+    AnvilIO.file("main.py", scaffold.main_py(), Path("scripts", "python"), "w")
+    AnvilIO.file(".gitignore", scaffold.gitignore(), "", "w")
     AnvilIO.file(
         "release.yml",
-        JsonSchemes.github_release_workflow(project_name, display_name),
-        os.path.join(".github", "workflows"),
+        scaffold.github_release_workflow(project_name),
+        Path(".github", "workflows"),
         "w",
     )
     AnvilIO.file("CHANGELOG.md", "", "", "w")
@@ -469,10 +309,10 @@ def init(
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
     if vscode:
         workspace_file = f"{project_name}.code-workspace"
-        workspace_dir = DESKTOP if os.path.isdir(DESKTOP) else WORKING_DIR
+        workspace_dir = DESKTOP if DESKTOP.is_dir() else WORKING_DIR
         AnvilIO.file(
             workspace_file,
-            JsonSchemes.code_workspace(
+            scaffold.code_workspace(
                 config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
                 WORKING_DIR,
                 preview,
@@ -482,7 +322,7 @@ def init(
             workspace_dir,
             "w",
         )
-        workspace_full_path = os.path.join(workspace_dir, workspace_file)
+        workspace_full_path = workspace_dir / workspace_file
         if sys.platform == "win32":
             process_subcommand(
                 f'start "" "{workspace_full_path}"',

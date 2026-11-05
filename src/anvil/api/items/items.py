@@ -1,139 +1,96 @@
-import os
+from typing import TYPE_CHECKING
 
-from anvil.api.actors.actors import Attachable
-from anvil.api.core.components import RootComponent, components_validations
 from anvil.api.core.core import ANVIL
-from anvil.api.core.enums import ItemCategory, ItemGroups
-from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import CONFIG
+from anvil.lib.jsonmodel import Identifier
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (
-    AddonObject,
-    JsonSchemes,
-    MinecraftDescription,
-    MinecraftItemDescriptor,
-)
 from anvil.lib.translator import AnvilTranslator
+
+if TYPE_CHECKING:
+    from anvil.api.items.client import ItemClient
 
 __all__ = ["Item"]
 
 
-# Items
-class _ItemServerDescription(MinecraftDescription):
-    def __init__(self, name, is_vanilla) -> None:
-        super().__init__(name, is_vanilla)
-        self._description["description"].update({"properties": {}, "menu_category": {}})
+class Item:
+    _object_type = "Item"
 
-    def menu_category(
-        self,
-        category: ItemCategory,
-        group: ItemGroups | None = None,
-        is_hidden_in_commands: bool = False,
-    ) -> "_ItemServerDescription":
-        """Sets the menu category for the item.
-
-        Parameters:
-            category (ItemCategory, optional): The category of the item. Defaults to ItemCategory.none.
-            group (str, optional): The group of the item. Defaults to None.
-            is_hidden_in_commands (bool, optional): Whether the item is hidden in commands. Defaults to False.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition)
-
-        """
-        self._description["description"]["menu_category"]["category"] = category
-        self._description["description"]["menu_category"]["group"] = group
-        self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
-            is_hidden_in_commands if is_hidden_in_commands else {}
-        )
-        return self
-
-    def __export__(self) -> dict:
-        return super().__export__()
-
-
-class _ItemServer(AddonObject):
-    _extension = ".item.json"
-    _path = os.path.join(CONFIG.BP_PATH, "items")
-    _object_type = "Item Server"
-
-    def __init__(self, name: str, is_vanilla: bool) -> None:
-        super().__init__(name)
-        self._server_item = JsonSchemes.server_item()
-        self._description = _ItemServerDescription(name, is_vanilla)
-        self._components = RootComponent()
-
-    @property
-    def description(self) -> "_ItemServerDescription":
-        return self._description
-
-    @property
-    def components(self) -> "RootComponent":
-        return self._components
-
-    def __export__(self) -> None:
-        if len(self._components._components) == 0:
-            raise ValueError(
-                f"Item '{self.name}' must have at least one component defined."
-            )
-
-        components_validations(self, self._components, [])
-
-        from anvil.api.items.components import ItemDisplayName
-
-        self._server_item["minecraft:item"].update(self.description.__export__())
-        self._server_item["minecraft:item"]["components"].update(
-            self._components.__export__()["components"]
-        )
-
-        if not self._components._has(ItemDisplayName):
-            self._server_item["minecraft:item"]["components"][
-                ItemDisplayName._identifier
-            ] = {"value": f"item.{self.identifier}.name"}
-
-            AnvilTranslator().add_localization_entry(
-                f"item.{self.identifier}.name",
-                self._display_name,
-            )
-
-        self.content(self._server_item)
-        super().__export__()
-
-
-class Item(MinecraftItemDescriptor):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        super().__init__(name, is_vanilla)
-        self.server = _ItemServer(name, is_vanilla)
-        self._attachable = None
+        """Creates an item: its server and client files share one identifier.
+
+        Args:
+            name (str): The item's name, with or without its namespace.
+            is_vanilla (bool, optional): If the item is a vanilla one. Defaults to False.
+
+        Raises:
+            ValueError: When the name is not valid (see `Identifier.parse`), or a vanilla
+                item is not in `MinecraftItemTypes`, or is an experimental one
+                (`anvil.beta.vanilla`) without `features.experimental`.
+        """
+        from anvil.api.items.server import ItemServer
+        from anvil.api.vanilla.items import vanilla_items_ids
+        from anvil.beta.vanilla.items import vanilla_items_ids as beta_vanilla_items_ids
+
+        self.identifier = Identifier.parse(
+            name, vanilla=is_vanilla, object_type=self._object_type
+        )
+        experimental = self.identifier in beta_vanilla_items_ids()
+        if (
+            self.identifier.is_vanilla
+            and self.identifier not in vanilla_items_ids()
+            and not (experimental and CONFIG._EXPERIMENTAL)
+        ):
+            if experimental:
+                raise ValueError(
+                    f"Vanilla item '{self.identifier}' is experimental: turn on "
+                    f"features.experimental in anvilconfig.json. Item [{self.identifier}]"
+                )
+            raise ValueError(
+                f"Invalid vanilla item '{self.identifier}'. Please use a valid vanilla "
+                f"item from MinecraftItemTypes. Item [{self.identifier}]"
+            )
+        self.server = ItemServer(self.identifier, self.identifier.is_vanilla)
+        self._client: ItemClient | None = None
 
     @property
-    def attachable(self) -> "Attachable":
-        if not self._attachable:
-            self._attachable = Attachable(self.name)
+    def name(self) -> str:
+        """The item's name, without its namespace."""
+        return self.identifier.name
 
-        return self._attachable
+    def __str__(self) -> str:
+        return self.identifier
+
+    @property
+    def client(self) -> ItemClient:
+        """The item client (its attachable), created the first time it is used."""
+        from anvil.api.items.client import ItemClient
+
+        if self._client is None:
+            self._client = ItemClient(self.identifier, self.identifier.is_vanilla)
+        return self._client
 
     def queue(self) -> "Item":
+        """Queues the item's files to be exported."""
         self.server.queue()
-
-        if self._attachable:
-            self._attachable.queue()
-
+        if self._client is not None:
+            self._client.queue()
         ANVIL.__queue__(self)
         return self
 
     def __export__(self) -> None:
-        item_name_comp = self.server._server_item["minecraft:item"]["components"][
-            ItemDisplayName._identifier
-        ]["value"]
+        from anvil.api.items.components import ItemDisplayName
 
-        if item_name_comp.startswith("item."):
-            display_name = AnvilTranslator().get_localization_value(item_name_comp)
-        else:
-            display_name = item_name_comp
+        display_name = next(
+            component.value
+            for component in self.server.components
+            if isinstance(component, ItemDisplayName)
+        )
+        if display_name.startswith("item."):
+            display_name = AnvilTranslator().get_localization_value(display_name)
 
         CONFIG.Report.add_report(
             ReportType.ITEM,
-            vanilla=self._is_vanilla,
+            vanilla=self.identifier.is_vanilla,
             col0=display_name,
             col1=self.identifier,
         )

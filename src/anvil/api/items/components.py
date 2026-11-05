@@ -1,1282 +1,1070 @@
-from math import inf
-from typing import Dict, Literal, Tuple, overload
-from warnings import deprecated
+from dataclasses import InitVar
+from typing import Annotated
 
-from anvil.api.actors.actors import ItemTexturesObject
-from anvil.api.core.components import Component
-from anvil.api.core.enums import DamageCause, EnchantsSlots, Rarity, Slots
-from anvil.api.core.textures import ItemTexturesObject
-from anvil.api.core.types import Identifier, Seconds, Tick
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.items.items import Item
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
-from anvil.api.vanilla.effects import MinecraftEffects
+from anvil.api.textures import ItemTexturesObject
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.blockbench import _BlockBenchSource
 from anvil.lib.config import CONFIG
-from anvil.lib.format_versions import ITEM_SERVER_VERSION
-from anvil.lib.lib import AnvilFormatter, Color, HexRGB, clamp
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
+from anvil.lib.jsonmodel import (
+    BlockId,
+    EntityId,
+    Hex,
+    IconTexture,
+    InRange,
+    ItemId,
+    JsonComponent,
+    JsonCustomComponent,
+    JsonObject,
+    JsonValueComponent,
+    Length,
+    MinMax,
+    NonNegative,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import DamageCause, EnchantsSlots
+from anvil.lib.jsonmodel.types import (
+    RGB,
+    RGB255,
+    RGBA,
+    RGBA255,
+    HexRGB,
+    HexRGBA,
+    ItemCooldownType,
+    ItemPlantAtFace,
+    ItemStartUsing,
+    ItemUseAnimations,
+    ItemWearableSlots,
+    Rarity,
 )
 from anvil.lib.translator import AnvilTranslator
 
+# region Parts: objects nested inside components
 
-# Require ITEM_SERVER_VERSION >= 1.21.130
-class ItemSwingSounds(Component):
-    _identifier = "minecraft:swing_sounds"
 
-    def __init__(
-        self,
-        attack_critical_hit: str,
-        attack_hit: str,
-        attack_miss: str,
-    ) -> None:
-        """Sound played when the item is swung.
+class KineticEffectConditions(JsonObject):
+    """Conditions that need to be satisfied for an effect of a kinetic weapon to be applied.
 
-        Parameters:
-            attack_critical_hit (str): Sound event played when the item is swung and a critical hit is achieved.
-            attack_hit (str): Sound event played when the item is swung and hits a target.
-            attack_miss (str): Sound event played when the item is swung and misses a target.
+    Args:
+        max_duration (int, optional): Time, in ticks, during which the effect can be applied after `delay` elapses. If negative, the effect is applied indefinitely. Game default -1.
+        min_relative_speed (float, optional): Minimum relative speed of the user with respect to the target, projected onto the view vector. Game default 0.
+        min_speed (float, optional): Minimum speed of the user, projected onto the view vector. Game default 0.
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_sounds)
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon_kinetic_effect_conditions)
+    """
+
+    max_duration: int | None = json_field(default=None)
+    min_relative_speed: float | None = json_field(default=None)
+    min_speed: float | None = json_field(default=None)
+
+
+class DurabilityThreshold(JsonObject):
+    """A durability threshold, and the effects emitted when it is met.
+
+    Args:
+        durability (int): The effects are emitted when the item durability is less than or equal to this value.
+        particle_type (str, optional): Particle effect to emit when the threshold is met.
+        sound_event (str, optional): Sound event emitted when the threshold is met: a built-in sound event, or any sound event from `sound_definitions.json`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor_durability_threshold)
+    """
+
+    durability: Annotated[int, NonNegative] = json_field()
+    particle_type: str | None = json_field(default=None)
+    sound_event: str | None = json_field(default=None)
+
+
+class DestroySpeed(JsonObject):
+    """How fast a digger item breaks a block.
+
+    Args:
+        block (str | Block | BlockDescriptor): The block, by descriptor, identifier or tag query.
+        speed (int): Digging speed for the block.
+    """
+
+    block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    speed: int = json_field()
+
+
+class RepairItem(JsonObject):
+    """Items that repair an item, and how much durability they restore.
+
+    Args:
+        items (list[str | Item]): Items that may be used to repair the item.
+        repair_amount (Molang | float, optional): How much the item is repaired.
+    """
+
+    items: list[Annotated[str | Item, ItemId]] = json_field()
+    repair_amount: Molang | str | float | None = json_field(default=None)
+
+
+class Ammunition(JsonObject):
+    """An item a shooter can fire.
+
+    Args:
+        item (str | Item): The ammunition item. It needs a `minecraft:projectile` component.
+        search_inventory (bool, optional): Whether the inventory is searched for the ammunition. Game default false.
+        use_in_creative (bool, optional): Whether the ammunition can be used in creative mode. Game default false.
+        use_offhand (bool, optional): Whether the ammunition can be used from the off hand. Game default false.
+    """
+
+    item: Annotated[str | Item, ItemId] = json_field()
+    search_inventory: bool | None = json_field(default=None)
+    use_in_creative: bool | None = json_field(default=None)
+    use_offhand: bool | None = json_field(default=None)
+
+
+# endregion
+
+# region Components required by other components
+
+
+class ItemDurability(JsonComponent):
+    """Sets how much damage the item can take before breaking, and allows the item to be combined at an anvil, grindstone, or crafting table.
+
+    Args:
+        max_durability (int): The amount of damage this item can take before breaking. Minimum 0.
+        damage_chance (tuple[float, float], optional): The `(min, max)` percentage chance of this item losing durability, each between 0 and 100. Game default (100, 100).
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability)
+    """
+
+    identifier = "minecraft:durability"
+
+    max_durability: Annotated[int, NonNegative] = json_field()
+    damage_chance: Annotated[tuple[int, int], InRange(0, 100), MinMax] | None = (
+        json_field(default=None)
+    )
+
+
+class ItemMaxStackSize(JsonValueComponent):
+    """Determines how many of an item can be stacked together.
+
+    Args:
+        value (int): How many of the item can be stacked together, from 1 to 64.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_max_stack_size)
+    """
+
+    identifier = "minecraft:max_stack_size"
+
+    value: Annotated[int, InRange(1, 64)] = json_field()
+
+
+class ItemStorageItem(JsonComponent):
+    """Enables an item to store data of the dynamic container associated with it. A dynamic container is a container for storing items that is linked to an item instead of a block or an entity.
+
+    Args:
+        allow_nested_storage_items (bool, optional): Whether another storage item is allowed inside this item. Game default true.
+        allowed_items (list[str | Item], optional): Items that are exclusively allowed in this storage item. If empty, all items are allowed.
+        banned_items (list[str | Item], optional): Items that are not allowed in this storage item.
+        max_slots (int, optional): The maximum number of slots, from 1 to 64. Game default 64.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item)
+    """
+
+    identifier = "minecraft:storage_item"
+
+    allow_nested_storage_items: bool | None = json_field(default=None)
+    allowed_items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
+    banned_items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
+    max_slots: Annotated[int, InRange(1, 64)] | None = json_field(default=None)
+
+
+class ItemUseModifiers(JsonComponent):
+    """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
+
+    Args:
+        use_duration (float): Time, in seconds, that the item takes to use. Minimum 0.
+        movement_modifier (float, optional): Multiplier applied to the player's movement speed while the item is in use. At most 1.
+        emit_vibrations (bool, optional): Whether vibrations are emitted when the item starts or stops being used. Game default true.
+        start_sound (str, optional): Sound event played when the item starts being used: a built-in sound event, or any sound event from `sound_definitions.json`.
+        start_using (ItemStartUsing, optional): When the player begins using the item. Game default "always". Requires format version 1.26.30.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers)
+    """
+
+    identifier = "minecraft:use_modifiers"
+
+    use_duration: Annotated[float, NonNegative] = json_field()
+    movement_modifier: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
+    )
+    emit_vibrations: bool | None = json_field(default=None)
+    start_sound: str | None = json_field(default=None)
+    start_using: ItemStartUsing | None = json_field(default=None)
+
+
+# endregion
+
+# region Components
+
+
+class ItemCustomComponent(JsonCustomComponent, abstract=True):
+    """Base of custom components: components registered by a script, with parameters.
+
+    Subclass it with an `identifier` and the parameters as fields. The identifier is in the project
+    namespace: a name without one gets it, any other namespace is refused.
+
+        class Explosive(ItemCustomComponent):
+            identifier = "explosive"
+
+            power: float = json_field()
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components)
+    """
+
+
+class ItemAllowOffHand(JsonValueComponent):
+    """Determines whether the item can be placed in the off hand slot.
+
+    Args:
+        value (bool, optional): Whether the item can be placed in the off hand slot. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_allow_off_hand)
+    """
+
+    identifier = "minecraft:allow_off_hand"
+
+    value: bool = json_field(default=True)
+
+
+class ItemBlockPlacer(JsonComponent):
+    """Sets the item as a placer item component for blocks. Items with this component will place a block when used.
+
+    Args:
+        block (str | Block | BlockDescriptor): The block that will be placed.
+        replace_block_item (bool, optional): If true, the item is registered as the item for this block, and is returned when the block is broken or picked. The item identifier must match the block identifier. Game default false.
+        aligned_placement (bool, optional): Whether block placement is aligned while the interaction button is held down. Requires format version 1.26.10.
+        use_on (list[str | Block | BlockDescriptor], optional): Blocks this item can be used on, at most 256. If empty, all blocks are allowed.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer)
+    """
+
+    identifier = "minecraft:block_placer"
+
+    block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    replace_block_item: bool | None = json_field(default=None)
+    aligned_placement: bool | None = json_field(default=None)
+    use_on: (
+        Annotated[
+            list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(maximum=256)
+        ]
+        | None
+    ) = json_field(default=None)
+
+
+class ItemBundleInteraction(JsonComponent):
+    """Enables the bundle-specific interaction scheme and tooltip for an item.
+
+    Args:
+        num_viewable_slots (int, optional): The maximum number of slots in the bundle viewable by the player, from 1 to 64. Game default 12.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_bundle_interaction)
+    """
+
+    identifier = "minecraft:bundle_interaction"
+    _requires = (ItemStorageItem, ItemMaxStackSize)
+
+    num_viewable_slots: Annotated[int, InRange(1, 64)] | None = json_field(default=None)
+
+
+class ItemCanDestroyInCreative(JsonValueComponent):
+    """Determines whether the item can be used to destroy blocks while in creative mode.
+
+    Args:
+        value (bool, optional): Whether the item breaks blocks in creative mode while swinging. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative)
+    """
+
+    identifier = "minecraft:can_destroy_in_creative"
+
+    value: bool = json_field(default=True)
+
+
+class ItemCompostable(JsonComponent):
+    """Specifies that an item is compostable and provides the chance of creating a composting layer in the composter.
+
+    Args:
+        composting_chance (int): The chance of this item to create a layer upon composting, from 1 to 100.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_compostable)
+    """
+
+    identifier = "minecraft:compostable"
+
+    composting_chance: Annotated[int, InRange(1, 100)] = json_field()
+
+
+class ItemCooldown(JsonComponent):
+    """Adds a cooldown to an item, preventing it from being used again for a specified duration. Items sharing the same category enter cooldown together.
+
+    Args:
+        category (str): Groups items together. When an item is used, all items of its category enter cooldown.
+        duration (int): How long, in seconds, the items of the category spend cooling down.
+        type (ItemCooldownType, optional): The action that triggers the cooldown, "use" or "attack". Game default "use".
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown)
+    """
+
+    identifier = "minecraft:cooldown"
+
+    category: str = json_field()
+    duration: Annotated[int | float, NonNegative] = json_field()
+    type: ItemCooldownType | None = json_field(default=None)
+
+
+class ItemDamage(JsonValueComponent):
+    """Determines how much extra damage the item deals when attacking.
+
+    Args:
+        value (int): Extra damage added to the base attack damage, from 0 to 32767.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage)
+    """
+
+    identifier = "minecraft:damage"
+
+    value: Annotated[int, InRange(0, 32767)] = json_field()
+
+
+class ItemDamageAbsorption(JsonComponent):
+    """Allows an item worn in an armor slot to absorb damage that would otherwise be dealt to its wearer. The absorbed damage reduces the item's durability.
+
+    Args:
+        absorbable_causes (list[DamageCause]): The damage causes the item can absorb, at least 1.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage_absorption)
+    """
+
+    identifier = "minecraft:damage_absorption"
+    _requires = (ItemDurability,)
+
+    absorbable_causes: Annotated[list[DamageCause], Length(minimum=1)] = json_field()
+
+
+class ItemDigger(JsonComponent):
+    """Configures an item as a digging tool, allowing it to break specific blocks faster than normal.
+
+    Args:
+        destroy_speeds (list[DestroySpeed], optional): The blocks this item digs, and how fast. Set them directly or add them with `add_destroy_speed`.
+        use_efficiency (bool, optional): Whether the Efficiency enchantment increases the dig speed. Game default false.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_digger)
+    """
+
+    identifier = "minecraft:digger"
+
+    destroy_speeds: list[DestroySpeed] = json_field(
+        default_factory=list, omit_default=True
+    )
+    use_efficiency: bool | None = json_field(default=None)
+
+    def add_destroy_speed(self, *, block: str | Block | BlockDescriptor, speed: int):
+        """Adds a block and its digging speed. See `DestroySpeed` for the parameters.
+
+        Returns:
+            ItemDigger: Self for method chaining.
         """
-        super().__init__("swing_sounds")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
-        self._add_field("attack_critical_hit", attack_critical_hit)
-        self._add_field("attack_hit", attack_hit)
-        self._add_field("attack_miss", attack_miss)
-
-
-class ItemKineticWeapon(Component):
-    _identifier = "minecraft:kinetic_weapon"
-
-    def __init__(
-        self,
-        reach: Tuple[float, float] = None,
-        creative_reach: Tuple[float, float] = None,
-        damage_modifier: float = 0,
-        damage_multiplier: float = 1,
-        delay: Tick = 0,
-        hitbox_margin: float = 0,
-    ) -> None:
-        """Specifies that the item is a kinetic weapon that uses kinetic energy when used.
-
-        Parameters:
-            reach (Tuple[float, float], optional): The reach range. Defaults to None.
-            creative_reach (Tuple[float, float], optional): The creative reach range. Defaults to None.
-            damage_modifier (float, optional): The damage modifier. Defaults to 0.
-            damage_multiplier (float, optional): The damage multiplier. Defaults to 1.
-            delay (Tick, optional): Delay in ticks. Defaults to 0.
-            hitbox_margin (float, optional): Hitbox margin. Defaults to 0.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon)
-        """
-        super().__init__("kinetic_weapon")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
-        self._dependencies = [ItemUseModifiers]
-
-        if reach:
-            self._add_field("reach", AnvilFormatter.min_max_dict(reach, "reach"))
-        if creative_reach:
-            self._add_field(
-                "creative_reach",
-                AnvilFormatter.min_max_dict(creative_reach, "creative_reach"),
-            )
-        if damage_modifier != 0:
-            self._add_field("damage_modifier", damage_modifier)
-        if damage_multiplier != 1:
-            self._add_field("damage_multiplier", damage_multiplier)
-        if delay != 0:
-            self._add_field("delay", delay)
-        if hitbox_margin != 0:
-            self._add_field("hitbox_margin", hitbox_margin)
-
-    def damage_conditions(
-        self,
-        max_duration: Tick = -1,
-        min_relative_speed: float = 0.0,
-        min_speed: float = 0.0,
-    ):
-        """Conditions for applying damage when using the kinetic weapon.
-
-        Parameters:
-            max_duration (Tick): Time, in ticks, during which the effect can be applied after "delay" elapses. If negative, the effect is applied indefinitely. Default is -1.
-            min_relative_speed (float): Minimum relative speed of the user with respect to the target (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
-            min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
-        """
-        entry = {}
-        if max_duration != -1:
-            entry["max_duration"] = max_duration
-        if min_relative_speed != 0.0:
-            entry["min_relative_speed"] = min_relative_speed
-        if min_speed != 0.0:
-            entry["min_speed"] = min_speed
-        self._add_field("damage_conditions", {})
+        self.destroy_speeds.append(DestroySpeed(block=block, speed=speed))
         return self
 
-    def knockback_conditions(
+
+class ItemDisplayName(JsonComponent):
+    """Sets the item display name. The item writes it as the localization key `item.<identifier>.name` and adds the name to the language file under that key.
+
+    Args:
+        value (str): The name shown for the item.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_display_name)
+    """
+
+    identifier = "minecraft:display_name"
+
+    value: str = json_field()
+
+    def __prepare_export__(self, owner: "Item", *, root: bool = True) -> None:
+        """Adds the name to the language file under `item.<identifier>.name`, then writes that key."""
+        key = f"item.{owner.identifier}.name"
+        if self.value == key:
+            return
+        AnvilTranslator().add_localization_entry(key, self.value)
+        self.value = key
+
+
+class ItemDurabilitySensor(JsonComponent):
+    """Enables an item to emit effects when it receives damage.
+
+    Args:
+        durability_thresholds (list[DurabilityThreshold]): The thresholds and their effects, at least 1. Set them directly or add them with `add_durability_threshold`. When several thresholds are met, only the one with the lowest durability is used.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor)
+    """
+
+    identifier = "minecraft:durability_sensor"
+    _requires = (ItemDurability,)
+
+    durability_thresholds: Annotated[list[DurabilityThreshold], Length(minimum=1)] = (
+        json_field(default_factory=list)
+    )
+
+    def add_durability_threshold(
         self,
-        max_duration: Tick = -1,
-        min_relative_speed: float = 0.0,
-        min_speed: float = 0.0,
-    ):
-        """Conditions for applying damage when using the kinetic weapon.
-
-        Parameters:
-            max_duration (Tick): Time, in ticks, during which the effect can be applied after "delay" elapses. If negative, the effect is applied indefinitely. Default is -1.
-            min_relative_speed (float): Minimum relative speed of the user with respect to the target (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
-            min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
-        """
-        entry = {}
-        if max_duration != -1:
-            entry["max_duration"] = max_duration
-        if min_relative_speed != 0.0:
-            entry["min_relative_speed"] = min_relative_speed
-        if min_speed != 0.0:
-            entry["min_speed"] = min_speed
-        self._add_field("knockback_conditions", {})
-        return self
-
-    def dismount_conditions(
-        self,
-        max_duration: Tick = -1,
-        min_relative_speed: float = 0.0,
-        min_speed: float = 0.0,
-    ):
-        """Conditions for applying damage when using the kinetic weapon.
-
-        Parameters:
-            max_duration (Tick): Time, in ticks, during which the effect can be applied after "delay" elapses. If negative, the effect is applied indefinitely. Default is -1.
-            min_relative_speed (float): Minimum relative speed of the user with respect to the target (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
-            min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
-        """
-        entry = {}
-        if max_duration != -1:
-            entry["max_duration"] = max_duration
-        if min_relative_speed != 0.0:
-            entry["min_relative_speed"] = min_relative_speed
-        if min_speed != 0.0:
-            entry["min_speed"] = min_speed
-        self._add_field("dismount_conditions", {})
-        return self
-
-
-class ItemPiercingWeapon(Component):
-    _identifier = "minecraft:piercing_weapon"
-
-    def __init__(
-        self,
-        reach: Tuple[float, float] = None,
-        creative_reach: Tuple[float, float] = None,
-        hitbox_margin: float = 0,
-    ) -> None:
-        """Allows an item to deal damage to all entities detected in a straight line along the user's view vector. Items with this component cannot destroy blocks, as the attack action always takes priority, regardless of what the user is looking at.
-
-        Parameters:
-            reach (Tuple[float, float], optional): The minimum and maximum reach of the weapon in survival mode. If not provided, defaults to the values defined in the Kinetic Weapon component if present, or standard melee reach values otherwise.
-            creative_reach (Tuple[float, float], optional): The minimum and maximum reach of the weapon in creative mode. If not provided, defaults to the values defined in the Kinetic Weapon component if present, or standard melee reach values otherwise.
-            hitbox_margin (float): Additional margin added to the hitbox size when detecting entities along the view vector. Default is 0.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_piercing_weapon)
-        """
-        super().__init__("piercing_weapon")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
-
-        if reach:
-            self._add_field("reach", AnvilFormatter.min_max_dict(reach, "reach"))
-        if creative_reach:
-            self._add_field(
-                "creative_reach",
-                AnvilFormatter.min_max_dict(creative_reach, "creative_reach"),
-            )
-        if hitbox_margin != 0:
-            self._add_field("hitbox_margin", hitbox_margin)
-
-
-class ItemCooldown(Component):
-    _identifier = "minecraft:cooldown"
-
-    def __init__(
-        self, category: str, duration: Seconds, type: Literal["attack", "use"] = "use"
-    ) -> None:
-        """Sets an items "Cool down" time. After using an item, it becomes unusable for the duration specified by the 'duration' setting of this component.
-
-        Parameters:
-            category (str): The type of cool down for this item.
-            duration (float): The duration of time (in Seconds) items with a matching category will spend cooling down before becoming usable again.
-            type (Literal["attack", "use"]): The type of action the cooldown applies to. Options are mutually exclusive, so cooldown for one type of action does not affect the others. Values: "use" (when using an item), "attack" (when attack with an item). Defaults to "use".
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown)
-        """
-        super().__init__("cooldown")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
-
-        self._add_field("category", category)
-        self._add_field("duration", duration)
-        if type != "use":
-            self._add_field("type", type)
-
-
-class ItemUseModifiers(Component):
-    _identifier = "minecraft:use_modifiers"
-
-    def __init__(
-        self,
-        use_duration: float,
-        movement_modifier: float = 1.0,
-        emit_vibrations: bool = True,
-        start_sound: str = None,
-        start_using: Literal["always", "if_first"] = "if_first",
-    ) -> None:
-        """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
-
-        Parameters:
-            use_duration (float): How long the item takes to use in seconds.
-            movement_modifier (float): Modifier value to scale the players movement speed when item is in use. Defaults to 1.0.
-            emit_vibrations (bool): Whether vibrations are emitted when the item starts or stops being used. Defaults to True.
-            start_sound (str): Sound event played when the item starts being used.
-            start_using (Literal["always", "if_first"]): When the item should start using. Defaults to "if_first".
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable)
-        """
-        super().__init__("use_modifiers")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
-
-        self._add_field("use_duration", clamp(use_duration, 0, inf))
-        self._add_field("movement_modifier", movement_modifier)
-        if not emit_vibrations:
-            self._add_field("emit_vibrations", emit_vibrations)
-        if start_sound:
-            self._add_field("start_sound", start_sound)
-        if start_using != "if_first":
-            self._enforce_version(ITEM_SERVER_VERSION, "1.26.30")
-            self._add_field("start_using", start_using)
-
-
-# Require ITEM_SERVER_VERSION >= 1.21.120
-class ItemSwingDuration(Component):
-    _identifier = "minecraft:swing_duration"
-
-    def __init__(self, value: float = 0.3) -> None:
-        """Duration, in seconds, of the item's swing animation played when mining or attacking.
-
-        Parameters:
-            value (float): Duration in seconds. Affects visuals only and does not impact gameplay mechanics.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_duration)
-        """
-        super().__init__("swing_duration")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.120")
-        self._set_value(clamp(value, 0, inf))
-
-
-class ItemFireResistant(Component):
-    _identifier = "minecraft:fire_resistant"
-
-    def __init__(self, value: bool = True) -> None:
-        """Determines whether the item is immune to burning when dropped in fire or lava.
-
-        Parameters:
-            value (bool): Determines whether the item is immune to burning when dropped in fire or lava. Defaults to True.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fire_resistant)
-        """
-        super().__init__("fire_resistant")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.120")
-        self._add_field("value", value)
-
-
-# Require ITEM_SERVER_VERSION >= 1.21.114
-class ItemDamageAbsorption(Component):
-    _identifier = "minecraft:damage_absorption"
-
-    def __init__(self, absorbable_causes: list[DamageCause]) -> None:
-        """Allows an item to absorb damage that would otherwise be dealt to its wearer. For this to happen, the item needs to be equipped in an armor slot. The absorbed damage reduces the item's durability, with any excess damage being ignored.
-
-        Parameters:
-            absorbable_causes (str): List of damage causes that can be absorbed by the item. Must have at least 1 item.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage_absorption)
-        """
-        super().__init__("damage_absorption")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.111")
-        self._dependencies = [ItemDurability]
-
-        if not absorbable_causes:
-            raise ValueError("absorbable_causes must have at least 1 item")
-
-        self._add_field("absorbable_causes", absorbable_causes)
-
-
-class ItemDurabilitySensor(Component):
-    _identifier = "minecraft:durability_sensor"
-
-    def __init__(self) -> None:
-        """Enables an item to emit effects when it receives damage.
-
-        This component requires ``minecraft:durability`` and at least one
-        durability threshold entry.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor)
-        """
-        super().__init__("durability_sensor")
-        self._dependencies = [ItemDurability]
-        self._add_field("durability_thresholds", [])
-
-    def add_threshold(
-        self,
+        *,
         durability: int,
         particle_type: str | None = None,
         sound_event: str | None = None,
     ):
-        """Adds a durability threshold entry.
+        """Adds a durability threshold. See `DurabilityThreshold` for the parameters.
 
-        Parameters:
-            durability (int): Emit effects when item durability is less than or equal to this value.
-            particle_type (str | None): Particle effect to emit when the threshold is met.
-            sound_event (str | None): Sound effect to emit when the threshold is met.
+        Returns:
+            ItemDurabilitySensor: Self for method chaining.
         """
-        entry = {"durability": max(0, durability)}
-
-        if particle_type is not None:
-            entry["particle_type"] = particle_type
-        if sound_event is not None:
-            entry["sound_event"] = sound_event
-
-        self._component["durability_thresholds"].append(entry)
+        self.durability_thresholds.append(
+            DurabilityThreshold(
+                durability=durability,
+                particle_type=particle_type,
+                sound_event=sound_event,
+            )
+        )
         return self
 
-    def __export__(self):
-        if not self._component["durability_thresholds"]:
-            raise ValueError(
-                "ItemDurabilitySensor requires at least one durability threshold"
+
+class ItemDyeable(JsonComponent):
+    """Enables players to dye this item, like leather armor.
+
+    Args:
+        default_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, optional): The color of the item when undyed. Written as a hex color. Game default white.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_dyeable)
+    """
+
+    identifier = "minecraft:dyeable"
+
+    default_color: (
+        Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] | None
+    ) = json_field(default=None)
+
+
+class ItemEnchantable(JsonComponent):
+    """Determines what enchantments can be applied to the item. Not all enchantments will have an effect on all item components.
+
+    Args:
+        slot (EnchantsSlots): Which types of enchantments can be applied. For example, `bow` lets the item be enchanted as if it were a bow.
+        value (int): The enchantability of the item. Minimum 0.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_enchantable)
+    """
+
+    identifier = "minecraft:enchantable"
+
+    slot: EnchantsSlots = json_field()
+    value: Annotated[int, NonNegative] = json_field()
+
+
+class ItemEntityPlacer(JsonComponent):
+    """Allows an item to place entities into the world, and to set the spawn type of a monster spawner.
+
+    Args:
+        entity (str | Entity): The entity to be placed in the world.
+        dispense_on (list[str | Block | BlockDescriptor], optional): Blocks this item can be dispensed on. If empty, all blocks are allowed.
+        use_on (list[str | Block | BlockDescriptor], optional): Blocks this item can be used on. If empty, all blocks are allowed.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_entity_placer)
+    """
+
+    identifier = "minecraft:entity_placer"
+
+    entity: Annotated[str | Entity, EntityId] = json_field()
+    dispense_on: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
+    )
+    use_on: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = json_field(
+        default=None
+    )
+
+
+class ItemFireResistant(JsonComponent):
+    """Determines whether the item is immune to burning when dropped in fire or lava.
+
+    Args:
+        value (bool, optional): Whether the item is immune to burning. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fire_resistant)
+    """
+
+    identifier = "minecraft:fire_resistant"
+
+    value: bool = json_field(default=True)
+
+
+class ItemFood(JsonComponent):
+    """Sets the item as a food component, allowing it to be edible to the player.
+
+    Args:
+        can_always_eat (bool, optional): Whether the item can be eaten even when not hungry. Game default false.
+        nutrition (int, optional): The value added to the entity's nutrition when the item is used. Game default 0.
+        saturation_modifier (float, optional): Used in `nutrition * saturation_modifier * 2` to compute the saturation buff. Game default 0.6.
+        using_converts_to (str | Item, optional): The item this one converts to when used.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_food)
+    """
+
+    identifier = "minecraft:food"
+    _requires = (ItemUseModifiers,)
+
+    can_always_eat: bool | None = json_field(default=None)
+    nutrition: Annotated[int, NonNegative] | None = json_field(default=None)
+    saturation_modifier: Annotated[float, NonNegative] | None = json_field(default=None)
+    using_converts_to: Annotated[str | Item, ItemId] | None = json_field(default=None)
+
+
+class ItemFuel(JsonComponent):
+    """Allows this item to be used as fuel in a furnace to 'cook' other items.
+
+    Args:
+        duration (int): How long, in seconds, this fuel cooks items for. Minimum 0.05.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fuel)
+    """
+
+    identifier = "minecraft:fuel"
+
+    duration: Annotated[int | float, InRange(minimum=0.05)] = json_field()
+
+
+class ItemGlint(JsonValueComponent):
+    """Determines whether the item has the enchanted glint render effect on it.
+
+    Args:
+        value (bool, optional): Whether the item has the enchanted glint. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_glint)
+    """
+
+    identifier = "minecraft:glint"
+
+    value: bool = json_field(default=True)
+
+
+class ItemHandEquipped(JsonValueComponent):
+    """Determines whether the item is rendered like a tool while in the player's hand.
+
+    Args:
+        value (bool, optional): Whether the item is rendered like a tool. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hand_equipped)
+    """
+
+    identifier = "minecraft:hand_equipped"
+
+    value: bool = json_field(default=True)
+
+
+class ItemHoverTextColor(JsonValueComponent):
+    """Determines the color of the item name when hovering over it.
+
+    Args:
+        value (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The color of the item hover text. Written as a hex color.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color)
+    """
+
+    identifier = "minecraft:hover_text_color"
+
+    value: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] = (
+        json_field()
+    )
+
+
+class ItemIcon(JsonComponent):
+    """Determines the icon that represents the item in the UI and elsewhere. The texture is added to the resource pack and to `item_texture.json`.
+
+    Args:
+        textures (TextureComponents): The icon texture and its PBR maps. Written as `{"default": "<namespace>:<color>"}`.
+        blockbench (str, optional): The Blockbench project to take the textures from. Not written to the JSON.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_icon)
+    """
+
+    identifier = "minecraft:icon"
+
+    textures: Annotated[TextureComponents, IconTexture] = json_field()
+    blockbench: InitVar[str | None] = None
+
+    def __post_init__(self, blockbench: str | None) -> None:
+        color = self.textures.color
+        ItemTexturesObject().add_item(
+            item_name=color, sprites=[color], blockbench=blockbench
+        )
+        texture_set = TextureSet(color, _BlockBenchSource.ITEM)
+        if blockbench:
+            texture_set.set_blockbench_textures(blockbench, self.textures)
+        else:
+            texture_set.set_item_textures(self.textures)
+        texture_set.queue()
+
+
+class ItemInteractButton(JsonValueComponent):
+    """Determines whether the interact button is shown in touch controls, and the text on it.
+
+    Args:
+        value (bool | str, optional): True shows the default "Use Item" text. A string is added to the language file and shown instead. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_interact_button)
+    """
+
+    identifier = "minecraft:interact_button"
+
+    value: bool | str = json_field(default=True)
+
+    def __post_init__(self) -> None:
+        if isinstance(self.value, str):
+            self.value = AnvilTranslator().localize(
+                self.value, prefix=f"key.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}"
             )
 
-        return super().__export__()
 
+class ItemKineticWeapon(JsonComponent):
+    """Allows an item to deal kinetic damage and its effects every tick while in use, along the user's view vector. Damage depends on the user's and the target's velocity.
 
-# Require ITEM_SERVER_VERSION >= 1.21.60
-class ItemCompostable(Component):
-    _identifier = "minecraft:compostable"
+    Args:
+        reach (tuple[float, float], optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
+        creative_reach (tuple[float, float], optional): The reach in Creative mode. Defaults to `reach`.
+        damage_modifier (float, optional): Value added to the scaled dot product, after `damage_multiplier`. Game default 0.
+        damage_multiplier (float, optional): Value the sum of the projected velocities is multiplied by. Game default 1.
+        delay (int, optional): Time, in ticks, after which kinetic damage and its effects start being applied. Game default 0.
+        hitbox_margin (float, optional): Added tolerance to the view vector raycast. Game default 0.
+        damage_conditions (KineticEffectConditions, optional): Conditions for damage to be applied. If not set, damage is not applied.
+        knockback_conditions (KineticEffectConditions, optional): Conditions for knockback to be applied. If not set, knockback is not applied.
+        dismount_conditions (KineticEffectConditions, optional): Conditions for riders to be dismounted. If not set, riders cannot be dismounted.
 
-    def __init__(self, composting_chance: float) -> None:
-        """Specifies that an item is compostable and provides the chance of creating a composting layer in the composter.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon)
+    """
 
-        Parameters:
-            composting_chance (float): The chance of this item to create a layer upon composting with the composter. Valid value range is 1 - 100 inclusive Value must be >= 1. Value must be <= 100.
+    identifier = "minecraft:kinetic_weapon"
+    _requires = (ItemUseModifiers,)
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_compostable)
-        """
-        super().__init__("compostable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.60")
-        self._add_field("composting_chance", clamp(composting_chance, 1.0, 100.0))
+    reach: Annotated[tuple[float, float], MinMax] | None = json_field(default=None)
+    creative_reach: Annotated[tuple[float, float], MinMax] | None = json_field(
+        default=None
+    )
+    damage_modifier: float | None = json_field(default=None)
+    damage_multiplier: float | None = json_field(default=None)
+    delay: Annotated[int, NonNegative] | None = json_field(default=None)
+    hitbox_margin: float | None = json_field(default=None)
+    damage_conditions: KineticEffectConditions | None = json_field(default=None)
+    knockback_conditions: KineticEffectConditions | None = json_field(default=None)
+    dismount_conditions: KineticEffectConditions | None = json_field(default=None)
 
-
-# Require ITEM_SERVER_VERSION >= 1.21.40
-class ItemStorageItem(Component):
-    _identifier = "minecraft:storage_item"
-
-    def __init__(
-        self, allow_nested_storage_items: bool = True, max_slots: int = 64
-    ) -> None:
-        """Enables an item to store data of the dynamic container associated with it. A dynamic container is a container for storing items that is linked to an item instead of a block or an entity.
-
-        Parameters:
-            allow_nested_storage_items (bool): Determines whether another Storage Item is allowed inside of this item. Default is True.
-            max_slots (int): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item)
-        """
-        super().__init__("storage_item")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
-
-        self._add_field("allow_nested_storage_items", allow_nested_storage_items)
-        self._add_field("max_slots", clamp(max_slots, 1, 64))
-
-    def allowed_items(self, *items: MinecraftItemDescriptor | str):
-        """List of items that are exclusively allowed in this Storage Item. If empty all items are allowed."""
-        self._add_field("allowed_items", [str(i) for i in items])
-        return self
-
-    def banned_items(self, *items: MinecraftItemDescriptor | str):
-        """List of items that are not allowed in this Storage Item."""
-        self._add_field("banned_items", [str(i) for i in items])
-        return self
-
-
-class ItemStorageWeightLimit(Component):
-    _identifier = "minecraft:storage_weight_limit"
-
-    def __init__(self, max_weight_limit: float = 64.0) -> None:
-        """Specifies the maximum weight limit that a storage item can hold.
-
-        Parameters:
-            max_weight_limit (float): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64. Value must be <= 64.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_limit)
-        """
-        super().__init__("storage_weight_limit")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
-        self._add_field("max_weight_limit", clamp(max_weight_limit, 0, 64))
-
-
-class ItemStorageWeightModifier(Component):
-    _identifier = "minecraft:storage_weight_modifier"
-
-    def __init__(self, weight_in_storage_item: int = 4) -> None:
-        """Specifies the weight of this item when inside another Storage Item.
-
-        Parameters:
-            weight_in_storage_item (int): The weight of this item when inside another Storage Item. Default is 4. 0 means item is not allowed in another Storage Item.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_modifier)
-        """
-        super().__init__("storage_weight_modifier")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
-        self._add_field("weight_in_storage_item", clamp(weight_in_storage_item, 0, inf))
-
-
-class ItemBundleInteraction(Component):
-    _identifier = "minecraft:bundle_interaction"
-
-    def __init__(self, num_viewable_slots: int = 12) -> None:
-        """Specifies the number of slots in the bundle viewable by the player.
-
-        Parameters:
-            num_viewable_slots (int): The maximum number of slots in the bundle viewable by the player. Can be from 1 to 64. Default is 12. Value must be >= 1 and <= 64.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_bundle_interaction)
-        """
-        super().__init__("bundle_interaction")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
-        self._dependencies = [ItemStorageItem, ItemMaxStackSize]
-
-        self._add_field("num_viewable_slots", clamp(num_viewable_slots, 1, 64))
-
-
-# Require ITEM_SERVER_VERSION >= 1.20.30
-class ItemRarity(Component):
-    _identifier = "minecraft:rarity"
-
-    def __init__(self, value: Rarity) -> None:
-        """Specifies the base rarity of the item, affecting the color of its name unless overridden by
-        'minecraft:hover_text_color'.
-
-        Parameters:
-            value (Rarity): The base rarity of the item.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity)
-        """
-        super().__init__("rarity")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-        self._set_value(value)
-
-
-class ItemDyeable(Component):
-    _identifier = "minecraft:dyeable"
-
-    def __init__(self, default_color: Color) -> None:
-        """Enables custom items to be dyed in cauldrons
-
-        Parameters:
-            default_color (Color): The default color of the item.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_dyeable)
-        """
-        super().__init__("dyeable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
-        self._add_field(
-            "default_color", AnvilFormatter.convert_color(default_color, HexRGB)
-        )
-
-
-# Require ITEM_SERVER_VERSION >= 1.21.20
-class ItemCustomComponents(Component):
-    _identifier = "minecraft:custom_components"
-
-    def __init__(self, component_name: str) -> None:
-        """Allows you to add custom components to an item.
-
-        Parameters:
-            component_name (str): The components to register, if the namespace is not provided, the project namespace will be used.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components)
-        """
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.20")
-        super().__init__(component_name, False)
-
-
-# Require ITEM_SERVER_VERSION >= 1.20.50
-class ItemTags(Component):
-    _identifier = "minecraft:tags"
-
-    def __init__(self, tags: list[MinecraftItemTags | str]) -> None:
-        super().__init__("tags")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
-        self._add_field("tags", tags)
-
-
-# Require ITEM_SERVER_VERSION >= 1.20.30
-class ItemEnchantable(Component):
-    _identifier = "minecraft:enchantable"
-
-    def __init__(self, slot: EnchantsSlots, value: int) -> None:
-        """Determines what enchantments can be applied to the item. Not all enchantments will have an effect on all item components.
-
-        Parameters:
-            slot (EnchantsSlots): What enchantments can be applied (ex. Using bow would allow this item to be enchanted as if it were a bow).
-            value (int): The value of the enchantment (minimum of 0).
-
-        ### [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_enchantable)
-        """
-        super().__init__("enchantable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-
-        self._add_field("slot", slot)
-        self._add_field("value", clamp(value, 0, inf))
-
-
-class ItemFood(Component):
-    _identifier = "minecraft:food"
-
-    def __init__(
+    def set_damage_conditions(
         self,
-        can_always_eat: bool = False,
-        nutrition: int = 0,
-        saturation_modifier: float = 0,
-        using_converts_to: MinecraftItemDescriptor | Identifier = None,
-    ) -> None:
-        """Sets the item as a food component, allowing it to be edible to the player.
-
-        Parameters:
-            can_always_eat (bool, optional): If true you can always eat this item (even when not hungry).
-            nutrition (int, optional): The value that is added to the actor's nutrition when the item is used. Defaults to 0.
-            saturation_modifier (float, optional): Saturation Modifier is used in this formula: (nutrition saturation_modifier 2) when applying the saturation buff. Defaults to 0.
-            using_converts_to (str, optional): Saturation Modifier is used in this formula: (nutrition saturation_modifier 2) when applying the saturation buff. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_food)
-        """
-        super().__init__("food")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-        self._dependencies = [ItemUseModifiers]
-
-        self._add_field("effects", [])
-        self._add_field("can_always_eat", can_always_eat)
-        self._add_field("nutrition", max(0, nutrition))
-        self._add_field("saturation_modifier", max(0, saturation_modifier))
-        if using_converts_to:
-            self._add_field("using_converts_to", str(using_converts_to))
-
-    @deprecated("This method is deprecated and will be removed in a future version.")
-    def effects(
-        self,
-        effect: MinecraftEffects,
-        chance: float,
-        duration: Seconds,
-        amplifier: int = 1,
+        *,
+        max_duration: int | None = None,
+        min_relative_speed: float | None = None,
+        min_speed: float | None = None,
     ):
-        """# DEPRECATED
-        Sets the effects of the food item.
+        """Sets the conditions for damage to be applied. See `KineticEffectConditions` for the parameters.
 
-        Parameters:
-            effect (MinecraftEffects): The effect to apply.
-            chance (float): The chance of the effect being applied.
-            duration (Seconds): The duration of the effect.
-            amplifier (int): The amplifier of the effect.
+        Returns:
+            ItemKineticWeapon: Self for method chaining.
         """
-        self._component["effects"].append(
-            {
-                "name": str(effect),
-                "chance": clamp(chance, 0, 1),
-                "duration": max(0, duration * 20),
-                "amplifier": clamp(amplifier, 0, 255),
-            }
+        self.damage_conditions = KineticEffectConditions(
+            max_duration=max_duration,
+            min_relative_speed=min_relative_speed,
+            min_speed=min_speed,
         )
         return self
 
-
-class ItemInteractButton(Component):
-    _identifier = "minecraft:interact_button"
-
-    def __init__(self, value: bool | str = True) -> None:
-        """Is a boolean or string that determines if the interact button is shown in touch controls, and what text is displayed on the button. When set to 'true', the default 'Use Item' text will be used.
-
-        Parameters:
-            value (bool | str): Determines if the interact button is shown in touch controls, and what text is displayed on the button. Defaults to True.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_interact_button)
-        """
-        super().__init__("interact_button")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-
-        if not value:
-            return
-
-        if isinstance(value, str):
-            localized_key = f"key.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.{value.lower().replace(' ', '_')}"
-            AnvilTranslator().add_localization_entry(localized_key, str(value))
-            self._set_value(localized_key)
-        elif isinstance(value, bool):
-            self._set_value(True)
-
-
-class ItemCanDestroyInCreative(Component):
-    _identifier = "minecraft:can_destroy_in_creative"
-
-    def __init__(self, value: bool) -> None:
-        """Determines if an item will break blocks in Creative Mode while swinging.
-
-        Parameters:
-            value (bool): If an item will break blocks in Creative Mode while swinging.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative)
-        """
-        super().__init__("can_destroy_in_creative")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemHoverTextColor(Component):
-    _identifier = "minecraft:hover_text_color"
-
-    def __init__(self, color: str) -> None:
-        """Determines the color of the item name when hovering over it.
-
-        Parameters:
-            color (str): The color of the item name when hovering over it.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color)
-        """
-        super().__init__("hover_text_color")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(color)
-
-
-# Require ITEM_SERVER_VERSION >= 1.20.20
-class ItemWearable(Component):
-    _identifier = "minecraft:wearable"
-
-    def __init__(self, slot: Slots, protection: int = 0) -> None:
-        """Sets the wearable item component.
-
-        Parameters:
-            slot (Slots): Determines where the item can be worn. If any non-hand slot is chosen, the max stack size is set to 1.
-            protection (int, optional): How much protection the wearable has. Defaults to 0.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_wearable)
-        """
-        super().__init__("wearable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.70")
-
-        self._add_field("slot", slot)
-        self._add_field("protection", protection)
-        # self._add_field("dispensable", dispensable)
-
-
-class ItemHandEquipped(Component):
-    _identifier = "minecraft:hand_equipped"
-
-    def __init__(self, value: bool) -> None:
-        """Determines if an item is rendered like a tool while in-hand.
-
-        Parameters:
-            value (bool): Determines if the item is rendered like a tool in-hand.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hand_equipped)
-        """
-        super().__init__("hand_equipped")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._add_field("value", value)
-
-
-class ItemGlint(Component):
-    _identifier = "minecraft:glint"
-
-    def __init__(self, value: bool) -> None:
-        """Determines whether the item has the enchanted glint render effect on it.
-
-        Parameters:
-            value (bool): Whether the item has the enchanted glint render effect.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_glint)
-        """
-        super().__init__("glint")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemStackedByData(Component):
-    _identifier = "minecraft:stacked_by_data"
-
-    def __init__(self, value: bool) -> None:
-        """Determines if the same item with different aux values can stack. Additionally, this component defines whether the item actors can merge while floating in the world.
-
-        Parameters:
-            value (bool): Sets whether the same item with different aux values can stack and merge while floating in the world.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_stacked_by_data)
-        """
-        super().__init__("stacked_by_data")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemUseAnimation(Component):
-    _identifier = "minecraft:use_animation"
-
-    def __init__(
+    def set_knockback_conditions(
         self,
-        value: Literal[
-            "eat",
-            "drink",
-            "block",
-            "bow",
-            "splash",
-            "linger",
-            "camera",
-            "crossbow",
-            "none",
-            "brush",
-            "spear",
-            "spyglass",
-        ],
-    ) -> None:
-        """Determines which animation plays when using an item.
-
-        Parameters:
-            value (str): Which animation to play when using an item.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_animation)
-        """
-        super().__init__("use_animation")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemAllowOffHand(Component):
-    _identifier = "minecraft:allow_off_hand"
-
-    def __init__(self, value: bool) -> None:
-        """Determines whether an item can be placed in the off-hand slot of the inventory.
-
-        Parameters:
-            value (bool): Whether the item can be placed in the off-hand slot.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_allow_off_hand)
-        """
-        super().__init__("allow_off_hand")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemShouldDespawn(Component):
-    _identifier = "minecraft:should_despawn"
-
-    def __init__(self, value: bool) -> None:
-        """Determines if an item should despawn while floating in the world.
-
-        Parameters:
-            value (bool): Sets whether the item should eventually despawn while floating in the world.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_should_despawn)
-        """
-        super().__init__("should_despawn")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemLiquidClipped(Component):
-    _identifier = "minecraft:liquid_clipped"
-
-    def __init__(self, value: bool) -> None:
-        """Determines whether an item interacts with liquid blocks on use.
-
-        Parameters:
-            value (bool): Whether an item interacts with liquid blocks on use.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_liquid_clipped)
-        """
-        super().__init__("liquid_clipped")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
-
-
-class ItemDamage(Component):
-    _identifier = "minecraft:damage"
-
-    def __init__(self, value: int) -> None:
-        """Determines how much extra damage an item does on attack.
-
-        Parameters:
-            value (bool): How much extra damage the item does on attack. Note that this must be a positive value.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage)
-        """
-        super().__init__("damage")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        if not (0 <= value <= 32767):
-            raise ValueError("Damage value must be between 0 and 32767 inclusive")
-
-        self._set_value(value)
-
-
-class ItemDigger(Component):
-    _identifier = "minecraft:digger"
-
-    def __init__(
-        self, destroy_speeds: Dict[MinecraftBlockDescriptor | Identifier, int]
-    ) -> None:
-        """Sets the item as a "Digger" item. Component put on items that dig.
-
-        Parameters:
-            destroy_speeds (str): Destroy speed per block.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_digger)
-        """
-        super().__init__("digger")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._add_field(
-            "destroy_speeds",
-            [{"block": str(k), "speed": v} for k, v in destroy_speeds.items()],
-        )
-
-    def use_efficiency(self, use_efficiency: bool = False):
-        """Toggles if the item will be used efficiently."""
-        self._add_field("use_efficiency", use_efficiency)
-        return self
-
-
-# Require ITEM_SERVER_VERSION >= 1.20.10
-class ItemRepairable(Component):
-    _identifier = "minecraft:repairable"
-
-    def __init__(
-        self, on_repaired: Literal["minecraft:celebrate", None] = None
-    ) -> None:
-        """Defines the items that can be used to repair a defined item, and the amount of durability each item restores upon repair. Each entry needs to define a list of strings for 'items' that can be used for the repair and an optional 'repair_amount' for how much durability is repaired.
-
-        Parameters:
-            on_repaired (str, optional): Event that is called when this item has been repaired. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_repairable)
-        """
-        super().__init__("repairable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
-        self._add_field("repair_items", [])
-
-        if not on_repaired is None:
-            self._add_field("on_repaired", on_repaired)
-
-    def add_items(
-        self,
-        repair_amount: Molang | int,
-        repair_items: list[MinecraftItemDescriptor | str],
+        *,
+        max_duration: int | None = None,
+        min_relative_speed: float | None = None,
+        min_speed: float | None = None,
     ):
+        """Sets the conditions for knockback to be applied. See `KineticEffectConditions` for the parameters.
+
+        Returns:
+            ItemKineticWeapon: Self for method chaining.
         """
-        Parameters:
-            repair_amount (int): How much durability is repaired.
-            repair_items (list[MinecraftItemDescriptor | str]): List of repair item entries.
+        self.knockback_conditions = KineticEffectConditions(
+            max_duration=max_duration,
+            min_relative_speed=min_relative_speed,
+            min_speed=min_speed,
+        )
+        return self
+
+    def set_dismount_conditions(
+        self,
+        *,
+        max_duration: int | None = None,
+        min_relative_speed: float | None = None,
+        min_speed: float | None = None,
+    ):
+        """Sets the conditions for riders to be dismounted. See `KineticEffectConditions` for the parameters.
+
+        Returns:
+            ItemKineticWeapon: Self for method chaining.
         """
-        self._component["repair_items"].append(
-            {"items": [str(i) for i in repair_items], "repair_amount": repair_amount}
+        self.dismount_conditions = KineticEffectConditions(
+            max_duration=max_duration,
+            min_relative_speed=min_relative_speed,
+            min_speed=min_speed,
         )
         return self
 
 
-class ItemMaxStackSize(Component):
-    _identifier = "minecraft:max_stack_size"
+class ItemLiquidClipped(JsonValueComponent):
+    """Determines whether the item interacts with liquid blocks on use.
 
-    def __init__(self, stack_size: int) -> None:
-        """Determines how many of an item can be stacked together.
+    Args:
+        value (bool, optional): Whether the item interacts with liquid blocks on use. Defaults to True.
 
-        Parameters:
-            stack_size (int): How many of an item that can be stacked together.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_liquid_clipped)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_max_stack_size)
-        """
-        super().__init__("max_stack_size")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
+    identifier = "minecraft:liquid_clipped"
 
-        self._set_value(clamp(stack_size, 1, 64))
+    value: bool = json_field(default=True)
 
 
-class ItemBlockPlacer(Component):
-    _identifier = "minecraft:block_placer"
+class ItemPiercingWeapon(JsonComponent):
+    """Allows an item to deal damage to all entities detected in a straight line along the user's view vector. Items with this component cannot destroy blocks.
 
-    def __init__(
+    Args:
+        reach (tuple[float, float], optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
+        creative_reach (tuple[float, float], optional): The reach in Creative mode. Defaults to `reach`.
+        hitbox_margin (float, optional): Added tolerance to the view vector raycast. Game default 0.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_piercing_weapon)
+    """
+
+    identifier = "minecraft:piercing_weapon"
+
+    reach: Annotated[tuple[float, float], MinMax] | None = json_field(default=None)
+    creative_reach: Annotated[tuple[float, float], MinMax] | None = json_field(
+        default=None
+    )
+    hitbox_margin: float | None = json_field(default=None)
+
+
+class ItemProjectile(JsonComponent):
+    """Defines an item as a projectile that can be shot from dispensers or used as ammunition by `minecraft:shooter`. With `minecraft:throwable`, sets the entity spawned when the item is thrown.
+
+    Args:
+        projectile_entity (str | Entity): The entity fired as a projectile. A spawn event can be added as `"entity<event>"`.
+        minimum_critical_power (float, optional): How long the projectile must be charged to critically hit. Game default 0.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile)
+    """
+
+    identifier = "minecraft:projectile"
+
+    projectile_entity: Annotated[str | Entity, EntityId] = json_field()
+    minimum_critical_power: float | None = json_field(default=None)
+
+
+class ItemRarity(JsonValueComponent):
+    """Specifies the base rarity of the item, and so the color of its name when hovered. Overridden by `minecraft:hover_text_color`.
+
+    Args:
+        value (Rarity): The base rarity. It rises when the item is enchanted.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity)
+    """
+
+    identifier = "minecraft:rarity"
+
+    value: Rarity = json_field()
+
+
+class ItemRecord(JsonComponent):
+    """Used by record items to play music.
+
+    Args:
+        sound_event (str): The sound event played.
+        duration (int, optional): Duration of the sound event, in seconds. Game default 0.
+        comparator_signal (int, optional): Signal strength for comparator blocks, from 1 to 13. Game default 1.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_record)
+    """
+
+    identifier = "minecraft:record"
+
+    sound_event: str = json_field()
+    duration: Annotated[int | float, NonNegative] | None = json_field(default=None)
+    comparator_signal: Annotated[int, InRange(1, 13)] | None = json_field(default=None)
+
+
+class ItemRepairable(JsonComponent):
+    """Defines the items that can repair this item, and how much durability each restores.
+
+    Args:
+        repair_items (list[RepairItem], optional): The repair entries. Set them directly or add them with `add_repair_item`.
+        on_repaired (str, optional): Event triggered when this item has been repaired, for example "minecraft:celebrate".
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_repairable)
+    """
+
+    identifier = "minecraft:repairable"
+
+    repair_items: list[RepairItem] = json_field(default_factory=list, omit_default=True)
+    on_repaired: str | None = json_field(default=None)
+
+    def add_repair_item(
         self,
-        block: MinecraftItemDescriptor | Identifier,
-        replace_block_item: bool = True,
-        aligned_placement: bool = False,
-        use_on: list[MinecraftBlockDescriptor | Identifier | str] = None,
-    ) -> None:
-        """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
+        *,
+        items: list[str | Item],
+        repair_amount: Molang | str | float | None = None,
+    ):
+        """Adds a repair entry. See `RepairItem` for the parameters.
 
-        Parameters:
-            block (str): Set the placement block name for the planter item.
-            replace_block_item (bool): If true, the item will be registered as the item for this block. This item will be returned by default when the block is broken/picked. Note: the identifier for this item must match the block's identifier for this field to be valid.
-            aligned_placement (bool): When true, block placement through this item will be aligned while holding the interaction button down.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer)
+        Returns:
+            ItemRepairable: Self for method chaining.
         """
-        super().__init__(
-            "block_placer",
-        )
-        self._enforce_version(ITEM_SERVER_VERSION, "1.21.50")
-
-        self._add_field("block", str(block))
-        if replace_block_item:
-            self._add_field("replace_block_item", replace_block_item)
-        if aligned_placement:
-            self._add_field("aligned_placement", aligned_placement)
-        if use_on:
-            self._add_field("use_on", use_on)
-
-    def use_on(self, *blocks: str):
-        """List of block descriptors that contain blocks that this item can be used on."""
-        self._add_field("use_on", blocks)
+        self.repair_items.append(RepairItem(items=items, repair_amount=repair_amount))
         return self
 
 
-class ItemSeed(Component):
-    _identifier = "minecraft:seed"
+class ItemSeed(JsonComponent):
+    """Sets the item as a seed that can be planted to grow crops.
 
-    def __init__(
-        self,
-        crop_result: MinecraftBlockDescriptor | Identifier,
-        plant_at: list[MinecraftBlockDescriptor | Identifier | str] | None = None,
-        plant_at_any_solid_surface: bool = False,
-        plant_at_face: Literal["UP", "DOWN"] | None = None,
-    ) -> None:
-        """Sets the item as a seed that can be planted to grow crops.
+    Args:
+        crop_result (str | Block | BlockDescriptor): The block placed when the seed is planted.
+        plant_at (list[str | Block | BlockDescriptor], optional): Blocks this seed can be planted on or attached to. If not set, standard farmland rules apply.
+        plant_at_any_solid_surface (bool, optional): Deprecated. Has no effect from format version 1.19.0.
+        plant_at_face (ItemPlantAtFace, optional): Deprecated. Has no effect from format version 1.19.0.
 
-        Parameters:
-            crop_result (MinecraftBlockDescriptor | Identifier): The block identifier placed when the seed is planted.
-            plant_at (list[MinecraftBlockDescriptor | Identifier | str] | None): Block identifiers this seed can be planted on or attached to.
-            plant_at_any_solid_surface (bool): Deprecated legacy setting that allows planting on any solid surface.
-            plant_at_face (Literal["UP", "DOWN"] | None): Deprecated legacy setting for the face the seed can be planted on.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_seed)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_seed)
-        """
-        super().__init__("seed")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.10.0")
+    identifier = "minecraft:seed"
 
-        if not plant_at and not plant_at_any_solid_surface:
-            raise ValueError(
-                "ItemSeed requires plant_at unless plant_at_any_solid_surface is true"
-            )
-
-        self._add_field("crop_result", str(crop_result))
-
-        if plant_at:
-            self._add_field("plant_at", [str(block) for block in plant_at])
-        if plant_at_any_solid_surface:
-            self._add_field("plant_at_any_solid_surface", plant_at_any_solid_surface)
-        if plant_at_face is not None:
-            self._add_field("plant_at_face", plant_at_face)
+    crop_result: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    plant_at: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
+    )
+    plant_at_any_solid_surface: bool | None = json_field(default=None)
+    plant_at_face: ItemPlantAtFace | None = json_field(default=None)
 
 
-class ItemRecord(Component):
-    _identifier = "minecraft:record"
+class ItemShooter(JsonComponent):
+    """Compels an item to shoot projectiles, like a bow or crossbow.
 
-    def __init__(
-        self, sound_event: str, duration: float, comparator_signal: int = 1
-    ) -> None:
-        """Used by record items to play music.
+    Args:
+        ammunition (list[Ammunition], optional): The items that can be fired. Set them directly or add them with `add_ammunition`.
+        charge_on_draw (bool, optional): Whether the shooter charges when the player starts drawing, like a crossbow. Game default false.
+        max_draw_duration (int, optional): How long, in seconds, the shooter can be drawn before it fires or reaches full power. Game default 0.
+        scale_power_by_draw_duration (bool, optional): Whether launch power grows with draw time. Game default false.
 
-        Parameters:
-            sound_event (str): Set the placement block name for the planter item.
-            duration (float): Duration of sound event in Seconds float value.
-            comparator_signal (int): Signal strength for comparator blocks to use from 1 - 13.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_shooter)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_record)
-        """
-        super().__init__("record")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
+    identifier = "minecraft:shooter"
+    _requires = (ItemUseModifiers,)
 
-        self._add_field("sound_event", sound_event)
-        self._add_field("duration", duration)
-        self._add_field("comparator_signal", clamp(comparator_signal, 1, 13))
-
-
-class ItemShooter(Component):
-    _identifier = "minecraft:shooter"
-
-    def __init__(
-        self,
-        charge_on_draw: bool = False,
-        max_draw_duration: float = 0.0,
-        scale_power_by_draw_duration: bool = False,
-    ) -> None:
-        """Sets the shooter item component.
-
-        Parameters:
-            charge_on_draw (bool, optional): Sets if the item is charged when drawn (Like crossbows). Defaults to False.
-            max_draw_duration (float, optional): How long can it be drawn before it will release automatically. Defaults to 0.0.
-            scale_power_by_draw_duration (bool, optional): Scale the power by draw duration? When true, the longer you hold, the more power it will have when released.. Defaults to False.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_shooter)
-        """
-        super().__init__("shooter")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
-
-        self._add_field("ammunition", [])
-        if charge_on_draw:
-            self._add_field("charge_on_draw", charge_on_draw)
-        if max_draw_duration != 0.0:
-            self._add_field("max_draw_duration", max_draw_duration)
-        if scale_power_by_draw_duration:
-            self._add_field(
-                "scale_power_by_draw_duration", scale_power_by_draw_duration
-            )
+    ammunition: list[Ammunition] = json_field(default_factory=list, omit_default=True)
+    charge_on_draw: bool | None = json_field(default=None)
+    max_draw_duration: Annotated[int | float, NonNegative] | None = json_field(
+        default=None
+    )
+    scale_power_by_draw_duration: bool | None = json_field(default=None)
 
     def add_ammunition(
         self,
-        ammunition: Identifier,
-        search_inventory: bool = True,
-        use_in_creative: bool = False,
-        use_offhand: bool = False,
+        *,
+        item: str | Item,
+        search_inventory: bool | None = None,
+        use_in_creative: bool | None = None,
+        use_offhand: bool | None = None,
     ):
-        self._component["ammunition"].append(
-            {
-                "item": ammunition,
-                "search_inventory": search_inventory,
-                "use_in_creative": use_in_creative,
-                "use_offhand": use_offhand,
-            }
+        """Adds an ammunition entry. See `Ammunition` for the parameters.
+
+        Returns:
+            ItemShooter: Self for method chaining.
+        """
+        self.ammunition.append(
+            Ammunition(
+                item=item,
+                search_inventory=search_inventory,
+                use_in_creative=use_in_creative,
+                use_offhand=use_offhand,
+            )
         )
         return self
 
 
-class ItemProjectile(Component):
-    _identifier = "minecraft:projectile"
+class ItemShouldDespawn(JsonValueComponent):
+    """Determines whether the item should eventually despawn while floating in the world.
 
-    def __init__(
-        self,
-        projectile_entity: MinecraftEntityDescriptor | Identifier,
-        minimum_critical_power: int,
-    ) -> None:
-        """Compels the item to shoot, similarly to an arrow.
-        Items with minecraft:projectile can be shot from dispensers or used as ammunition for items with the minecraft:shooter item component.
-        Additionally, this component sets the entity that is spawned for items that also contain the minecraft:throwable component.
+    Args:
+        value (bool, optional): Whether the item despawns. Defaults to True.
 
-        Parameters:
-            projectile_entity (Identifier): The entity to be fired as a projectile.
-            minimum_critical_power (int): Defines the time a projectile needs to charge in order to critically hit.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_should_despawn)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile)
-        """
-        super().__init__("projectile")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
+    identifier = "minecraft:should_despawn"
 
-        self._add_field("projectile_entity", str(projectile_entity))
-        self._add_field("minimum_critical_power", minimum_critical_power)
+    value: bool = json_field(default=True)
 
 
-class ItemThrowable(Component):
-    _identifier = "minecraft:throwable"
+class ItemStackedByData(JsonValueComponent):
+    """Determines whether the same item with different aux values can stack, and whether the item entities can merge while floating in the world.
 
-    def __init__(
-        self,
-        do_swing_animation: bool = False,
-        launch_power_scale: float = 1.0,
-        max_draw_duration: float = 0.0,
-        max_launch_power: float = 1.0,
-        min_draw_duration: float = 0.0,
-        scale_power_by_draw_duration: bool = False,
-    ) -> None:
-        """Sets the throwable item component.
+    Args:
+        value (bool, optional): Whether items with different aux values stack and merge. Defaults to True.
 
-        Parameters:
-            do_swing_animation (bool, optional): Whether the item should use the swing animation when thrown. Defaults to False.
-            launch_power_scale (float, optional): The scale at which the power of the throw increases. Defaults to 1.0.
-            max_draw_duration (float, optional): The maximum duration to draw a throwable item. Defaults to 0.0.
-            max_launch_power (float, optional): The maximum power to launch the throwable item. Defaults to 1.0.
-            min_draw_duration (float, optional): The minimum duration to draw a throwable item. Defaults to 0.0.
-            scale_power_by_draw_duration (bool, optional): Whether or not the power of the throw increases with duration charged. When true, The longer you hold, the more power it will have when released. Defaults to False.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_stacked_by_data)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_throwable)
-        """
-        super().__init__("throwable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
+    identifier = "minecraft:stacked_by_data"
 
-        if do_swing_animation:
-            self._add_field("do_swing_animation", do_swing_animation)
-        if launch_power_scale != 1.0:
-            self._add_field("launch_power_scale", launch_power_scale)
-        if max_draw_duration != 0.0:
-            self._add_field("max_draw_duration", max_draw_duration)
-        if max_launch_power != 1.0:
-            self._add_field("max_launch_power", max_launch_power)
-        if min_draw_duration != 0.0:
-            self._add_field("min_draw_duration", min_draw_duration)
-        if scale_power_by_draw_duration:
-            self._add_field(
-                "scale_power_by_draw_duration", scale_power_by_draw_duration
-            )
+    value: bool = json_field(default=True)
 
 
-# Require ITEM_SERVER_VERSION >= 1.19.80
-class ItemDurability(Component):
-    _identifier = "minecraft:durability"
+class ItemStorageWeightLimit(JsonComponent):
+    """Specifies the maximum weight limit that a storage item can hold.
 
-    def __init__(
-        self, max_durability: int, damage_chance: tuple[int, int] = 100
-    ) -> None:
-        """Sets how much damage the item can take before breaking, and allows the item to be combined at an anvil, grindstone, or crafting table.
+    Args:
+        max_weight_limit (int, optional): The maximum allowed weight of the sum of all contained items, at most 64. Game default 64.
 
-        Parameters:
-            max_durability (int): Max durability is the amount of damage that this item can take before breaking. The minimum value for this parameter is 0.
-            damage_chance (int, optional): Damage chance is the percentage chance of this item losing durability. Default is set at 100 to 100.. Defaults to 100.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_limit)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability)
-        """
-        super().__init__("durability")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        self._add_field("max_durability", max(0, max_durability))
+    identifier = "minecraft:storage_weight_limit"
 
-        if damage_chance != 100:
-            self._add_field(
-                "damage_chance",
-                AnvilFormatter.min_max_dict(
-                    damage_chance,
-                    "damage_chance",
-                    clamp_min=0,
-                    clamp_max=100,
-                ),
-            )
+    max_weight_limit: Annotated[int, InRange(0, 64)] | None = json_field(default=None)
 
 
-class ItemDisplayName(Component):
-    _identifier = "minecraft:display_name"
+class ItemStorageWeightModifier(JsonComponent):
+    """Specifies the weight of this item when inside another storage item.
 
-    def __init__(self, display_name: str, localized_key: str = None) -> None:
-        """Sets the item display name within Minecraft: Bedrock Edition. This component may also be used to pull from the localization file by referencing a key from it.
+    Args:
+        weight_in_storage_item (int, optional): The weight of this item inside another storage item. 0 means the item is not allowed in one. Game default 4.
 
-        Parameters:
-            display_name (str): Set the display name for an item.
-            localized_key (str, optional): The localization key for the display name. Defaults to None.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_modifier)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_display_name)
-        """
-        super().__init__("display_name")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        if not localized_key:
-            localized_key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_").replace("\\n", "_").replace("_", "")}.name'
+    identifier = "minecraft:storage_weight_modifier"
 
-        AnvilTranslator().add_localization_entry(localized_key, display_name)
-        self._add_field("value", localized_key)
+    weight_in_storage_item: Annotated[int, NonNegative] | None = json_field(
+        default=None
+    )
 
 
-class ItemFuel(Component):
-    _identifier = "minecraft:fuel"
+class ItemSwingDuration(JsonComponent):
+    """Duration, in seconds, of the item's swing animation when mining or attacking. Affects visuals only.
 
-    def __init__(self, duration: float) -> None:
-        """Allows this item to be used as fuel in a furnace to 'cook' other items.
+    Args:
+        value (int, optional): The swing duration in seconds. Game default 0.3.
 
-        Parameters:
-            duration (float): How long in seconds will this fuel cook items for. Minimum value: 0.05.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_duration)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fuel)
-        """
-        super().__init__("fuel")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        self._add_field("duration", clamp(duration, 0.05, inf))
+    identifier = "minecraft:swing_duration"
+
+    value: Annotated[int | float, NonNegative] | None = json_field(default=None)
 
 
-class ItemEntityPlacer(Component):
-    _identifier = "minecraft:entity_placer"
+class ItemSwingSounds(JsonComponent):
+    """Overrides the swing sounds emitted by the user. Each field takes a sound event from `sound_definitions.json`, including vanilla ones.
 
-    def __init__(self, entity: MinecraftEntityDescriptor | Identifier) -> None:
-        """Allows an item to place entities into the world. Additionally, the component allows the item to set the spawn type of a monster spawner.
+    Args:
+        attack_critical_hit (str, optional): Sound played when an attack hits and deals critical damage.
+        attack_hit (str, optional): Sound played when an attack hits.
+        attack_miss (str, optional): Sound played when an attack misses or deals no damage due to invulnerability.
 
-        Parameters:
-            entity (str): The entity to be placed in the world.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_sounds)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_entity_placer)
-        """
-        super().__init__("entity_placer")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        self._add_field("entity", str(entity))
+    identifier = "minecraft:swing_sounds"
 
-    def dispense_on(self, *blocks: str):
-        """List of block descriptors that contain blocks that this item can be dispensed on."""
-        self._add_field("dispense_on", blocks)
-        return self
-
-    def use_on(self, *blocks: str):
-        """List of block descriptors that contain blocks that this item can be used on."""
-        self._add_field("use_on", blocks)
-        return self
+    attack_critical_hit: str | None = json_field(default=None)
+    attack_hit: str | None = json_field(default=None)
+    attack_miss: str | None = json_field(default=None)
 
 
-class ItemIcon(Component):
-    _identifier = "minecraft:icon"
+class ItemTags(JsonComponent):
+    """Determines which tags are included on the item.
 
-    @overload
-    def __init__(
-        self,
-        component: TextureComponents,
-    ) -> None: ...
+    Args:
+        tags (list[MinecraftItemTags | str]): The item tags.
 
-    @overload
-    def __init__(
-        self,
-        blockbench: str,
-        component: TextureComponents,
-    ) -> None: ...
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_tags)
+    """
 
-    def __init__(
-        self,
-        blockbench: str | TextureComponents,
-        component: TextureComponents | None = None,
-    ) -> None:
-        """Sets the icon item component. Determines the icon to represent the item in the UI and elsewhere.
+    identifier = "minecraft:tags"
 
-        Parameters:
-            blockbench (str | TextureComponents): Either the Blockbench project file name (str) or TextureComponents directly.
-            component (TextureComponents | None): The texture components if blockbench is a string, otherwise None.
+    tags: list[MinecraftItemTags | str] = json_field()
 
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_icon)
-        """
-        super().__init__("icon")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
 
-        # Handle overload: if blockbench is TextureComponents, use it as component
-        if isinstance(blockbench, TextureComponents):
-            component = blockbench
-            blockbench_model = None
-        else:
-            blockbench_model = blockbench
+class ItemThrowable(JsonComponent):
+    """Makes an item throwable by the player, like a snowball or ender pearl. Use with `minecraft:projectile` to set the entity spawned.
 
-        # Ensure component is set
-        if component is None:
-            raise ValueError("TextureComponents must be provided")
+    Args:
+        do_swing_animation (bool, optional): Whether the item uses the swing animation when thrown. Game default false.
+        launch_power_scale (float, optional): The scale at which the power of the throw increases. Game default 1.0.
+        max_draw_duration (int, optional): The maximum duration to draw the item. Game default 0.
+        max_launch_power (float, optional): The maximum launch power. Game default 1.0.
+        min_draw_duration (int, optional): The minimum duration to draw the item. Game default 0.
+        scale_power_by_draw_duration (bool, optional): Whether the power of the throw grows with draw time. Game default false.
 
-        ItemTexturesObject().add_item(
-            component.color, blockbench_model, [component.color]
-        )
-        self._texture_set = TextureSet(component.color, _BlockBenchSource.ITEM)
-        if blockbench_model:
-            self._texture_set.set_blockbench_textures(blockbench_model, component)
-        else:
-            self._texture_set.set_item_textures(component)
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_throwable)
+    """
 
-        self._texture_set.queue()
+    identifier = "minecraft:throwable"
 
-        self._component["textures"] = {
-            "default": f"{CONFIG.NAMESPACE}:{component.color}",
-        }
+    do_swing_animation: bool | None = json_field(default=None)
+    launch_power_scale: float | None = json_field(default=None)
+    max_draw_duration: Annotated[int | float, NonNegative] | None = json_field(
+        default=None
+    )
+    max_launch_power: float | None = json_field(default=None)
+    min_draw_duration: Annotated[int | float, NonNegative] | None = json_field(
+        default=None
+    )
+    scale_power_by_draw_duration: bool | None = json_field(default=None)
+
+
+class ItemUseAnimation(JsonValueComponent):
+    """Specifies which animation is played when the player uses the item.
+
+    Args:
+        value (ItemUseAnimations): The animation played when the item is used.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_animation)
+    """
+
+    identifier = "minecraft:use_animation"
+
+    value: ItemUseAnimations = json_field()
+
+
+class ItemWearable(JsonComponent):
+    """Allows an item to be worn by a player in an equipment slot. A non-hand slot sets the max stack size to 1.
+
+    Args:
+        slot (ItemWearableSlots): Where the item can be worn.
+        protection (int, optional): How much protection the item provides. Game default 0.
+        hides_player_location (bool, optional): Whether the wearer is hidden on locator maps and the locator bar. Game default false.
+        dispensable (bool, optional): Whether the item can be equipped by a dispenser.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_wearable)
+    """
+
+    identifier = "minecraft:wearable"
+
+    slot: ItemWearableSlots = json_field()
+    protection: Annotated[int, NonNegative] | None = json_field(default=None)
+    hides_player_location: bool | None = json_field(default=None)
+    dispensable: bool | None = json_field(default=None)
+
+
+# endregion

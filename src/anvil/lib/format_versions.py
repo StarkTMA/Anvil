@@ -1,28 +1,19 @@
-# ---------------------------------------------------------------------------
-# Manifest
-# ---------------------------------------------------------------------------
-
 MANIFEST_VERSION: int = 3
-MANIFEST_BUILD: str = "1.26.50"
-MANIFEST_BUILD_PREVIEW: str = "1.26.60"
+WORLD_TEMPLATE_MANIFEST_VERSION: int = 2
+MANIFEST_BUILD: str = "1.26.60"
+MANIFEST_BUILD_PREVIEW: str = "1.26.70"
 
-# ---------------------------------------------------------------------------
-# Script API module versions
-# ---------------------------------------------------------------------------
 
-MODULE_MINECRAFT_SERVER: str = "2.10.0"
-MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.11.0-beta"
+MODULE_MINECRAFT_SERVER: str = "2.11.0"
+MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.12.0-beta"
 
-MODULE_MINECRAFT_SERVER_UI: str = "2.2.0"
-MODULE_MINECRAFT_SERVER_UI_PREVIEW: str = "2.3.0-beta"
+MODULE_MINECRAFT_SERVER_UI: str = "2.3.0"
+MODULE_MINECRAFT_SERVER_UI_PREVIEW: str = "2.4.0-beta"
 
 MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"
 MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"
 MODULE_MINECRAFT_SERVER_GRAPHICS: str = "1.0.0"
 
-# ---------------------------------------------------------------------------
-# Content-type format versions (all currently track MANIFEST_BUILD)
-# ---------------------------------------------------------------------------
 
 BLOCK_SERVER_VERSION: str = MANIFEST_BUILD
 ENTITY_SERVER_VERSION: str = MANIFEST_BUILD
@@ -30,7 +21,7 @@ ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD
 ITEM_SERVER_VERSION: str = MANIFEST_BUILD
 RECIPE_JSON_FORMAT_VERSION: str = MANIFEST_BUILD
 SOUND_DEFINITIONS_VERSION: str = MANIFEST_BUILD
-SERVER_SOUND_DEFINITIONS_VERSION: str = "beta"
+SERVER_SOUND_DEFINITIONS_VERSION: str = "1.26.60"
 JIGSAW_VERSION: str = MANIFEST_BUILD
 BIOME_SERVER_VERSION: str = MANIFEST_BUILD
 BIOME_CLIENT_VERSION: str = MANIFEST_BUILD
@@ -45,9 +36,6 @@ COLOR_GRADING_SETTINGS_VERSION: str = "1.21.90"
 WATER_SETTINGS_VERSION: str = "1.21.120"
 LOCAL_LIGHTING_SETTINGS_VERSION: str = "1.21.120"
 
-# ---------------------------------------------------------------------------
-# Animation / rendering
-# ---------------------------------------------------------------------------
 
 ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"
 BP_ANIMATION_VERSION: str = "1.10.0"
@@ -57,15 +45,15 @@ GEOMETRY_VERSION: str = "1.26.0"
 VOXEL_SHAPE_VERSION: str = "1.21.110"
 MATERIALS_VERSION: str = "1.0.0"
 CAMERA_PRESET_VERSION: str = "1.21.0"
+AIM_ASSIST_VERSION: str = "1.21.70"
 BLOCK_CULLING_VERSION: str = "1.20.80"
 TEXTURE_SET_VERSION: str = "1.21.30"
 
-# ---------------------------------------------------------------------------
-# Block / item / world JSON format versions
-# ---------------------------------------------------------------------------
 
 BLOCK_JSON_FORMAT_VERSION: str = "1.21.40"
 CRAFTING_ITEMS_CATALOG: str = "1.21.60"
 DIALOGUE_VERSION: str = "1.18.0"
+DIMENSION_VERSION: str = "1.26.50"
+LOOT_TABLE_VERSION: str = "1.26.60"
 FEATURE_VERSION: str = MANIFEST_BUILD
 FEATURE_RULE_VERSION: str = MANIFEST_BUILD

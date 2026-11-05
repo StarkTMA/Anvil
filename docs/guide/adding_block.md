@@ -2,6 +2,8 @@
 
 This guide shows how to create an **Enchanting Plus Table** block with **Anvil**. It's written for **Anvil beginners** who already understand Minecraft concepts. Each step highlights what's **necessary** versus **optional**.
 
+Every snippet on this page is taken from a project that compiles. Component arguments are **keyword-only**: write `BlockDestructibleByMining(seconds_to_destroy=1.5)`, not `BlockDestructibleByMining(1.5)`.
+
 ---
 
 ## Define the Block
@@ -23,15 +25,15 @@ def enchanting_plus_table():
 ## Server Description & States
 
 ```py title="server description"
-from anvil.api.core.enums import ItemCategory
+from anvil.lib.jsonmodel.enums import ItemCategory
 
 # Show the block in the creative inventory (optional)
-block.server.description.menu_category(ItemCategory.Construction)
+block.server.description.set_menu_category(ItemCategory.Construction)
 block.server.description.add_state("is_awesome", (False, True))
 ```
 
 !!! note
-    Server‑side states are **optional**. If you don't define any, the block still exports and works.
+    Server‑side states are **optional**. If you don't define any, the block still exports and works. A state name without a namespace gets the project's (`tut:is_awesome`). States, permutations and traits are covered in [Block states, permutations and traits](block_states.md).
 
 ---
 
@@ -40,93 +42,108 @@ block.server.description.add_state("is_awesome", (False, True))
 ```py title="components: visuals & basics"
 from anvil.api.blocks.components import (
     BlockCollisionBox,
-    BlockSelectionBox,
-    BlockDisplayName,
-    BlockMaterialInstance,
-    BlockGeometry,
     BlockDestructibleByMining,
+    BlockGeometry,
+    BlockMaterialInstance,
+    BlockSelectionBox,
     InstanceSpec,
     InstanceVariant,
 )
-from anvil.api.pbr.texture_set import TextureComponents
 
 # Visuals (mandatory): geometry + at least one material instance
 block.server.components.add(
-    BlockCollisionBox((16, 12, 16), (0, 0, 0)),
-    BlockSelectionBox((16, 12, 16), (0, 0, 0)),
-    BlockDisplayName("Enchanting Plus Table"),
+    BlockCollisionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
+    BlockSelectionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
     BlockMaterialInstance().add_instance(
-        InstanceSpec(
-            blockbench_name="enchanting_plus_table",
-            variations=[InstanceVariant(color="enchanting_plus_table")]
+        spec=InstanceSpec(
+            blockbench="enchanting_plus_table",
+            variations=[InstanceVariant(color="enchanting_plus_table")],
         )
     ),
-    BlockGeometry("enchanting_plus_table"),
-    BlockDestructibleByMining(1.5),
+    BlockGeometry(blockbench="enchanting_plus_table"),
+    BlockDestructibleByMining(seconds_to_destroy=1.5),
 )
 ```
 
 !!! info "Blockbench references"
-    The identifier passed to `BlockGeometry(...)` must map to a **Blockbench file** under `assets/blockbench`, and its **internal geometry/material names must match**. Mismatches raise an export error.
+    `BlockGeometry(blockbench=...)` and `InstanceSpec(blockbench=...)` name a **Blockbench file** under `assets/bbmodels`. Its model identifier must equal the file name, and the texture named in `InstanceVariant(color=...)` must exist inside that file. Mismatches raise an export error.
 
 !!! info "Blockbench collections"
-    If your `.bbmodel` contains exported Blockbench collections, you can reference a specific part with `BlockGeometry("my_model", collection="bottom")`. Anvil exports that collection as its own geometry and references it as `geometry.<namespace>.my_model.bottom`.
+    If your `.bbmodel` contains exported Blockbench collections, you can reference a specific part with `BlockGeometry(blockbench="my_model", collection="bottom")`. Anvil exports that collection as its own geometry and references it as `geometry.<namespace>.my_model.bottom`.
 
 !!! tip "PBR Support"
-    `InstanceVariant` inherits from `TextureComponents`, so you can add PBR textures: `InstanceVariant(color="block", normal="block_normal", mer="block_mer")` for advanced rendering with normal maps and metalness/emissive/roughness channels.
+    `InstanceVariant` takes the same arguments as `TextureComponents`: `InstanceVariant(color="block", normal="block_normal", mer="block_mer")` enables normal maps and metalness/emissive/roughness channels. See the [PBR guide](pbr.md).
+
+!!! tip "Display name"
+    Anvil adds a `BlockDisplayName` for you, keyed `tile.<namespace>:<name>.name` in `localization.csv`. Add `BlockDisplayName(value="Enchanting Plus Table")` yourself only to override the generated text.
 
 !!! failure
     **Visuals are mandatory.** Without a `BlockGeometry` and at least one material instance, the block won't export.
 
-![Enchanting Plus Table Blockbench preview](../assets/enchanting_plus_table_blockbench.png)
+---
+
+## Block Sounds
+
+```py title="block sounds"
+from anvil.lib.jsonmodel.enums import BlockSoundGroup
+
+block.client.sound_group(BlockSoundGroup.Wood)
+```
+
+!!! note
+    A sound group reuses the sounds of a vanilla block and needs no sound files. Custom block sounds are covered in [Particles and sounds](particles_and_sounds.md).
 
 ---
 
 ## Crafting Recipe
 
 ```py title="crafting"
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla.items import MinecraftItemTypes
 
 recipe = ShapedCraftingRecipe(block.name)
-recipe.result(block.identifier, count=1)
-recipe.ingredients([
-    [MinecraftItemTypes.AmethystShard, MinecraftBlockTypes.EnchantingTable(), MinecraftItemTypes.AmethystShard],
-    [MinecraftBlockTypes.GoldBlock(),    MinecraftBlockTypes.GoldBlock(),       MinecraftBlockTypes.GoldBlock()],
-])
-recipe.unlock_items([
-    MinecraftItemTypes.AmethystShard,
-    MinecraftBlockTypes.EnchantingTable(),
-    MinecraftBlockTypes.GoldBlock(),
-])
+recipe.result(block)
+recipe.ingredients(
+    [
+        [
+            MinecraftItemTypes.AmethystShard(),
+            MinecraftBlockTypes.EnchantingTable(),
+            MinecraftItemTypes.AmethystShard(),
+        ],
+        [
+            MinecraftBlockTypes.GoldBlock(),
+            MinecraftBlockTypes.GoldBlock(),
+            MinecraftBlockTypes.GoldBlock(),
+        ],
+    ]
+)
+recipe.unlock_items([MinecraftBlockTypes.EnchantingTable()])
 recipe.queue()
 ```
 
 !!! note
-    Recipes are **optional**. If omitted, the block can still be obtained via creative inventory or commands.
+    Recipes are **optional**. If omitted, the block can still be obtained via creative inventory or commands. More recipe types are in [Recipes and the item catalog](recipes.md).
 
 ---
 
 ## Block Item
 
 ```py title="block item"
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemIcon, ItemMaxStackSize
-from anvil.api.core.enums import ItemCategory
+from anvil.lib.jsonmodel.enums import ItemCategory
+from anvil.api.items.components import ItemIcon, ItemMaxStackSize
 from anvil.api.pbr.texture_set import TextureComponents
 
 item = block.item
-item.server.description.category(ItemCategory.Construction)
+item.server.description.set_menu_category(ItemCategory.Construction)
 item.server.components.add(
-    ItemMaxStackSize(64),
-    ItemIcon(TextureComponents(color=item.name)),
-    ItemBlockPlacer(block.identifier),
-    ItemDisplayName("Enchanting Plus Table"),
+    ItemMaxStackSize(value=64),
+    ItemIcon(textures=TextureComponents(color=item.name)),
 )
 ```
 
 !!! tip
-    The block's **item** is available as `block.item`. Accessing it auto‑creates a corresponding item.
+    The block's **item** is available as `block.item`. Accessing it creates an `Item` with the block's name, and `block.queue()` queues it too. The icon is read from `assets/textures/items/enchanting_plus_table.png`. Add `ItemBlockPlacer(block=block)` when the item should place the block itself instead of relying on the game's default block item.
 
 ---
 
@@ -139,10 +156,7 @@ return block
 
 !!! success
     **Queuing is mandatory.** If you don't call `block.queue()`, the framework will **not export** the block.
-    Queuing the block will also queue any associated item.
-
-!!! tip "Queue groups"
-    You can also group exports by calling `block.queue("group")` if you prefer a structured output directory.
+    Queuing the block also queues its client file and its item.
 
 ---
 
@@ -152,68 +166,68 @@ return block
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
     BlockCollisionBox,
-    BlockSelectionBox,
-    BlockDisplayName,
-    BlockMaterialInstance,
-    BlockGeometry,
     BlockDestructibleByMining,
+    BlockGeometry,
+    BlockMaterialInstance,
+    BlockSelectionBox,
     InstanceSpec,
     InstanceVariant,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemIcon, ItemMaxStackSize
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.vanilla.items import MinecraftItemTypes
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
-from anvil.api.core.enums import ItemCategory
+from anvil.lib.jsonmodel.enums import BlockSoundGroup, ItemCategory
+from anvil.api.items.components import ItemIcon, ItemMaxStackSize
+from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
 from anvil.api.pbr.texture_set import TextureComponents
+from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla.items import MinecraftItemTypes
 
 
 def enchanting_plus_table():
     block = Block("enchanting_plus_table")
 
-    block.server.description.menu_category(ItemCategory.Construction)
+    block.server.description.set_menu_category(ItemCategory.Construction)
     block.server.description.add_state("is_awesome", (False, True))
 
     # Visuals (mandatory)
     block.server.components.add(
-        BlockCollisionBox((16, 12, 16), (0, 0, 0)),
-        BlockSelectionBox((16, 12, 16), (0, 0, 0)),
-        BlockDisplayName("Enchanting Plus Table"),
+        BlockCollisionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
+        BlockSelectionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name="enchanting_plus_table",
-                variations=[InstanceVariant(color="enchanting_plus_table")]
+            spec=InstanceSpec(
+                blockbench="enchanting_plus_table",
+                variations=[InstanceVariant(color="enchanting_plus_table")],
             )
         ),
-        BlockGeometry("enchanting_plus_table"),
-        BlockDestructibleByMining(1.5),
+        BlockGeometry(blockbench="enchanting_plus_table"),
+        BlockDestructibleByMining(seconds_to_destroy=1.5),
     )
-
-    # For a multi-block model exported from Blockbench collections:
-    # BlockGeometry("tower", collection="bottom")
+    block.client.sound_group(BlockSoundGroup.Wood)
 
     # Crafting recipe (optional)
     recipe = ShapedCraftingRecipe(block.name)
-    recipe.result(block.identifier, count=1)
-    recipe.ingredients([
-        [MinecraftItemTypes.AmethystShard, MinecraftBlockTypes.EnchantingTable(), MinecraftItemTypes.AmethystShard],
-        [MinecraftBlockTypes.GoldBlock(),    MinecraftBlockTypes.GoldBlock(),       MinecraftBlockTypes.GoldBlock()],
-    ])
-    recipe.unlock_items([
-        MinecraftItemTypes.AmethystShard,
-        MinecraftBlockTypes.EnchantingTable(),
-        MinecraftBlockTypes.GoldBlock(),
-    ])
+    recipe.result(block)
+    recipe.ingredients(
+        [
+            [
+                MinecraftItemTypes.AmethystShard(),
+                MinecraftBlockTypes.EnchantingTable(),
+                MinecraftItemTypes.AmethystShard(),
+            ],
+            [
+                MinecraftBlockTypes.GoldBlock(),
+                MinecraftBlockTypes.GoldBlock(),
+                MinecraftBlockTypes.GoldBlock(),
+            ],
+        ]
+    )
+    recipe.unlock_items([MinecraftBlockTypes.EnchantingTable()])
     recipe.queue()
 
     # Block item (optional)
     item = block.item
-    item.server.description.category(ItemCategory.Construction)
+    item.server.description.set_menu_category(ItemCategory.Construction)
     item.server.components.add(
-        ItemMaxStackSize(64),
-        ItemIcon(TextureComponents(color=item.name)),
-        ItemBlockPlacer(block.identifier),
-        ItemDisplayName("Enchanting Plus Table"),
+        ItemMaxStackSize(value=64),
+        ItemIcon(textures=TextureComponents(color=item.name)),
     )
 
     # Finalize (mandatory)
@@ -228,62 +242,37 @@ EnchantingPlusTable = enchanting_plus_table()
 
 ## Advanced Features
 
-Now that you've created a basic block, here are some advanced features you can add:
-
 ### Custom Ticking
 
-Use the `BlockTicker` and `BlockTick` components to make your block execute logic periodically or randomly.
+Use `BlockTick` to make your block run a `tick` custom component event periodically or randomly.
 
 ```python
 from anvil.api.blocks.components import BlockTick
 
-# Add a random tick listener
-block.server.components.add(
-    BlockTick(interval_range=[10, 20], looping=True)
-)
-```
-
-### Custom Sounds
-
-You can define custom sounds for your block using `BlockSoundEvent`.
-
-```python
-from anvil.api.core.enums import BlockSoundEvent
-
-# Add custom sounds
-block.client.block_sound("my_sound", BlockSoundEvent.Break).add_sound("my_custom_sound")
-```
-
-To use the sounds of a vanilla block instead, give the block a vanilla sound group. It needs no sound files:
-
-```python
-from anvil.api.core.enums import BlockSoundGroup
-
-block.client.sound_group(BlockSoundGroup.Wood)
+block.server.components.add(BlockTick(interval_range=(10, 20), looping=True))
 ```
 
 ### Custom Components
 
-For more complex logic, you can attach **Custom Components**. These are scripts that run in the game and can interact with the world.
+For more complex logic, attach **Custom Components**. These are scripts that run in the game and can interact with the world.
 
 ```python
-from anvil import CONFIG
-from anvil.api.blocks.components import BlockCustomComponents
+from anvil.api.blocks.components import BlockCustomComponent
 
-class MyBlockLogic(BlockCustomComponents):
-    _identifier = f"{CONFIG.NAMESPACE}:my_component"
 
-    def __init__(self):
-        super().__init__(self._identifier)
+class MyBlockLogic(BlockCustomComponent):
+    identifier = "my_block_logic"
 
-block.server.components.add(
-    MyBlockLogic()
-)
+
+block.server.components.add(MyBlockLogic())
 ```
 
-See the [Custom Components Guide](custom_components.md) for details on how to implement the logic in TypeScript.
+See the [Custom Components Guide](custom_components.md) for parameters and the TypeScript side.
+
+### States, Permutations and Traits
+
+Make the block change with its state (a lit lantern, a rotated model) in [Block states, permutations and traits](block_states.md).
 
 ### World Generation
 
-To make your block generate naturally in the world, use the **Features API**.
-See [World Features API](../api/world/features.md) for reference.
+To make your block generate naturally in the world, see [Generating features](world_features.md).

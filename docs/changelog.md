@@ -1,0 +1,2220 @@
+> This changelog is archived and covers Anvil up to 0.9.101. From 1.0.0 on, release notes are published on [GitHub Releases](https://github.com/starktma/anvil/releases).
+
+# Table of Contents
+
+## 0.9.x
+
+- [**0.9.101**](#09101)
+- [0.9.99](#0999)
+- [0.9.98](#0998)
+- [0.9.97](#0997)
+- [0.9.96](#0996)
+- [0.9.95](#0995)
+- [0.9.94](#0994)
+- [0.9.93](#0993)
+- [0.9.92](#0992)
+- [0.9.91](#0991)
+- [0.9.9](#099)
+- [0.9.8.71](#09871)
+- [0.9.8.6](#0986)
+- [0.9.8.5](#0985)
+- [0.9.8.4](#0984)
+- [0.9.8.3](#0982)
+- [0.9.8.2](#0982)
+- [0.9.8.1](#0981)
+- [0.9.8](#098)
+- [0.9.7.5](#0975)
+- [0.9.7.4](#0974)
+- [0.9.7.3](#0973)
+- [0.9.7.2](#0972)
+- [0.9.7.1](#0971)
+- [0.9.7](#097)
+- [0.9.6.6](#0966)
+- [0.9.6.5](#0965)
+- [0.9.6.4](#0964)
+- [0.9.6.3](#0963)
+- [0.9.6.2](#0962)
+- [0.9.6.1](#0961)
+- [0.9.6](#096)
+- [0.9.5.3](#0953)
+- [0.9.5.2](#0952)
+- [0.9.5.1](#0951)
+- [0.9.5](#095)
+- [0.9.4.6](#0946)
+- [0.9.4.5](#0945)
+- [0.9.4.4](#0944)
+- [0.9.4.3](#0943)
+- [0.9.4.2](#0942)
+- [0.9.4.1](#0941)
+- [0.9.4](#094)
+- [0.9.3.1](#0931)
+- [0.9.3](#093)
+- [0.9.2](#092)
+- [0.9.1](#091)
+- [**0.9.0** - _Modular Architecture_](#090)
+
+## 0.8.x Series
+
+- [0.8.4](#084)
+- [0.8.3](#083)
+- [0.8.2](#082)
+- [0.8.1](#081)
+- [**0.8.0** - _The Blockbench Update_](#080---the-blockbench-update)
+
+## 0.7.x Series
+
+- [0.7.3](#073)
+- [0.7.2](#072)
+- [0.7.1](#071)
+- [**0.7.0** - _Guidelines & Addon Support_](#070)
+
+## 0.6.x Series
+
+- [**0.6.0** - _Configuration Overhaul_](#060)
+
+## 0.5.x Series
+
+- [0.5.4](#054)
+- [0.5.3](#053)
+- [0.5.2](#052)
+- [0.5.1](#051)
+- [**0.5.0** - _Documentation & Tools_](#050)
+
+## 0.4.x Series
+
+- [0.4.2 - 0.4.2.6](#042---04226)
+- [0.4.1](#041)
+- [**0.4.0** - _ScriptAPI & PBR Support_](#040)
+
+## 0.3.x Series
+
+- [0.3.5](#035)
+- [0.3.4](#034)
+- [0.3.3](#033)
+- [0.3.2](#032)
+- [0.3.1](#031)
+- [**0.3.0** - _Materials System_](#030)
+
+## 0.2.x Series
+
+- [0.2.6](#026)
+- [0.2.5](#025)
+- [0.2.4](#024)
+- [0.2.3](#023)
+- [0.2.2](#022)
+- [0.2.1](#021)
+- [**0.2.0** - _Major Architecture Rewrite_](#020)
+
+## Early Development
+
+- [**0.1.0** - _Core Foundation_](#010)
+- [0.0.0 → 0.1.0](#000--010)
+
+---
+
+# 0.9.x
+
+## 0.9.101
+
+### Anvil
+
+- Sound files given with forward-slash paths are copied under their file name: before, only backslashes were split on, so a `path/to/sound.ogg` source kept its whole path as its name.
+
+### Kit
+
+- Wood set doors make double doors like vanilla: a door placed with a door on its left and none on its right hinges on the right and opens the other way, so the pair opens from the middle. Doors from other namespaces count whatever way they face, the set's own doors only when they face the same way. Added the `hinge_right` state and the `BlockWoodSetDoor` component (`wood_set_door`), which needs that state.
+- The wood set redstone consumer script is now `redstone-consumer.ts` (was `redstoneConsumer.ts`); the generated script index turns kebab-case module names into `register<Name>Component`.
+
+## 0.9.99
+
+### Anvil
+
+- Fixed `blocks.json` nesting its blocks under a `"blocks"` key, which the game ignores: they now sit next to `format_version`, like vanilla. This affected every block with custom sounds.
+- Added `block.client.sound_group(BlockSoundGroup.Wood)`, which gives a block the sounds of a vanilla sound group through `blocks.json`, with no sound files (`block_sound` is still how you make your own). `BlockSoundGroup` lists the vanilla groups, and `BlocksJSONObject.add_block` takes the group.
+- `process_subcommand` takes `exit_on_error`, which exits with the subprocess's return code when it fails. The script build and `anvil build` use it, so a failed build fails the CI job instead of carrying on.
+- A Blockbench model already loaded as another source can also be loaded as `items`, this is particularly useful for Item Embeds and because there are no item model exports.
+- The generated GitHub release workflow runs on Ubuntu and can also be started by hand, never runs two releases of a ref at once, installs `mcanvil` at least as new as the Anvil that generated it, plus the project's `requirements.txt`, and builds with local export on. It releases only when no release exists for the version (any other API error fails the job instead of guessing), checks that the build made the `.mcaddon` or `.mcworld` the target needs, and tags the pushed commit.
+
+### Kit
+
+- Added `WoodSet.map_color(color)` (and `map_color=` on `create_wood_set`) to the wood set kit: the color every block of the set has on a map, "#e6d063" by default. Each block's `create` takes it as a keyword-only `map_color`.
+- Added `WoodSet.sound_group(group, parts)` and `WoodSet.options(parts, **options)` to the wood set kit: the first sets the vanilla sound group of some parts, the second passes keyword arguments to their `create`, like the ids of the sounds the scripts play (`open_sound`, `close_sound` for doors, trapdoors and fence gates, `on_sound`, `off_sound` for buttons and pressure plates). A block's own sounds from files are made with `block.client.block_sound(...)` on the built part.
+- Wood set blocks have vanilla sounds: the `wood` group, `hanging_sign` for the hanging sign and `grass` for leaves and saplings, as oak has.
+- Wood set doors, trapdoors, fence gates, buttons and pressure plates play their vanilla open, close and click sounds: the game only plays those for vanilla blocks, so the scripts play them (also when redstone opens or closes them). `BlockWoodSetInteractable`, `BlockWoodSetRedstoneConsumer` and `BlockWoodSetTogglable` take their ids as `open_sound`, `close_sound`, `on_sound` and `off_sound`.
+- Wood set blocks now use `BlockLiquidDetection` like vanilla Bedrock: slabs, stairs, fences, fence gates, doors, trapdoors, signs, hanging signs and leaves can be waterlogged, and saplings pop off and drop their loot when water flows into them. Leaves that decay while waterlogged leave their water behind.
+- Wood set doors, trapdoors and fence gates keep their open state when the world reloads. A `powered` state remembers the last redstone power, so they only open or close when it changes (before, any redstone update without power closed them). Doors count as powered while either half is. Blocks using `BlockWoodSetRedstoneConsumer` need a `powered` state.
+
+### Repository
+
+- Anvil's own GitHub workflows are split into `main`, `test`, `version`, `release`, `publish_pypi` and `docs` (renamed from `build_docs`), replacing `publish_to_pypi` and `publish_to_test_pypi`.
+
+## 0.9.98
+
+### Anvil
+
+- `Block.descriptor()` takes states as keywords (`leaves.descriptor(natural=True)` uses the block's own namespace) and no longer exports empty tags.
+- Fixed `MinecraftBlockDescriptor` turning state values into strings, so a boolean state was exported as `"True"` and ignored by the game (feature-placed blocks kept the default state). Values now keep their type.
+- Added `BlockItemVisual.item_display_transforms()`, which replaces the `item_display_transforms` of a Blockbench model with your own per display slot (or keeps the rest with `merge=True`). In the `gui` slot, `fit_to_frame` is exported when given: `True` as `{}`, `False` as an explicit `false`. No other slot accepts it. It only works on a visual made from a collection, and the transforms are shared by every block using that collection's geometry.
+- Added loot table condition support (`LootConditions`) for `LootTable` pools and entries (`pool.conditions`, `entry.conditions`), supporting `match_tool`, `random_chance`, `random_chance_with_looting`, `random_difficulty_chance`, `random_regional_difficulty_chance`, `killed_by_player`, `killed_by_player_or_pets`, `killed_by_entity`, `entity_killed`, `has_variant`, `has_mark_variant`, and `entity_properties`.
+- Enhanced `TreeFeature` with method chaining, support for `poplar_trunk` and `poplar_canopy`, and shorthand builder methods for all trunk and canopy types (`trunk`, `fancy_trunk`, `acacia_trunk`, `cherry_trunk`, `fallen_trunk`, `mangrove_trunk`, `mega_trunk`, `poplar_trunk`, `canopy`, `fancy_canopy`, `acacia_canopy`, `cherry_canopy`, `mangrove_canopy`, `mega_canopy`, `mega_pine_canopy`, `pine_canopy`, `poplar_canopy`, `roofed_canopy`, `spruce_canopy`, `random_spread_canopy`).
+- Feature and feature rule files use the game version (`MANIFEST_BUILD`) as their format version, like the other content types.
+- **Breaking:** `SnapToSurfaceFeature` takes `search_range` in place of `vertical_search_range`, which the game no longer accepts from format version 1.26.50, and supports the `wall` surface and `allow_non_air_placement`.
+- Added `MinecraftItemTags.Leaves` and the other item tags missing from the enum.
+
+### Kit
+
+- A built `WoodSet` exposes the feature its saplings grow into as `tree_feature`, so what builds the tree from the set (`.tree(lambda palm: ...)`) doesn't need to hand it back through a closure.
+- Wood sets ship their two Blockbench models (`wood_set` and `wood_set_boat`): when either is missing from `assets/bbmodels`, `build()` asks whether to copy the base into the project, and never overwrites an existing model.
+- `WoodSet.build()` no longer special-cases the leaves and the sapling: every part is created and stored the same way.
+- Wood set saplings grow on random ticks instead of a scheduled tick, with vanilla's two stages (the `stage` state): a random tick (1 in 7, light 9 or more above) or a bone meal (45% in survival, with particles, using one) advances a stage, and the second stage places the tree. Bone meal in creative places it at once.
+- `WoodSet.sapling_on(blocks)` sets the blocks the sapling can be planted on (dirt, grass, sand... by default).
+- `WoodSet.leaf_distance(blocks)` sets how far from a log the leaves can still hold on (4 by default, like vanilla), for trees whose canopies reach further.
+- Wood set leaves carry the `minecraft:leaves` item tag, so vanilla recipes that take it (smelting leaves into leaf litter) work with them without a recipe of the kit's own.
+- Added the `WoodSet` class to the wood set kit: configure it with `.tree()` and `.leaf_drop(item, chance, count)` (extra leaf drops like the oak apple, for breaking and decaying), then `.build()`. It maps part names to parts as before. `create_wood_set` remains as a shortcut, now with `leaf_drops=`. **Breaking:** `WoodSet` was the type of what `create_wood_set` returned and is now this class.
+- Wood set leaves now behave like vanilla leaves: natural leaves decay on random ticks (the scheduled tick that never fired on generated leaves is gone), any log or wood within 4 blocks holds them up through any leaves, and flammability and blast resistance match vanilla. The kit's logs and wood carry the `log` tag.
+- `create_wood_set(tree=...)` also takes a function that receives the finished set and returns the tree, so the tree can use the set's own blocks (the sapling is made last).
+- Added `WoodBlock.LEAVES` and `WoodBlock.SAPLING` to wood sets (`<name>_leaves`, `<name>_sapling`, with `BlockWoodSetLeaves` and `BlockWoodSetSapling` for their scripts):
+    - Leaves work like vanilla's: they have a `natural` state, off for leaves a player placed, which stay forever. Whatever generates leaves (a feature, a jigsaw structure, a script) sets it on, and only those leaves decay, when none of the set's logs or wood is within 4 blocks through leaves of the same kind, dropping a sapling or sticks by chance.
+    - Shears and silk touch drop the leaves themselves; any other way drops a sapling or sticks by chance. These drops are defined in the block's loot table using `match_tool` and `random_chance` conditions, handled natively by the game engine rather than by break scripts.
+    - Saplings go on dirt-like blocks, grow by random ticks or bone meal through two stages, and then place the feature given as `tree` to `create_wood_set`, a `Feature` or its identifier. A set with saplings requires it (a `ValueError` otherwise, unless `WoodBlock.SAPLING` is excluded), and the kit makes no trees of its own: the caller builds and queues the feature, which can use the set's blocks by their identifiers (`<namespace>:<name>_log`, and `<namespace>:<name>_leaves` with `natural` on).
+- `create_wood_set` returns a `WoodSet`, a typed dict of what it made, one `WoodSetPart(block, item)` per block named like `WoodBlock` in lowercase (`wood["planks"]`, `wood["boat"]`; boats hold their entity). Parts left out with `exclude` are missing.
+- Wood sets share their Blockbench models: every block uses the `wood_set` model and every boat the `wood_set_boat` model, instead of `<name>_planks` and `<name>_boat` per set, so a set only differs by its names and textures. Each shared model must hold the textures of every set (`<name>_planks`, `<name>_log`, `<name>_boat` and so on). Existing projects rename `<name>_planks.bbmodel` to `wood_set.bbmodel` and `<name>_boat.bbmodel` to `wood_set_boat.bbmodel`, and merge the textures of their sets into them. Adding the same block culling rule twice to a geometry now keeps one, so blocks sharing a geometry can each add it.
+- Wood set buttons and pressure plates define `minecraft:redstone_producer` in their base components as well as their permutations, which format 1.26.20 and later require. They also keep ticking only while pressed (a looping tick in the `powered` permutation); the base components have a tick that runs once and stops, which a block with an `onTick` script needs, and their script releases them with a short timer as well, in case the engine does not start the tick when a script presses them.
+- Wood set signs and hanging signs tick once, not every tick: the text is drawn on the first tick and again when it is edited, dyed or made to glow, since it stays in the world until the sign is broken. `refreshSignText(block)` in the sign script draws it again for scripts that change a sign's properties.
+- Wood set signs and hanging signs now stack to 16, like vanilla. Boats and chest boats already stacked to 1, and every other block keeps the default of 64.
+
+## 0.9.97
+
+### Kit
+
+- Wood set signs: the wall sign and the standing sign are now one block, `<name>_sign`, with a `standing` state that picks its shape:
+    - Standing (the default) turns in 16 steps and is selected by a post; not standing hangs flat against the side of a block in one of four directions.
+    - Placing the sign item on the side of a block turns `standing` off and points the sign at that block. It breaks with the block below, or with the wall it hangs on.
+    - `WoodBlock.WALL_SIGN` and `WoodBlock.STANDING_SIGN` are replaced by `WoodBlock.SIGN`.
+    - `BlockWoodSetSign` takes `wall_text_offset` (where the text sits on a wall) in place of `wall_sign`.
+    - Added `SupportedBy.Sign` to `BlockWoodSetSupport`.
+- Wood set logs and wood: stripping with an axe is now done in a world event (`registerStrippableEvents`), so the blocks no longer handle interactions themselves, which stopped other blocks from being placed against them.
+- `create_wood_set(name, exclude=())` now lists the blocks to leave out instead of the ones to create (everything is created by default), as a `WoodBlock`, several combined with `|`, or a list: `create_wood_set("rotten", [WoodBlock.DOOR, WoodBlock.BOAT])`. The `blocks` argument is removed.
+
+## 0.9.96
+
+### Anvil
+
+- Added the `--debug` flag to `anvil build`, enabling debug mode for that build.
+- Component dependencies of a permutation can now be satisfied by the block's root components.
+- Bumped the geometry format version to `1.26.0`.
+- Declared `requests` as a dependency (it was imported but only installed indirectly).
+
+### Models
+
+- Added `anvil.api.models`, builders for model files made in code:
+    - `Geometry` (`*.geo.json`): a tree of bones holding cubes and locators, with `clone()`, `merge()`, `translate()` and `scale()`. Cubes use box UV (`uv=(u, v)`) or per-face UVs as keyword arguments (`north=((0, 0), (4, 4))`, `up=((4, 0), (4, 4), 90)`, or a dict for a `material_instance`).
+    - `Animations` (`*.animations.json`): many animations in one file, with position/rotation/scale keyframes, particle, sound and timeline events, and `validate()` against a `Geometry`.
+    - `VoxelShape` (`*.shape.json`): named groups of boxes, built like a `Geometry`.
+- Geometry, animation and culling shape references now accept these objects as well as names:
+    - Entities and attachables: `geometry(...)`, `animation(...)` and `reuse_assets.geometry(...)` / `reuse_assets.animation(...)`.
+    - `BlockGeometry`, `BlockItemVisual` and `BlockEmbeddedVisual` accept a `Geometry`.
+    - `BlockGeometry.block_culling()` accepts a `VoxelShape`, and gives a code-built geometry its own culling rules.
+
+### Blockbench
+
+- The Blockbench importer now builds `anvil.api.models` objects and lives in the internal `anvil.lib.blockbench` package. Imported models export the same files as before.
+- Collections:
+    - Groups nested inside a collection are resolved with their full children.
+    - A node is no longer exported twice when one of its ancestors is also in the collection.
+    - `queue_model` checks the collection identifier.
+- Block culling rules are now one file per geometry (`<model>` or `<model>.<collection>`), checked against that geometry's bones; `cube_index` is checked against the bone's actual cubes.
+- Voxel shapes mirror the model's groups; exporting a voxel shape from a model with no bounding boxes now raises an error, and inverted boxes are normalized.
+- Animations:
+    - Empty particle and sound effects are skipped.
+    - Sounds without a locator no longer write `"locator": null`.
+    - Several events on the same keyframe are all kept.
+    - Animation files are exported under their source folder.
+    - Keyframe values are trimmed, and a blank value counts as 0 like in Blockbench, instead of exporting an invalid Molang expression.
+- Loading the same `.bbmodel` under two sources (e.g. as an item and as a block) now raises an error.
+- Duplicate bone names in a model now raise an error instead of silently dropping a bone.
+- A model with both top-level cubes and a `root` group keeps all cubes.
+- `override_bounding_box` now also applies to geometries that were already built.
+
+### Blocks
+
+- Added the `BlockReplaceable` component.
+- `BlockEntity` no longer writes an empty `container` when no `slot_count` is given.
+- `BlockMapColor` accepts any color format.
+- `BlockItemVisual` and `BlockEmbeddedVisual` support Blockbench collections (`collection=`) and `bone_visibility()`.
+- `placement_direction` only writes the fields that are set.
+- Removed a duplicate definition of `BlockDestructionParticles`.
+- Fixed `BlockGeometry.n_way_visual_rotation()`, which always failed; it now takes the axes as keywords like the visual components: `n_way_visual_rotation(y=...)`.
+
+### Molang
+
+- **Breaking:** `Query.All` and `Query.Any` take the compared queries as a list: `Query.All(query, [a, b])`.
+- **Breaking:** `Query.AllTags` takes a list of tags, `Query.AllTags(["minecraft:is_axe"])`, and raises an error when given a single string.
+
+### Enums
+
+- **Breaking:** block state enums were renamed and regrouped:
+    - `BlockFaces` → `BlockFaceValues`
+    - `BlockFacesTrait` → `FacingDirectionValues` (which also replaces `FacingDirectionsTrait`)
+    - `CardinalDirectionsTrait` → `CardinalDirectionsValues`
+    - `VerticalHalfTrait` → `VerticalHalfValues`
+    - `BlockCorner` → `BlockCornerValues`
+    - `BlockCardinalConnection` → `CardinalConnectionStates`
+- Added the `BlockCornerState` and `MultiblockPartState` enums.
+
+### Items
+
+- `CraftingItemCatalog` is now a true singleton, so groups added from different places end up in one catalog file instead of overwriting each other.
+- `CraftingItemCatalog.add_group()` extends an existing group instead of adding a duplicate.
+
+### Schemas
+
+- `MinecraftBlockDescriptor` can match blocks by tags alone: `tags` is now a Molang expression (e.g. `Query.AllTags([...])`) and `name` is optional. Block states still require a name.
+
+### Vanilla
+
+- Added `MinecraftBlockTags.CornerableStairs` and `MinecraftBlockTags.HasFenceConnections`.
+- Added `MinecraftItemTags.CopperTier`.
+
+### Kit
+
+- Added `anvil.kit.blocks.wood_set`: `create_wood_set(name, blocks=WoodBlock.ALL)` creates a complete wood set (planks, logs, wood, stripped variants, slabs, stairs, fences, fence gates, doors, trapdoors, buttons, pressure plates, wall signs, standing signs, hanging signs, boats and chest boats). The set includes:
+    - Its recipes.
+    - Vanilla wood tags, so every vanilla wood recipe accepts its planks, slabs and logs.
+    - Vanilla fuel values.
+    - Creative inventory placement next to the vanilla blocks, or in its own group with `own_creative_group=True`.
+    - The TypeScript components the blocks need, generated for every wood set in the project.
+    - Wall signs and standing signs (16-way rotation), placed with a single `<name>_sign` item like vanilla signs, that ask for their text in a form when placed, store it in the block's dynamic properties, and show it again for editing when used (needs `scriptui`).
+    - Hanging signs: one block hung under a block or on its side (cardinal rotation, a separate bone for each), 4 lines of 9 characters, broken with the block holding it.
+    - Signs can be dyed and made to glow with a glow ink sac (an ink sac removes the glow), in vanilla's dye colours and glow outline.
+    - Boats (two seats) and chest boats (one seat and a 27-slot chest, opened by sneaking) sharing one model. They float, face away from the player when placed, steer like vanilla boats (A/D turn, W/S row), can be leashed, and animate their paddles and shake when hit. They break after a few quick hits, or at once with an axe or in creative, dropping their item (not in creative) and the chest's contents.
+    - Its custom components as classes in `anvil.kit.blocks.wood_set.components`: `BlockWoodSetSign` (text position, scale, line length, double-sided text), `BlockWoodSetSupport` (breaks the block with the block below, the one it was placed against or the one it faces, set with `SupportedBy`), `BlockWoodSetInteractable`, `BlockWoodSetRedstoneConsumer`, `BlockWoodSetStrippable`, `BlockWoodSetTogglable` and `BlockWoodSetSlab`.
+- `anvil.kit.world.ldtk` now explains how to install Amulet (`pip install mcanvil[ldtk]`) when it is missing.
+
+### Documentation
+
+- Added the Models API pages and a Kit page, which notes that the kit may change between minor versions while `anvil.api` is the stable layer.
+- Updated the PBR guide to `BlockFaceValues`.
+
+## 0.9.95
+
+### Anvil
+
+- Updated `EntityProjectile` and `EntityAIRangedAttack` scheme
+- Added `ServerSoundDefinition` support, requires the Preview flag.
+- Manifest setting text is now localized.
+
+## 0.9.94
+
+### Anvil
+
+- Fixed format versions
+
+## 0.9.93
+
+### Anvil
+
+- Updated format version to `1.26.50`.
+- Updated `@minecraft/` npm package versions.
+- Particles now check for the existence of non vanilla particles referenced in the particle events.
+- Behaviour Pack settings can now be used without setting the `preview` flag to true.
+
+### Actor
+
+- Updated `EntityAngerLevel`, `EntityProjectile`, `EntityAIRangedAttack` components.
+- Updated `EntityProjectile` component and its `on_hit` subcomponents (`wind_burst_on_hit`, `catch_fire_on_hit`, `thrown_potion_effect`, `arrow_effect`, `impact_damage`, `spawn_chance`, `stick_in_ground`) according to the latest Bedrock documentation.
+- Added `EntityFreezingImmune`, `EntityFreezingVulnerable`, `EntityCanStandOnPowderSnow` components.
+
+### Blocks
+
+- Added the new `BlockEntity` component.
+
+### Vanilla
+
+- Added new Abandoned Camp Feature/Structure entries.
+- Added all new Wool Stairs and Wool Slabs 16 color block factories.
+- Added all new Cushion item factories.
+- Added the new Cushion entity factory.
+- Added a new `minecraft:leaves` block tag.
+
+## 0.9.92
+
+### Anvil
+
+- Added cross-platform support for **Linux** and **macOS** alongside **Windows**. Operating systems outside of Windows, Linux, and macOS are explicitly disallowed and raise an `OSError`.
+- Added `local_export` (`bool`) configuration option under `[ANVIL]` in `anvilconfig.json`.
+    - When enabled (or running on non-Windows), exports development resource packs, behavior packs, and worlds into an isolated `./output/com.mojang/` directory structure (`output/com.mojang/development_resource_packs/RP_<name>`, `output/com.mojang/development_behavior_packs/BP_<name>`, `output/com.mojang/minecraftWorlds/<name>`), preventing namespace collisions with packaged distribution archives (`.mcaddon`, `.mcworld`, `.zip`, `.pdf`) in `./output/`.
+    - On Windows with `local_export: false`, continues exporting to Minecraft Bedrock AppData folders (`RELEASE_COM_MOJANG` or `PREVIEW_COM_MOJANG`).
+    - On non-Windows platforms, `local_export` is enforced as `True` at runtime.
+- Updated `Directory.create()` to safely support absolute paths cross-platform without prepending `./`.
+- Updated `anvil init --vscode` workspace launcher to support cross-platform commands (`start` on Windows, `open` on macOS, and `xdg-open` on Linux).
+- Updated `anvil clean` / `anvil clear` and build-time pack cleanup (`clean_old_dev`) to dynamically locate and clear development packs from `output/com.mojang` when local export is active.
+- Simplified `esbuild.js` scaffolding template to drop local path guessing and rely exclusively on the `--outdir` argument supplied during `anvil build`.
+- Updated documentation and README with badges and setup instructions for Windows, Linux, and macOS.
+
+### Blockbench
+
+- Added support for locator `rotation` and `ignore_inherited_scale` properties in Blockbench models.
+- Fixed newline handling in animation particle keyframes, allowing particle scripts, effects, and locators to be parsed cleanly without formatting issues.
+- Added `VOXEL_SHAPE_VERSION` (`1.21.110`) format version constant.
+
+### Components
+
+- Added `add_stamp` (`bool`) option under `[ANVIL]` in `anvilconfig.json` to configure whether metadata stamps are prepended to generated files.
+- Restricted `EntityAIHide.poi_type` with strict `Literal["bed", "jobsite", "meeting_area"]` typing.
+
+## 0.9.91
+
+### CLI & Scaffolding
+
+- Enhanced `AnvilValidator.check_new_versions()` to detect outdated packages across both npm dependencies and pip (`mcanvil`), outputting a clear, color-coded terminal table.
+- Updated project scaffolding template `package.json` to include default `"build"` (`node esbuild.js`) and `"test"` (`npx tsc --noemit`) npm scripts.
+- Updated `esbuild.js` scaffolding template to target `BP_${projectName}` behavior pack output directory and dynamically exclude `@minecraft/server-ui` based on the `scriptui` config flag.
+- Updated GitHub Actions release workflow template to use Node.js version 24.
+- Comprehensive documentation updates for the `anvil init` command (alias `anvil create`), clarifying valid flags and providing guidance on removed CLI options (`--pbr`, `--random_seed`/`--seed`, and `--fullns`).
+
+### Core
+
+- Updated behavior pack module dependencies (`ManifestBP`) so that `@minecraft/server` and `@minecraft/server-ui` preview module versions are only used when both `preview` and `experimental` flags are enabled.
+
+## 0.9.9
+
+### Blockbench
+
+- Added Voxel Shape support for Blockbench models. Now you can generate bounding boxes for your blocks in Blockbench and queue them to export using BlockGeometry.block_culling with full support for collections.
+
+### Blocks
+
+- Added `BlockInstrumentSound` block component for mapping note block sounds to `up` and `down` block faces.
+- Enhanced `multi_block` trait in `_BlockTraits`:
+    - Added support for horizontal directions (`"north"`, `"south"`, `"east"`, `"west"`) under experimental flag.
+    - Added strict trait conflict validation: `multi_block` cannot be combined with `placement_position` or `connection` traits.
+    - Restricted `multi_block` + `placement_direction` usage to `PlacementDirectionTrait.CardinalDirection`.
+
+### Features
+
+- Added `MultiBlockFeature` for placing multi-blocks in worldgen.
+
+### Actors & Entities
+
+- Added `EntityNotPickableFromInside` component to prevent cursor targeting when the player's camera lies inside the entity's collision box.
+- Updated `EntityApplyKnockbackRules`, `EntityProjectile` and `EntityAIUseKineticWeapon` with the new schema.
+- Updated `EntityMovementMeters` calculation precision to 4 decimal places.
+
+### Vanilla
+
+- Added `"minecraft:cushion"` to vanilla entity IDs list.
+- Added ~80 new block factories:
+    - Colored wool slabs, double slabs, and stairs for all 16 wool colors (`{Color}WoolDoubleSlab`, `{Color}WoolSlab`, `{Color}WoolStairs`).
+    - Full Poplar wood block set (`PoplarButton`, `PoplarDoor`, `PoplarDoubleSlab`, `PoplarFence`, `PoplarFenceGate`, `PoplarHangingSign`, `PoplarLog`, `PoplarPlanks`, `PoplarPressurePlate`, `PoplarSapling`, `PoplarShelf`, `PoplarSlab`, `PoplarStairs`, `PoplarStandingSign`, `PoplarTrapdoor`, `PoplarWallSign`, `PoplarWood`).
+    - `StrippedPoplarLog` and `StrippedPoplarWood`.
+    - Poplar leaf variants (`OrangePoplarLeaves`, `RedPoplarLeaves`, `YellowPoplarLeaves`).
+    - New blocks: `RedShrub`, `ShelfMushroom`, and `StrawBed`.
+
+## 0.9.8.71
+
+### Anvil
+
+- The `Fonts` object will now create the `default8` texture in the resource pack instead of `/assets`
+- Update format version to `1.26.34`.
+- Increased the file path length from 80 to 96.
+- Fixed molang condition test unit.
+
+### Actors
+
+- You can now customize your initial state name in client/server animation controller with "default" as the _default_ name.
+- Server animations now require a list of commands/events instead of a star-args.
+- Creating a render controller with the same name will now return the existing controller if it exists instead of overwriting it.
+
+### Blocks
+
+- Added `minecraft:sixteen_way_rotation` trait.
+
+### Molang
+
+- Renamed `Molang.molang_condition()` to `Molang.condition()`
+
+## 0.9.8.6
+
+### Anvil & Schemas
+
+- Added core schema classes `NoiseDescriptor` and `NoiseBlockSpecifier` to represent surface/subsurface builder schemas with validation supporting the Bedrock 1.26.30 interval rules.
+
+### Biomes
+
+- Updated surface and subsurface builders (`_BaseBiomeSurfaceBuilder.set_noise_gradient_builder`) to support new noise gradient schemas.
+- Enhanced the `BiomeNoiseGradient` component with `noise`, `noise_block_specifiers`, and `non_replaceable_blocks` builders while maintaining legacy list-style compatibility.
+- Promoted `minecraft:sulfur_caves` to `MinecraftBiomeTypes`.
+
+### Items
+
+- Added item factories for `SulfurSpike` and `MusicDiscBounce`.
+- Added promoted tags for `minecraft:sulfur_cube_archetype_bouncy`, `minecraft:sulfur_cube_archetype_regular`, and `minecraft:sulfur_cube_archetype_sticky` under `MinecraftItemTags`.
+- Updated `ItemUseModifiers` with the `start_using` parameter.
+
+### Blocks
+
+- Added block factories for `Cinnabar`, `CinnabarBrickSlab`, `CinnabarBrickStairs`, `CinnabarBrickWall`, `Sulfur`, `SulfurSpike`, and `PotentSulfur`.
+- Added `BlockPrecipitationInteractions` component.
+- Supported `n_way_visual_rotation` for `BlockGeometry`, `BlockItemVisual`, and `BlockEmbeddedVisual`.
+- Exposed `PlacementDirectionTrait.SixteenWayRotation`.
+- Added the `lava_flammable` parameter on `BlockFlammable`.
+
+### Actors & Entities
+
+- Added the `SulfurCube` entity factory.
+- Added `hide_held_items` option to the entity client description.
+- Updated `EntityAIPickupItems` with the `stop_if_holding_item` field.
+- Added `execute_event_on_home_block` to entity events, sequence steps, and randomize steps.
+- Supported direct definition of `play_sound` and `emit_particle` in sequence and randomize event builders.
+- Added new actor components: `EntityBounciness`, `EntityAirDragModifier`, `EntityApplyKnockbackRules`, `EntityPushableByEntity` (with full preset options), `EntityAreaAttack`, `EntityLeashable`, and `EntityLeashableTo`.
+- Added `unleash` event response capabilities for entity server events.
+- Added `redstone_strength_at_position` query filter.
+
+## 0.9.8.5
+
+### Anvil
+
+- Added a `--clean` command-line flag to the build CLI command to clear previous project development packs before compiling.
+- Improved the `CameraPreset` to support setting `listener` to a boolean or custom position string, configuring input `control_scheme`, setting search cones for targeting assist limits, validating rotation boundaries, and improved docstrings.
+- Added the `ControlSchemes` enumeration representing different Bedrock camera control schemes (`camera_relative`, `camera_relative_strafe`, `player_relative`, `player_relative_strafe`, `locked_player_relative_strafe`).
+- Updated the packaging system to bundle the `db` directory for world templates.
+- Enhanced color validation system to properly support RGB/RGBA lists and corrected hex string checks.
+- Simplified the generated GitHub Release Workflow template to directly pull the package target settings from `anvilconfig.json`.
+- Added unit tests covering blockbench parsing, camera presets, components, LDtk levels, PBR settings, and world icons.
+
+### Actors
+
+- Added a new `.config(...)` method to the entity server description to set configurations like `summonable`, `spawnable`, `experimental`, `runtime_identifier`, and `spawn_category` in a single call.
+- Deprecated properties `Summonable`, `Spawnable`, `Experimental`, and `RuntimeIdentifier` on the server description.
+- Added support for configuring a custom `initial_state` for animation controllers via `.animation_controller` and `add_controller` (defaults to `"default"`).
+- Refactored `add()`, `remove()`, and `queue_command()` on `_BaseEvent`, `_Randomize`, and `_Sequence` classes to accept a list of strings (`list[str]`) instead of varargs, with added type enforcement.
+- Updated sound event registrations to avoid queueing empty sound definitions, automatically prepending the namespace to music references, and tracking modification state.
+- Enhanced the `EntityProjectile` component constructor with support for configuration parameters: `hit_nearest_passenger`, `ignored_entities`, `isolated_physics`, `owner_launch_immunity_ticks`, and `reflect_immunity`.
+
+### Blocks
+
+- Added `Block.override_vanilla_texture(...)` to extract textures from a Blockbench model and export them as a block's texture layout (as a `.texture_set.json` file), bypassing the generation of block configuration files (server/client JSON files) for doing vanilla texture updates.
+- Updated `Block.descriptor(...)` to guarantee all block state keys are serialized as strings.
+- Renamed the block tag component identifier to `"minecraft:tags"` (previously `"minecraft:tag"`).
+
+### Biomes
+
+- Updated client biome files to use the `.client_biome.json` extension (previously `.biome.json`).
+- Updated component identifiers to use their string representations instead of the `.identifier` attribute.
+- Simplified `fog_appearance` to take a `Fog` object directly.
+- Automatically queue client biomes when the parent biome is queued.
+
+### Blockbench
+
+- Added advanced support for rendering layered/blended textures from Blockbench files, with native blending using Pillow (supporting blend modes such as overlay, multiply, hard_light, screen, darken, lighten, default, behind, alpha_mask, set_opacity, divide, and color).
+- Support exporting textures in formats other than PNG (including WebP, TGA, JPEG/JPG).
+- Support specifying a custom destination directory when queueing textures.
+
+### PBR
+
+- Completely modularized the PBR API. The monolithic `pbr.py` has been split into multiple dedicated modules: `atmosphere`, `color_grading`, `cubemap`, `fallback`, `fog` (moved to the PBR namespace), `lighting`, `shadow`, `texture_set`, and `water`.
+- Introduced granular Minecraft version configuration mapping for each PBR settings file type.
+- Updated PBR JSON templates (`vv_atmosphere_settings.jsont`, `vv_fog_settings.jsont`, and `vv_local_lighting.jsont`) to align with current Bedrock schema requirements, including wrapping identifiers under description blocks and updating local light settings.
+- Updated all API guides and examples to reference the correct sub-modules.
+
+### UI & Dialogues
+
+- Updated NPC screen dialogue components (`npc_name`, `text`) and dialogue buttons (`name`) to wrap user-provided text/names inside the translation schema format (`{"rawtext": [{"translate": ...}]}`).
+
+### World / LDtk
+
+- Updated the LDtk world generator tool to write separate `<level_name>.json` files under `scripts/javascript/content/levels/` instead of writing a single massive `entities.ts` file.
+- Added support for calculating Minecraft coordinates (`corner_0`, `corner_1`), capturing custom spawn points, and ignoring entities configured with `do_not_spawn`.
+
+## 0.9.8.4
+
+### Anvil
+
+- Added `subtitle` support to all sound events. You can now add your subtitle to your entity, block or individual sound event. Subtitles are localized automatically.
+
+### Actors
+
+- Added `spawns_above_block_filter` method to Entity Spawn rules.
+
+## 0.9.8.3
+
+### Actors
+
+- Fixed `EntityPushableByBlock` and `EntityPushableByEntity` scheme forcing objects rather than booleans.
+- Removed `goal_radius` from `EntityAISleep` as it seems to be silently removed.
+
+## 0.9.8.2
+
+### Anvil
+
+- Dropped the following libraries: numpy, pygithub, halo, pandas.
+- Updated format versions.
+- Improved component clashes and dependency validation.
+
+### Actors
+
+- Updated entity component scheme.
+- Added `on_pickup_item_start` and `on_pickup_item_end` to `EntityAIPickupItems`.
+- Added `EntityOnEquipmentChanged`, `EntitySpawnOnDeath` Components.
+- Added `EntityAirDragModifier`, `EntityUseUniformAirDrag`, `EntityApplyKnockbackRules` Components. Require Experimental toggle.
+- Refactored `EntityAIFollowTargetCaptain` to `EntityAIFollowTargetLead`.
+- Updated `EntityKnockbackResistance`, ``
+- Added `has_same_equipment_in_slot_as` filter.
+
+### Blocks
+
+- Added validation for placement_direction `y_rotation_offset`.
+- Block tags have been completely changed, now requiring the use of `BlockTagComponent` with a new format. Anvil will handle old code using the permutation tag method so no immediate changes are need, but that will be removed in `v1.0`. Updating the code is advised.
+- Added `BlockChestObstruction` component.
+
+#### Items
+
+- Added new sulfur item tags.
+
+### Features
+
+- Added `embed_in_surface` to `SnapToSurfaceFeature` feature.
+- Added `rotate_around_center` to `StructureTemplateFeature` feature.
+- Feature can now be used in `JigsawStructureTemplatePool`.
+
+#### Vanilla
+
+- Added `SulfurCaves` biome type under the experimental flag.
+- Added `SulfurCube` entity type under the experimental flag.
+- Added `ChiseledCinnabar`, `ChiseledSulfur`, `Cinnabar`, `CinnabarBrickSlab`, `CinnabarBrickStairs`, `CinnabarBrickWall`, `CinnabarBricks`, `CinnabarSlab`, `CinnabarStairs`, `CinnabarWall`, `PolishedCinnabar`, `PolishedCinnabarSlab`, `PolishedCinnabarStairs`,`PolishedSulfur`, `PolishedSulfurSlab`, `PolishedSulfurStairs`, `PolishedSulfurWall`, `PotentSulfur`, `Sulfur`, `SulfurBrickSlab`, `SulfurBrickWall`, `SulfurBricks`, `SulfurCubeBucket`, `SulfurCubeSpawnEgg`, `SulfurSlab`, `SulfurStairs` items under the experimental flag.
+
+#### Biomes
+
+- Added `BiomeSubSurfaceBuilder` biome component. Details are virtually non existent on the component, until further information can be found, the component inherits from `BiomeSurfaceBuilder`.
+- Added `BiomeNoiseGradient` component. Note: The `noise_descriptor` field is completely undocumented on the learning portal.
+
+## 0.9.8.1
+
+### Anvil
+
+- Fixed github workflows executing on linux.
+
+### Molang
+
+- Fixed `deprecated` module import.
+
+## 0.9.8
+
+### CLI
+
+- Added new build arguments:
+    - `--nocompile` to skip compilation entirely.
+    - `--workflow` to generate (or update) a github workflow that handles packaging and publishing releases on github pushes.
+    - `--minify` to override the anvilconfig minify parameter and force anvil to minify JSON and JS.
+    - `--no-arch` -> `--noarch`.
+
+### Anvil
+
+- Fixed AnvilIO bundling typescript .map files.
+
+### Molang
+
+- Added Null Coalescing `[??]` as XOR operator `Query.Variant() ^ 5`.
+- Added `[]` array access to Molang.
+- Added `molang_condition`, `molang_return`, `molang_block`, `molang_loop` and `molang_for_each` as class methods to the Molang class.
+- Added `this`, `break_` and `continue_` as properties to the Molang class.
+
+## 0.9.7.5
+
+### Anvil
+
+- Fixed python build tool skipping over template files.
+
+## 0.9.7.4
+
+### Anvil
+
+- Added missing **init** files.
+
+## 0.9.7.3
+
+### CLI
+
+- Fixed command launch on github workflows.
+
+## 0.9.7.2
+
+### Anvil
+
+- Added a new github workflow generated with your projects, the workflow will automatically compiles and creates an `.mcaddon` and `.zip`. Then creates a new release in your repository using the latest push version and changelog.
+- Setting up the ground work for unit tests.
+
+### Blocks
+
+- Improved the TagComponent.
+
+## 0.9.7.1
+
+### Anvil
+
+- Added community contribution support with new issue templates, an updated `CONTRIBUTING.md`, and refreshed README guidance.
+- Work is being done to add strict typing to the entire Anvil framework.
+
+### CLI
+
+- Split the cli file into smaller focused command files in `./cli_commands`.
+- Added command aliases to existing commands, the old commands still work fine.
+- Added a new command `anvil process-sounds`/`anvil sounds`. This command will take all of your sounds in `assets/sounds` of the formats `.wav`, `.mp3` and `.ogg` and processes them using `ffmpeg`. The script will convert them all to `.ogg`, normalizes loudness, lufs and sample rate. NOTE: this is a destructive process, run `anvil sounds --help` for more information.
+
+### Features & Feature Rules.
+
+- Added `DistributionMixin` to `ScatterFeature` allowing the configuration of the feature distribution. #1
+- Removed unused `DistributionMixin` from `SearchFeature`. #1
+- `DistributionMixin` iteration now allows Molang. #2
+
+### Vanilla
+
+- Changed how vanilla Items, Entities and Blocks are accessed. This will not break existing scripts but should improve performance negligibly.
+
+## 0.9.7
+
+### Anvil
+
+- Localization now uses `localization.csv` instead of `localization.xlsx`, with one column per Minecraft-supported language and incremental sync during export.
+- `ANVIL.compile()` now supports packaging in the same call through `zip`, `mcaddon`, `mcworld`, `apply_overlay`, and `generate_technical_notes` options.
+- Reworked file serialization and archive generation around new `AnvilIO` and `AnvilArchive` helpers backed by `orjson`, and moved localization storage to CSV-based workflows which improved compilation performance by a factor of 8.
+- Added Python `3.13` support and updated package build requirements.
+
+### CLI
+
+- Added `anvil clear` to remove the current project's generated development packs.
+- Added `anvil profile` to record a `py-spy` speedscope trace for the current project.
+- Added pack size report to `anvil run` on packages of type `addon`.
+
+### Actors
+
+- Added broad Bedrock actor component coverage, including `EntitySpawnEggInteraction`, `EntityAnnotationBreakDoor`, `EntityAttackCooldown`, `EntityCombatRegeneration`, `EntityDamageOverTime`, `EntityDefaultLookAngle`, `EntityFloatsInLiquid`, `EntityGroundOffset`, `EntityInputAirControlled`, `EntityRemoveInPeaceful`, `EntitySoundVolume`, `EntityUnderwaterMountBreathing`, `EntityUsesLegacyFriction`, `EntityVibrationDamper`, `EntityWalkAnimationSpeed`, and `EntityWantsJockey`.
+- Added interaction and gameplay actor components including `EntityBlockClimber`, `EntityBlockSensor`, `EntityBribeable`, `EntityCelebrateHunt`, `EntityHeartbeat`, `EntityHome`, `EntityInsomnia`, `EntityLeashableTo`, `EntityMobEffectImmunity`, `EntityTamemount`, `EntityTradeTable`, `EntityBalloonable`, `EntityBarter`, `EntityBoostable`, `EntityBreakBlocks`, `EntityDash`, `EntityDryingOutTimer`, `EntityFlocking`, `EntityGenetics`, `EntityGiveable`, `EntityGrowsCrop`, `EntityItemControllable`, `EntityManagedWanderingTrader`, `EntityPeek`, `EntityRaidTrigger`, `EntityRailMovement`, `EntityRailSensor`, `EntityRavagerBlocked`, `EntitySuspectTracking`, `EntityTeleport`, `EntityTrail`, `EntityTrust`, `EntityTrusting`, and `EntityVibrationListener`.
+- Added player-state and utility actor components including `EntityPlayerExhaustion`, `EntityPlayerExperience`, `EntityPlayerLevel`, `EntityPlayerSaturation`, `EntityStrength`, and experimental `EntityReflectProjectiles`, and added a compatibility stub for the removed `EntityPushable` component that redirects users to the replacement pushable components.
+- Added broad Bedrock actor AI goal coverage for combat, targeting, locomotion, and idle behavior, including `EntityAINearestPrioritizedAttackableTarget`, `EntityAIKnockbackRoar`, `EntityAIRandomStroll`, `EntityAILookAtPlayer`, `EntityAIRandomLookAround`, `EntityAIHurtByTarget`, `EntityAIMeleeAttack`, `EntityAIRangedAttack`, `EntityAISummonEntity`, `EntityAIDelayedAttack`, `EntityAIMoveToBlock`, `EntityAIEquipItem`, `EntityAISendEvent`, `EntityAIMoveTowardsTarget`, `EntityAIRandomSitting`, `EntityAIStayWhileSitting`, `EntityAIRandomSwim`, `EntityAIRandomBreach`, `EntityAIMoveToWater`, `EntityAIMoveToLand`, `EntityAIMoveToLava`, `EntityAILookAtTarget`, `EntityAIFollowParent`, `EntityAIPlayerRideTamed`, `EntityAIFollowOwner`, `EntityAIPanic`, `EntityAIChargeAttack`, `EntityAIRamAttack`, `EntityAIAvoidMobType`, `EntityAILeapAtTarget`, `EntityAIOcelotAttack`, `EntityAIOwnerHurtByTarget`, `EntityAIOwnerHurtTarget`, `EntityAIRandomSearchAndDig`, `EntityAIStompAttack`, `EntityAIRandomHover`, `EntityAIRoar`, `EntityAIFloatWander`, `EntityAILayDown`, `EntityAIMeleeBoxAttack`, `EntityAITimerFlag1`, `EntityAITimerFlag2`, `EntityAITimerFlag3`, `EntityAIRunAroundLikeCrazy`, `EntityAISlimeKeepOnJumping`, and `EntityAIRiseToLiquidLevel`.
+- Added rider, pet, interaction, and environment AI goals including `EntityAIAdmireItem`, `EntityAIBarter`, `EntityAIBeg`, `EntityAIBreakDoor`, `EntityAIControlledByPlayer`, `EntityAICroak`, `EntityAIDoorInteract`, `EntityAIFleeSun`, `EntityAILayEgg`, `EntityAIMoveOutdoors`, `EntityAIOpenDoor`, `EntityAIPlayDead`, `EntityAIRestrictOpenDoor`, `EntityAIRestrictSun`, `EntityAITempt`, `EntityAIMoveToLiquid`, `EntityAIMoveToVillage`, `EntityAIMoveTowardsHomeRestriction`, `EntityAIMoveTowardsRestriction`, `EntityAIOfferFlower`, `EntityAIPetSleepWithOwner`, `EntityAIRandomLookAroundAndSit`, `EntityAISwell`, `EntityAITakeFlower`, `EntityAITeleportToOwner`, `EntityAIAquaticChargeAttack`, `EntityAIChargeHeldItem`, `EntityAIDrinkPotion`, `EntityAIFollowCaravan`, `EntityAIHoldGround`, `EntityAIJumpAroundTarget`, and `EntityAIJumpToBlock`.
+- Added village, utility, and vanilla-specialized AI goals including `EntityAICelebrate`, `EntityAIDefendTrustedTarget`, `EntityAIDefendVillageTarget`, `EntityAIFloatTempt`, `EntityAILookAtEntity`, `EntityAIMoveAroundTarget`, `EntityAIMoveToPOI`, `EntityAINap`, `EntityAIStrollTowardsVillage`, `EntityAICelebrateSurvive`, `EntityAIFindCover`, `EntityAIFindUnderwaterTreasure`, `EntityAIFireAtTarget`, `EntityAIGoHome`, `EntityAIOcelotSitOnBlock`, `EntityAIRaidGarden`, `EntityAISwimIdle`, `EntityAIVexCopyOwnerTarget`, `EntityAIVexRandomMove`, `EntityAIRoll`, `EntityAIScared`, `EntityAIEmerge`, `EntityAISniff`, `EntityAISneeze`, `EntityAISnacking`, `EntityAISwimWander`, `EntityAISwimWithEntity`, `EntityAIDropItemFor`, `EntityAIFindMount`, `EntityAIFollowTargetCaptain`, `EntityAIGuardianAttack`, `EntityAIMoveThroughVillage`, `EntityAISonicBoom`, `EntityAIStayNearNoteblock`, `EntityAIStompTurtleEgg`, `EntityAIEatCarriedItem`, `EntityAIEndermanLeaveBlock`, `EntityAIEndermanTakeBlock`, `EntityAIGoAndGiveItemsToNoteblock`, `EntityAIGoAndGiveItemsToOwner`, `EntityAIInvestigateSuspiciousLocation`, `EntityAIMountPathing`, `EntityAIStalkAndPounceOnTarget`, `EntityAIEatBlock`, `EntityAIEatMob`, `EntityAITransportItems`, `EntityAISilverfishMergeWithStone`, `EntityAISilverfishWakeUpFriends`, `EntityAISkeletonHorseTrap`, `EntityAISlimeAttack`, `EntityAISlimeFloat`, `EntityAISlimeRandomDirection`, `EntityAISquidDive`, `EntityAISquidFlee`, `EntityAISquidIdle`, `EntityAISquidMoveAwayFromGround`, and `EntityAISquidOutOfWater`.
+- Updated the new actor component docstrings to follow Microsoft Learn wording, including constructor argument types and default values.
+- Refreshed components docstrings against current Microsoft Learn pages, including updated summaries, constructor parameter descriptions, and repaired Learn links for moved component pages.
+- Render controllers now support `Molang` expressions for material bindings.
+- Component group properties now validate Minecraft's 32-property limit when defining custom properties.
+
+### Features
+
+- Added a new world generation API under `anvil.api.features`, including `FeatureRule` support and feature definitions for aggregate, cave carver, fossil, geode, growing plant, multiface, Nether cave carver, ore, partially exposed blob, scatter, search, sculk patch, sequence, single block, snap to surface, structure template, surface relative threshold, tree, underwater cave carver, vegetation patch, and weighted random features.
+- Added feature distribution helpers, biome filter integration for feature rules, and support for the `pregeneration_pass` placement pass.
+- Note: There is a mismatch between what the scheme says on the Learn Portal and what Minecraft accepts. If you find any bugs please report them.
+
+### Molang
+
+- Added `Context.ItemSlot()`.
+
+## 0.9.6.6
+
+### Blockbench
+
+- Added support for multiblock collections, now you can reference the specific collections in your models and the collections will be exported as separate geometries. This is useful for multiblock structures and blocks with different states that require different geometries. For example, a door can have a "bottom" collection and a "top" collection, and you can reference them in your block description as `BlockGeometry("door", collection="bottom")` and `BlockGeometry("door", collection="top")`.
+
+### Actors
+
+- Fixed `EntityPushableByBlock` identifier.
+- Updated `EntityAIFollowMob` scheme.
+
+## 0.9.6.5
+
+### Anvil
+
+- Updated to support Minecraft `1.26.10` release.
+
+### Actors
+
+- Added `EntityGameEventMovementTracking`, `EntityAIRandomFly`,`EntityAICircleAroundAnchor`, `EntityAISwoopAttack`, `EntityAISwimUpForBreath` components.
+- Added `held_item_scale` method to `EntityClient` description.
+- Split `EntityPushable` component into `EntityPushableByEntity` and `EntityPushableByBlock` components.
+- Updated `EntityAgeable` component to support baby growth halting.
+
+### Items
+
+- Added `ItemDurabilitySensor`, `ItemSeed` components.
+
+### Blocks
+
+- `BlockSelectionBox` component now supports a boolean value for multiblock support.
+- Added Multiblock trait support to Blocks.
+
+### Vanilla
+
+- Added `GoldenDandelion` item and block.
+
+---
+
+## 0.9.6.4
+
+### Anvil
+
+- Updated to support Minecraft `1.26.2` release.
+
+### Actors
+
+- the texture array method in render controllers now support a query to determine the texture index, this avoid manually writing the indexing logic in the textures method.
+
+---
+
+## 0.9.6.3
+
+### Anvil
+
+- Added a new Ask DeepWiki badge to the readme file, this badge will link to the Anvil ai generated documentation on the DeepWiki platform.
+- Update the minecraft version to `1.26.0` following the new versioning scheme adopted by Minecraft. For more information about this change, please refer to the official [Minecraft New Version Numbering System](https://www.minecraft.net/en-us/article/minecraft-new-version-numbering-system).
+- Updated format versions.
+
+### Actors
+
+- Added `EntityAIInspectBookshelf`, `EntityJumpDynamic`, `EntityOffspring` components.
+- Updated some components to support new features and changes in Minecraft `1.26.0`.
+
+### Blocks
+
+- Updated `BlockCollisionBox` component to support multiple collision boxes, additionally increased the max allowed height from 16 to 24.
+- Added `ConnectionTrait`, `BlockCardinalConnection` and `BlockConnectionRule` component.
+- Added `BlockRedstoneConsumer`, `BlockSupport`, `BlockLeashable`.
+- Updated `BlockLiquidDetection` component to support liquid clipping.
+- Added `CornerAndCardinal` to `PlacementPositionTrait` enum, Added `BlockCorner` enum.
+- Added `AlphaMaskedTint` to `BlockMaterial` enum.
+
+### Jigsaw Structures
+
+- Updated jigsaw rules to properly support the capped processor.
+
+### Biomes
+
+- Added `BiomeVillageType` component.
+- Updated `MinecraftBiomeTags` enum to include new biome tags.
+
+---
+
+## 0.9.6.2
+
+### Anvil
+
+- Exported json files are now sorted alphabetically for better readability.
+- Anvil raised errors now display the traceback for a single error.
+- Added new documentation.
+
+### Actors
+
+- Added `EntityIsHiddenWhenInvisible`, `EntityHurtOnCondition`, `EntityHide`, `EntityAnnotationOpenDoor`, `EntityDweller`, `EntityEconomyTradeTable`, `EntityScheduler`, `EntityTradeResupply`, `EntityShareables`, `EntityArmorEquipmentSlotMapping`, `EntityAIHide`, `EntityAITradeWithPlayer`, `EntityAIPickupItems`, `EntityAIMoveIndoors`, `EntityAILookAtTradingPlayer`, `EntityAIShareItems`,`EntityAIMoveTowardsDwellingRestriction`, `EntityAITradeInterest`, `EntityAIMakeLove`, `EntityAIReceiveLove`,`EntityAIWork`, `EntityAIWorkComposter`, `EntityAIHarvestFarmBlock`, `EntityAIFertilizeFarmBlock`, `EntityAIPlay`, `EntityAIMingle`, `EntityAISleep`, `EntityAIExploreOutskirts` and `EntityAIBreed` components.
+- Client spawn egg now require using `TextureComponent` for full PBR support.
+- Server event name includes a built-in events Literal.
+- Calling a Server event with the same name will now return the existing event instead of overwriting it.
+
+### Blockbench
+
+- Blockbench api now handles exporting animation sound events properly.
+- Animation rotations now are properly calculated.
+
+### World
+
+- Added Trade Table API to manage trade tables, `anvil.api.world.trade_tables`.
+- Loot Table explorer map entry function now support Jigsaw structures.
+
+### Kit
+
+- Added `anvil.kit.world.potionsAPI` module to create vanilla like custom potions.
+- Added `anvil.kit.actors.components` module to host custom components that can be used across different projects.
+
+---
+
+## 0.9.6.1
+
+### Anvil
+
+- Updated to support Minecraft `1.21.132` release.
+- Fixed some Jigsaw structures and sets field data types.
+
+---
+
+## 0.9.6
+
+### Anvil
+
+- Anvil now passes the behaviour pack script path to the bundling script as `--outdir` argument.
+- Added Pack Configuration functionality, now you can use `ManifestRP` and `ManifestBP` classes to register pack settings. for more information about this feature, please refer to the official [Configurable Packs Documentation](https://learn.microsoft.com/en-us/minecraft/creator/documents/addons/custompacksettings).
+- Improved the AnvilTranslator language handling.
+- Updated manifest format version to `3`.
+- Anvil now has a custom JSON parser that supports pretty printing JSON files with proper indentation and spacing. The minify flag is still supported to export single line JSON files. And will handle Minecraft objects gracefully without having to call `.identifier` on every object.
+- Added Dimension Configuration support. You can now use the `DimensionConfiguration()` from `anvil.api.world.dimensions`. You can read more about this feature in the official [Dimension Configuration Documentation](https://learn.microsoft.com/en-us/minecraft/creator/documents/datadrivenoverworldheight?view=minecraft-bedrock-stable).
+- Anvil now uses a placeholder pack_icon for simple compilation if no pack_icon is provided in marketing. Anvil will still raise an error during packaging if no pack_icon is provided.
+- Updated format versions.
+
+### Blockbench
+
+- Major improvements to Blockbench file parsing.
+- Blockbench will not parse `fit_to_frame` option for block model visuals and will always default to true, as this option is no longer allowed in Minecraft `1.21.130` onwards.
+
+### Molang
+
+- Added `GetPackSetting()`, `IsPackSettingEnabled()` and `IsPackSettingSelected()` queries. These queries can be used to read pack settings defined in the pack configuration.
+
+### Actors
+
+- Updated `EntityAddRider`, `EntityTameable`, `EntityAINearestAttackableTarget`, `EntityBurnsInDaylight` and `EntityAIFloat`.
+- Added `EntityRotationLockedToVehicle`, `EntityHealable`, `EntityExhaustionValues` and `EntityAIUseKineticWeapon`.
+
+### Items
+
+- Added `ItemSwingSounds`, `ItemKineticWeapon`, `ItemPiercingWeapon` components.
+- Updated `ItemUseModifiers` and `ItemCooldown` components.
+
+### Blocks
+
+- Added `descriptor()` method to the `Block` class. This method can be used to get a block descriptor for block including specific block states and tags. This will return the identified if no states or tags are provided otherwise it will return a custom block descriptor `{"name": str, "states": {}, "tags": []}`.
+
+### Vibrant Visuals
+
+- Added Cubemap settings to the pbr api.
+- PBR keyframed settings now use `Keyframe` dataclass for instead of manual dicts.
+
+### Molang
+
+- Added `TempVar` variable type for temporary variables.
+- Added `EntityBiomeHasAllTags`, `EntityBiomeHasAnyTags`, `EntityBiomeHasAnyIdentifier`, `GetKineticItemDelay`, `GetKineticItemDamageDuration`, `GetKineticItemKnockbackDuration`, `GetKineticItemDismountDuration`, `KineticWeaponDelay`, `KineticWeaponDamageDuration`, `KineticWeaponKnockbackDuration`, `KineticWeaponDismountDuration`, `TicksSinceLastKineticWeaponHit` queries.
+
+### Vanilla
+
+- Updated Minecraft vanilla definitions to 1.21.130
+
+### Filters
+
+- Added `is_controlling_passenger_family` and `has_item_with_component` filters.
+
+---
+
+## 0.9.5.3
+
+### Anvil
+
+- All components referencing textures now require using `TextureComponents` to define texture maps including the color map.
+- `Particles` now require you specifying the particle texture in addition to optional Normal, Height, MER and MERS maps.
+
+### Items
+
+- `ItemIcon` component now supports normal, height, MER and MERS maps.
+- `ItemIcon` can now reference blockbench files for icons, useful if you're using a billboard entity with the same texture as the item icon.
+
+---
+
+## 0.9.5.2
+
+### Anvil
+
+- Completely dropped support for `functions`, `tick.json` and `commands`, these features are very limited and a much better and advanced scripting system is available through the Minecraft ScriptingAPI.
+- Resolved import issues with some modules.
+
+---
+
+## 0.9.5.1
+
+### CLI
+
+- Added `anvil loopback` command to enable minecraft loopback networking on Windows systems. Also starts http://localhost:7003/ in the default browser.
+
+### Anvil
+
+- Fixed support for PBR texture sets in entities.
+- `ItemTexturesObject`, `BlockTexturesObject` and `EntityTexturesObject` now support texture and use a singleton pattern to avoid overwriting definitions.
+- `AnvilTranslator` uses a singleton pattern to avoid overwriting translations.
+- `TextureSet` require the `pbr` flag to be enabled in Anvil configuration.
+- `AnvilConfig` is now a singleton to avoid overwriting configuration values.
+- Updated format versions.
+- Introduced a new JSON parser for pretty printing JSON files, this is the default behavior. The minify flag is still supported to export single line JSON files.
+- `BlocksJSONObject`, `MusicDefinition` and `SoundDefinition` use a singleton pattern to avoid overwriting definitions.
+- Massively improved sound registration through Entities and Blocks client methods, everything is now properly namespaced and referenced and integrates Entity and Block events.
+    - Standalone sound references can still be added using `SoundDefinition` class.
+
+### Items
+
+- Removed `group`, `category` and `is_hidden_in_commands` from Item description, these are now handled through the `menu_category()` method.
+
+### Blocks
+
+- Removed `group`, `category` and `is_hidden_in_commands` from Block description, these are now handled through the `menu_category()` method.
+- Removed `BlockDefault` component. All block client can be handled through `BlockMaterialInstance` and the block client instance.
+
+### Blockbench
+
+- Blockbench now raises errors if newlines are detected in animation keyframes, a very common mistake.
+
+---
+
+## 0.9.5
+
+### Anvil
+
+- Updated Anvil to support Minecraft `1.21.120`
+- Anvil now display better console errors and warnings.
+- Anvil now targets the new Minecraft GDK builds, this is handled automatically and does not require any changes on your side except for the typescript bundling script and the vscode launch configuration if you are using vscode.
+- All color fields in anvil now use the new `anvil.lib.convert_color` function, which allows you to support any type of color `[RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA]` and convert them to any of those formats. All Minecraft components handle conversion automatically so you can use your favourite type (HexRGBA) everywhere with no worries about the type.
+- Removed `pbr` and `random_seed` from the cli create tool. The flags are still available in anvilconfig.json.
+- Added `--vscode` flag to the cli create tool to generate a vscode launch configuration and code workspace file.
+
+### Actors
+
+- Added `EntityAIDig`, `EntityAIDrinkMilk`, `EntityAIAvoidBlock` components.
+
+### Blocks
+
+- Rewrote `BlockMaterialInstance` completely, this is a **BREAKING** change and will require updating.
+- `BlockMaterialInstance` is easier to use with builtin support for `flipbook textures`, `texture sets` and `texture variations`.
+- Updated `BlockGeometry` class, the geometry name is now optional. The default minecraft full_block geometry will be used if blockbench is referenced.
+- Updated `BlockItemVisual` class, the geometry name is now optional. The default minecraft full_block geometry will be used if blockbench is referenced.
+
+### Items
+
+- Added `ItemSwingDuration` and `ItemCompostable` components.
+
+### Loot Tables
+
+- Added missing loot table functions.
+
+### Molang
+
+- Added the new Math easing functions.
+
+### Blockbench
+
+- Updated the blockbench api to support Blockbench 5.0.0, this is not a versioned update. All of your models must be updated to Blockbench^5.0.0.
+
+---
+
+## 0.9.4.6
+
+### Anvil
+
+- Fixed missing templates and kit folders from built package.
+
+---
+
+## 0.9.4.5
+
+### Anvil
+
+- Minor tweaks to the documentation and code formatting.
+
+---
+
+## 0.9.4.4
+
+### Anvil
+
+- Fixed circular import issue.
+- Anvil now supports Minecraft Preview GDK migration from UWP, current Minecraft release still uses old UWP paths.
+
+---
+
+## 0.9.4.3
+
+### Vanilla
+
+- Updated Minecraft vanilla definitions to 1.21.111
+
+---
+
+## 0.9.4.2
+
+### Documentation
+
+- Added Entity tutorial.
+- Added Block tutorial.
+- Added Item tutorial.
+- Added Localization guide.
+
+### Anvil
+
+- Updated format versions.
+
+### Biomes
+
+- Biomes no longer require experimental features to be enabled.
+
+### Actors
+
+- Renamed `EntityInputAirControlled` to `EntityFreeCameraControlled`.
+- Renamed `EntityDash` to `EntityDashAction`.
+- Added `EntityVerticalMovementAction`, `EntityOnDeath`, `EntityOnFriendlyAnger`, `EntityOnHurt`, `EntityOnHurtByPlayer`, `EntityOnIgnite`, `EntityOnStartLanding`, `EntityOnStartTakeoff`, `EntityOnTargetAcquired`, `EntityOnTargetEscaped`, `EntityOnWakeWithOwner` components.
+- Updated the `EntityExperienceReward` component.
+
+---
+
+## 0.9.4.1
+
+### Anvil
+
+- Added a new cli command `anvil export-world` to export the world from the `.mcworld` file to the `world` directory. this works exactly like the `extract_world` argument in the `Anvil.compile()` method.
+
+### Actors
+
+- Added `EntityPersistent`, `EntityAIMoveToRandomBlock` components.
+
+### Blocks
+
+- Added `block_culling` method to the `BlockGeometry` component.
+
+---
+
+## 0.9.4
+
+### Anvil
+
+- Preparing for Full Anvil Release.
+- Moved the Filters class from api.actors.components to lib.filters.
+- Added all missing filters.
+
+### Biomes
+
+- Added a new api to manage biome components.
+- Added Biomes server components.
+- Moved BiomeCustomization class to the Biomes api, the customization options are now more accessible through the Biome Client property, similar to Entities and Blocks.
+
+### Recipes
+
+- Added support for Potion Brewing Recipes.
+- Added support for Shapeless, Shaped, and Stonecutter custom block tags.
+
+### Loot Tables
+
+- The loot table classes are now up to date with the current Anvil API architecture.
+- Added missing loot table functions.
+
+### Actors
+
+- Separated the Spawn Rule classes from the actors classes, now you can write spawn rules without needing to create an entity.
+
+---
+
+## 0.9.3.1
+
+- Fixed some templates.
+- Fixed "en_US" lang files not exporting.
+- Cleaned up some CLI print statements during compilation.
+
+---
+
+## 0.9.3
+
+- PyPI version fix
+
+---
+
+## 0.9.2
+
+### Anvil
+
+- Cleaned up the codebase, removed unused imports and files.
+- Removed the Logger class as the code now relies heavily on exceptions.
+- Added 3 new entries to the anvilConfig file:
+    - **ENTRY_POINT**: This is the entry point for the Anvil CLI, it can be used to run Anvil from a specific python file.
+        - **NOTE**: The `anvil run` still requires the `anvilconfig.json` file to be present in the working directory.
+    - **SCRIPT_BUNDLE_SCRIPT**: This is the javascript compilation/bundling script that will be used to bundle the TypeScript/JavaScript files.
+    - **MINIFY**: This option enables/disables minification of json files.
+- Changed the anvil project hierarchy.
+    - The new hierarchy is designed to be more intuitive and easier to navigate.
+    - The new hierarchy is as follows:
+
+        ```text
+        project/
+        ├── assets/
+        │   ├── bbmodels/
+        │   ├── particles/
+        │   ├── textures/
+        │   └── sounds/
+        ├── marketing/
+        ├── output/
+        ├── scripts/
+        │   ├── javascript/
+        │   └── python/
+        ├── world/
+        │   └── structures/
+        ├── anvilconfig.json
+        ├── esbuild.js
+        ├── package.json
+        └── tsconfig.json
+        ```
+
+- Anvil now uses esbuild by default to bundle the TypeScript files into JavaScript files.
+    - esbuild is recommended by Microsoft for bundling TypeScript files for Minecraft Bedrock Edition.
+    - The Compiling/Bundling script can be changed in the `anvilconfig.json` file. So you can use your own bundling script if you wish.
+- Updated format versions.
+- Anvil now uses Templates for file generation instead of hardcoded jsons.
+- Added a new translator module, this new module shouldn't effect your existing code at all. However it introduced a new localization.xlsx file for managing translations. Now you can choose to manually translate your strings using this, automatically translate them using the Google Translate API, or a combination of both. You can also choose to only compile and translate specific languages.
+    - The file is generated automatically in the root directory of your projects and is populated with all the localization keys from your code.
+    - If you already manually or automatically translated your strings, and then changed a value in your code, the translation of that string will be removed and that language will not be exported unless the key is updated.
+
+### Blockbench
+
+- Blockbench API can now export Generic models containing meshes. This is not a fully supported feature, and likely will not be supported in the future. The API expects meshes containing Minecraft like cubic clusters with a Cubic scale of 1 meters squared.
+    - This was tested with .OBJ files exported from Minecraft using Mineways.
+- Blockbench can export global animation rotation.
+- Added `override_bounding_box` argument to geometry registration in Entity and Block descriptions.
+
+### Kit
+
+- Added a new module `anvil.kit`.
+    - The module contains useful functions and classes used for different purposes across different projects by startkma.
+- Added `ldtk()` class `anvil.kit.world`. This class can be used to load and parse LDtk files then convert them to Minecraft worlds.
+    - ldtk can be a little confusing to work with here, but it was powerful for the creation of [Beyond: Platformer](https://www.minecraft.net/en-us/marketplace/pdp/starktma/beyond:-platformer/f1ecf12b-1b6f-4794-a8de-24dfb82e6f25).
+    - A tutorial on how to use the `ldtk()` class will be available in the documentation sometime in the future.
+- Added `add_entity_outline()` function to the `anvil.kit.actors.materials` module. This function can be used to add 2 materials used for entity outlines.
+    - The function will add the `base` and `outline` materials to the entity.materials file.
+    - The `base` material is used for the base model, while the `outline` material is used for the outline of entities.
+
+### Actors
+
+- Added `is_moving` filter.
+- Added `EntityAITakeBlocks()`, `EntityAIPlaceBlock()` components.
+
+### Items
+
+- Added `ItemStorageItem`, `ItemStorageWeightLimit`, `ItemStorageWeightModifier` and `ItemBundleInteraction` components.
+
+### Blocks
+
+- Added `BlockMovable()`, `BlockDestructionParticles()` component.
+
+---
+
+## 0.9.1
+
+### Anvil
+
+- Improved Type Hints and IDE autocompletion. Although much more work is needed.
+- Improved error handling and raised errors.
+- Improved class inheritance and modularity for AddonObjects and Descriptors.
+- Exposed the `CustomComponent` from the `anvil.lib.schemas` module, enabling users to define custom components with support for inheritance.
+- Relocated many classes for better organization and modularity, your code should be minimally affected by this change.
+- Component Groups now validates component dependencies and clashes within the same group or permutation.
+
+---
+
+## 0.9.0 - Modular Architecture
+
+### Anvil
+
+- Updated to release `1.21.90`.
+- Refactored and rearranged the Anvil codebase to use a more modular approach.
+- Creating a new project will no longer generate the folder in "com.mojang/minecraftWorlds", instead the working directory will be used.
+- Added a new "assets/world" to host and ".mcworld file" with the same name as the project.
+- "assets/world" will now be used to host ".mcstructures" files instead of "assets/structures".
+- Added a new argument "extract_world" to Anvil.compile() method, this will extract the world from the ".mcworld" file and place it in the world directory.
+- Added a new `JigsawStructureSet()` and `JigsawStructureTemplatePool()` classes to the `anvil.api.structures` module, `JigsawStructure` and `JigsawStructureProcess` can be initialized from within `JigsawStructureSet` and `JigsawStructureTemplatePool`.
+- Started moving away from `Enums` to new `types` and `Literals` to better support type checking and IDE autocompletion.
+
+### PBR
+
+- Added `AtmosphericSettings()`, `FogSettings()`, `ShadowSettings()`, `WaterSettings()`, `ColorGradingSettings()`, `BiomeCustomization()`, `LightingSettings()`, `PointLights()`, `PBRFallback()`.
+- Integrated Texture Sets with Entities and BlockMaterialInstances.
+
+### Blockbench
+
+- Blockbench no longer exports cube faces that have texture disabled.
+
+---
+
+# 0.8.x
+
+## 0.8.4
+
+### Anvil
+
+- Added Recipe unlocking context to the `Recipe()` class.
+
+### Blocks
+
+- Added `BlockTick()` component.
+
+---
+
+## 0.8.3
+
+### Anvil
+
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.17.0]`.
+- Added Aim Assist and Focus Target to the `CameraPreset()` class.
+- Added `Glyph()` enum.
+- Entity Sound Events now support variants.
+- Animation controller sound effects now support locators.
+
+### Blocks
+
+- Block groups are now namespaced, for example `starktma:group_name`.
+- Added `BlockItemVisual()`, `BlockLiquidDetection()`, `BlockDestructionParticles()` component.
+
+### Items
+
+- Item groups are now namespaced, for example `starktma:group_name`.
+
+### Components
+
+- Added `MovementSoundDistanceOffset()`, `RendersWhenInvisible()`, `Breedable()`, `IsCollidable()`, `BodyRotationAxisAligned()`, `InputAirControlled()` components.
+- Added `home_distance`, `is_bound_to_creaking_heart` Filters.
+
+### Molang
+
+- Added `LastInputModeIsAny()` and `TouchOnlyAffectsHotbar()` queries.
+
+---
+
+## 0.8.2
+
+### Anvil
+
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.16.0]`.
+- Updated `MODULE_MINECRAFT_SERVER_UI` to `[1.3.0]`.
+
+### Blocks
+
+- Added `BlockRedstoneConductivity()` components.
+
+### Components
+
+- Added `DimensionBound()`, `Transient()`, `CannotBeAttacked()`, `IgnoreCannotBeAttacked()`, `LookedAt()` components.
+
+### Vanilla
+
+- Added new blocks: `CreakingHeart()`, `ClosedEyeBlossom()`, `OpenEyeBlossom()`, `PaleHangingMoss()`, `PaleMossBlock()`.
+- Added new entities: `Creaking`.
+
+### Actors
+
+- Added `play_sound` and `emit_particle` to Entity Events.
+
+### Molang
+
+- Added `ClientMemoryTier`, `ServerMemoryTier` and `ClientMaxRenderDistance` queries.
+
+---
+
+## 0.8.1
+
+### Anvil
+
+- Updated `GEOMETRY_VERSION` to `[1.21.0]`.
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.13.0]`.
+- Updated `MODULE_MINECRAFT_SERVER_UI` to `[1.2.0]`.
+
+### Vanilla
+
+- Added 2 new mobs: Bogged and Breeze
+- Added new items: `Mace`, `OminousBottle`, `WindCharge`, `TrialKey`, `OminousTrialKey`, `BreezeRod`, `TrialSpawner`, `FlowPotteryShard`, `GusterPotteryShard`, `ScrapePotteryShard`, `FlowBannerPattern`, `GlobeBannerPattern`, `GusterBannerPattern`, `BoltArmorTrim`, `FlowArmorTrim`, `MusicDiscCreator`, `MusicDiscCreatorMusicBox`, `MusicDiscPrecipice`.
+- Added new blocks: `Crafter()`, `TrialSpawner()`, `Vault()`, `HeavyCore()`.
+- Expanded the copper family with all the Oxidized and waxed variants of the following blocks: `ChiseledCopper()`, `CopperGrate()`, `CopperBulb()`, `CopperDoor()`, `CopperTrapdoor()`
+
+### Commands
+
+- Added new effects to the `Effects` enum: `Infested`, `Oozing`, `Weaving`, `WindCharged`, `RaidOmen`, `TrailOmen`.
+
+### Blockbench
+
+- Added support for UV rotations.
+- Added support for Item Display Transformation.
+
+### Blocks
+
+- Added `scale_pivot` and `rotation_pivot` to `BlockTransformation()`.
+- Added `BlockCustomComponents()`.
+
+### Items
+
+- Added `ItemCustomComponents()`, `ItemRarity()` components.
+
+---
+
+## 0.8.0 - The Blockbench Update
+
+### Blockbench
+
+- Added support for Blockbench files. Entities attachables and blocks no longer require a dedicated model, animation and texture files, instead a single bbmodel must be added to the `assets/bbmodels` folder.
+    - A blockbench file can store a model and all of its relative textures and animations.
+    - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.bbmodel` to the `assets/bbmodels` folder. For example:
+        - `player.Client.description.geometry("energy_beam")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the model from it.
+        - `player.Client.description.texture("energy_beam", "energy_beam_blue")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the texture `energy_beam_blue` from it.
+        - `player.Client.description.animation("energy_beam", "energy_beam_charging")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the animation `energy_beam_charging` from it.
+- Blockbench file identifiers should use a namespace prefix, for example `starktma:truck.bbmodel`. Anvil will automatically add the namespace to the identifier.
+- Blockbench animations should contain their name. For example, `energy_beam_charging` instead of `animation.stark_ap.player.energy_beam`. Anvil will automatically format them properly.
+- Blockbench textures should contain their name. For example, `energy_beam_blue` instead of `texture.stark_ap.player.energy_beam`. Anvil will automatically format them properly.
+- Blockbench animation controllers are not currently supported. the animation controllers must be added manually through Anvil.
+- Blockbench `Bézier` keyframes are not supported. Anvil will treat them as `linear` keyframes.
+
+### Actors
+
+- Actors will no longer support a texture and geometry shortnames instead the full name will be used. **Breaking**
+- Actors will now require a `blockbench_filename` property to reference the blockbench file, in addition to the target texture and animation. **Breaking**
+
+### Anvil
+
+- Resource and behavior packs are now generated in the `development_behavior_packs` and `development_resource_packs` directories instead of the project root folder, this improves the development experience and reduces the commit changes as the packs can be regenerated at any point.
+- Added a new enumerator `ItemVanillaTags` for item tags.
+- Added a new enumerator `BlockVanillaTags` for block tags.
+
+### Features
+
+- Added `SmithingTrimRecipe()` class.
+
+### Blocks
+
+- Added Block tag to Components and Permutations. `block.server.components.tag()` or `block.server.permutation("permutation_name").tag()`.
+
+---
+
+# 0.7.x
+
+## 0.7.3
+
+### Anvil
+
+- Added `behavior_description` and `resource_description` to `anvilconfig.json`.
+- Fixed addons packaging issue.
+- Updated `MANIFEST_BUILD` to `1.20.80`.
+- Updated `ENTITY_SERVER_VERSION` to `1.20.80`.
+- Updated `MODULE_MINECRAFT_SERVER` to `1.10.0`.
+- Updated `ITEM_SERVER_VERSION` to `1.20.70`.
+- Updated `CAMERA_PRESET_VERSION` to `1.20.80`.
+
+### Actors
+
+- Added a `reuse_assets` property to the `EntityClient` description, this property will allow you to manually enter animation, geometry and controller IDs without Anvil checking for a match in the `assets` directory.
+- Added `queryable_geometry` property to the `EntityClient` description.
+- Added `should_update_bones_and_effects_offscreen` and `should_update_effects_offscreen` properties to the `EntityClient` description.
+- Updated the `get_vanilla()` `EntityClient` function, the change will fixes some issues with retrieving the proper vanilla entity from the public repository.
+- Added a placeholder `spawn_category()` function to the `EntityServer` description. This is not functional in Minecraft at the moment therefore it has no effect.
+- `EntityClient` `spawn_egg()` function now supports an index number.
+- Added `spawn_egg_color()` function to the `EntityClient` description.
+
+### Commands
+
+- Added the `Hud` command.
+- Added a `remove()` function to the `Effect()` class, this function will remove specific effects from the target.
+
+### Components
+
+- Added `has_tag()`, `is_difficulty()`, `is_sitting()` and `has_damaged_equipment()` filters.
+- Updated the `Interact()` component.
+- Added `Inventory()`, `Dash()`, `VariableMaxAutoStep()`, `RiseToLiquidLevel()`, `Buoyant()`, `LavaMovement()`, `ExperienceReward()`, `Equippable()`, `Color()`, `Color2()`, `BurnsInDaylight()`, `Boss()`, `Sittable()`, `FlyingSpeedMeters()`, `ConditionalBandwidthOptimization()`, `ItemHopper()`, and `BodyRotationBlocked()` components.
+
+### Features
+
+- Added `extend_player_rendering()` to the `CameraPreset()` class.
+
+### Molang
+
+- Added `ArmorSlotDamage()` query.
+- `BoneOrientationTrs()` and `BoneOrientationMatrix()` queries now return an object with `position`, `rotation` and `scale` properties.
+
+---
+
+## 0.7.2
+
+### Anvil
+
+- Added an `anvilConstans.ts` to the `assets/javascript` directory. This file will be regenerated on every run of the script and is means to sync the project configuration with ScriptingAPI.
+- Updated `MANIFEST_BUILD` to `1.20.70`.
+- Updated `ENTITY_SERVER_VERSION` to `1.20.70`.
+- Updated `MODULE_MINECRAFT_SERVER` to `1.9.0`.
+
+### Blocks
+
+- Added a menu category and group Enums to block description.
+- Added `is_hidden_in_commands` property to block description.
+- Added `AlphaTestSingleSided` variable to the `BlockMaterial` enum.
+
+### Features
+
+- Rewrote the Recipe class.
+- Added `SmeltingRecipe()`, `SmithingRecipe()`, `ShapelessRecipe()`, `StoneCutterRecipe()`, `ShapedCraftingRecipe()` classes.
+
+### Vanilla
+
+- Remove the `LEGACYItems()` class and added the rest of the items to the `Items()` class.
+- Renamed `Grass()` block class to `GrassBlock()`.
+- Split `Leaves()` and `Leaves2()` block classes to `AcaciaLeaves()`, `BirchLeaves()`, `DarkOakLeaves()`, `JungleLeaves()`, `OakLeaves()`, `SpruceLeaves()`.
+- Split `DoubleWoodenSlab()` block class to `AcaciaDoubleSlab()`, `BirchDoubleSlab()`, `DarkOakDoubleSlab()`, `JungleDoubleSlab()`, `OakDoubleSlab()`, `SpruceDoubleSlab()`.
+- Split `WoodenSlab()` block class to `AcaciaSlab()`, `BirchSlab()`, `DarkOakSlab()`, `JungleSlab()`, `OakSlab()`, `SpruceSlab()`.
+- Split `Wood()` block class to `AcaciaWood()`, `BirchWood()`, `DarkOakWood()`, `JungleWood()`, `OakWood()`, `SpruceWood()`, `StrippedOakWood()`, `StrippedSpruceWood()`, `StrippedBirchWood()`, `StrippedJungleWood()`, `StrippedAcaciaWood()`, `StrippedDarkOakWood()`.
+
+### Commands
+
+- Added `has_property()` method to the `TargetSelector()` class.
+- Replace the `Suicide` DamageCause enum variable with `SelfDestruct`.
+
+### Components
+
+- `EntitySensor()` range parameter now accepts a tuple for horizontal and vertical range.
+- Added `was_last_hurt_by()` filter.
+
+### Molang
+
+- Due to the deprecation of class properties in Python 3.13, all class properties are now converted to methods.
+- Added `IsAttached()`, `HasPlayerRider()`, `Scoreboard()`, `RideBodyXRotation()`, `RideBodyYRotation()`, `RideHeadXRotation()`, `RideHeadYRotation()`, `RiderBodyXRotation()`, `RiderBodyYRotation()`, `RiderHeadXRotation()` and `RiderHeadYRotation()` queries.
+
+---
+
+## 0.7.1
+
+### Anvil
+
+- Updated `MODULE_MINECRAFT_SERVER` to `1.8.0`.
+- Updated `MANIFEST_BUILD` to `1.20.60`
+- Music now references the correct sound definitions.
+
+### Actors
+
+- Added `queue_command` and `emit_vibration` to Actor events.
+- Actors can now reference the same animations, same as geometries and textures.
+
+### Components
+
+- Added `is_panicking` and `is_sprinting` filters.
+- Updated `Ageable()` component.
+- `EntitySensor()` now support multiple sensors.
+- Added `SlimeKeepOnJumping()` component.
+
+### Molang
+
+- Added `IsCooldownType`, `CooldownTime`, `CooldownTimeRemaining`, `RelativeBlockHasAnyTags`, `RelativeBlockHasAllTags`, `BlockNeighborHasAnyTags`, `BlockNeighborHasAllTags`, `BlockHasAllTags`, `BlockHasAnyTags`, `BoneOrientationTrs` and `BoneOrientationMatrix` queries.
+
+---
+
+## 0.7.0 - Guidelines & Addon Support
+
+### Guidelines
+
+- New packaging type: Addon
+- Anvil raises an error when using experimental features in packages of type Addon.
+- Anvil raises an error when total block permutations exceed 10,000 in packages of type Addon, and a warning otherwise.
+- Anvil raises an error when overriding a vanilla feature (items and entities, including the player) in packages of type Addon.
+- All textures are now placed 2 folders deep in the RP directory, this is to avoid overriding 3rd party textures. `RP/textures/namespace/project_name/`
+- Texture references are now in the format `namespace:texture_name`. This is done automatically.
+- Scores are now enforced to start with `namespace.` for packages of type Addon. added a new method `get_new_score` to anvil definition to generate scores.
+- Tags are now enforced to start with `namespace.` for packages of type Addon.
+- Loot Tables are now placed 2 folders deep in the BP directory, this is to avoid conflicting with 3rd party loot tables. `BP/loot_tables/namespace/project_name/`.
+- Functions are now placed 2 folders deep in the BP directory, this is to avoid conflicting with 3rd party functions. `BP/functions/namespace/project_name/`.
+- Sound references are now in the format `namespace:sound_name`. This is done automatically.
+- Materials now follow the format `namespace.material_name:base_material`.
+
+### Anvil
+
+- Split the `core.py` file into multiple files. This shouldn't cause any issues.
+- Removed the `fullns` cli option, a universal format is now enforced.
+- Added `addon` cli option to set the packaging target. Can be changed from `anvilconfig.json`.
+- Missing config options are now handled on runtime.
+- `AddonObjects` now all have a single extension format.
+- Refactored a lot of code, split a lot classes into smaller modules.
+- Most of the functionalities are now required to manually import from their respective modules.
+- Anvil now flags experimental entities on non experimental environments.
+- Resource packs and behavior Packs always have dependencies on each other
+- Reimplemented the `get_vanilla` method in Entity clients, work with vanilla entities only. The method retrieves the latest version of the `client_entity` from the official `bedrock_samples` github repository.
+- Implemented a basic caching system to store retrieved vanilla data, the cached data will be updated in case there is newer release.
+- Added a new `identifier` property to the `Materials()` class.
+
+### Blocks
+
+- Added a new `BlockDefault()` component that allows you to use the blocks.json file to define block visuals. This is a workaround until `BlockUnitCube()` is out of experimental.
+- `BlockGeometry()` and `BlockMaterialInstance()` are no longer required when using `BlockDefault()`.
+- If a display name is not supplied using `BlockDisplayName()`, the name will be inferred from the block identifier. Not localized.
+
+### Items
+
+- If a display name is not supplied using `ItemDisplayName()`, the name will be inferred from the item identifier. Not localized.
+- Added an `attachable` property to items to quickly add attachables to items.
+
+### Molang
+
+- Added `Context` to the molang module.
+- Fixed an error that treated some molang expressions as string literals and wrapped them with single quotes.
+
+### Blockbench
+
+- As an effort to move towards using `.bbmodel` files natively, there has been a change to how models and textures are referenced.
+    - Entities and attachables no longer require a dedicated model file, instead a referenced models must be added to the `assets/models` folder under their own name.
+        - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.geo.json` to the `assets/models/actors` folder.
+    - Entities and attachables no longer require a dedicated texture file, instead a referenced textures must be added to the `assets/textures` folder under their own name.
+        - For instance, if you have an entity named `starktma:vehicle` that references a texture called `truck`, you must add a texture file named `truck.png` to the `assets/textures/actors` folder.
+    - Entities and attachables textures and models are now placed in the same `actors` folder.
+    - Entities and attachables no longer exports their models and texture into queued folders, instead everything is exported under the `actors` folder.
+- Adopting blockbench files will facilitate working with assets, additionally the folder structure can no longer be supported with the new enforced guidelines due to the file path limit.
+
+### Components
+
+- Added `Tameable()` component.
+
+---
+
+# 0.6.x
+
+## 0.6.0 - Configuration Overhaul
+
+### Anvil
+
+- Changed the directory configuration of some files to support the new Addons program.
+- Changed `Config.ini` to `anvilconfig.json`. This is done so it's much easier to integrate with the Scripting API.
+- A newer guidelines have been introduced to Anvil. Namespaces now require an additional abbreviation of the project name. For instance, if the namespace is `starktma` and the project name is `Beyond: Platformer`, the namespace will be `starktma_bp`. This is done to avoid conflicts with other projects.
+- Item Texture and Terrain Texture references are now in this format `namespace:name`. This change does not require your attention as it's done automatically.
+- Item and block textures are now save under `RP/textures/namespace/`. previously they were saved under `RP/textures/`.
+- Added sounds and music will now use `RP/sounds/namespace/` instead of `RP/sounds/`.
+- Sounds now use the format `namespace:sound_reference` instead of `sound_reference`. This is does not require your attention as it's done automatically.
+- Calling `identifier` on a sound definitions will return the Sound reference in the format `namespace:sound_reference`.
+- Moved `Dialogue()`, `Fog()`, `LootTable()`, `Recipe()`, `Function()`, `Particle()`, `CameraPreset()`, `Structure()`, `Fonts()` and `SkinPack()` classes to `anvil.api.features`.
+- Dialogue scene tags now use the format `namespace:scene_tag` instead of `scene_tag`. This is does not require your attention as it's done automatically.
+- Calling `identifier` on a dialogue scene will return the scene tag in the format `namespace:scene_tag`.
+- Calling `identifier` on a fog instance will return its identifier.
+- Moved `Geometry()` and `Animations()` classes to `anvil.api.blockbench`, this is in preparation to integrate `.bbmodel` files directly into Anvil without splitting them into multiple json files.
+- LootTables will be exported to `BP/loot_tables/namespace/`
+- Calling `path` on a loot table will return its execution path that can be used in Components or Commands. (Must be queued first)
+- Particle textures will no be copied to `RP/textures/particle/namespace/`.
+- Actor textures are now copied into `RP/textures/namespace/[entity-attachable]/` instead of `RP/textures/[entity-attachable]/`
+
+### Components
+
+- Added `FlyingSpeed()`, `RandomHover()`, `Interact()`, `AngerLevel()`, `Roar()`, `FloatWander()`, `LayDown()`, `MeleeBoxAttack()`, `CanJoinRaid()`, `TimerFlag1()`, `TimerFlag2()`, `TimerFlag3()` components.
+- Updated `ENTITY_SERVER_VERSION` to `[1.20.50]`.
+
+### Vanilla
+
+- Split the Planks block into 6 individual blocks.
+- Split the Stone block into 7 individual blocks.
+
+### Items
+
+- Renamed `ItemUseDuration()` to `ItemUseModifiers()`.
+- Added `ItemTags()` component.
+- Updated `ITEM_SERVER_VERSION` to `[1.20.50]`.
+
+### Molang
+
+- Added `timer_flag_1`, `timer_flag_2`, `timer_flag_3` queries.
+
+---
+
+# 0.5.x
+
+## 0.5.4
+
+### Anvil
+
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.6.0]`.
+- Updated `ITEM_SERVER_VERSION` to `[1.20.40]`.
+- tsc now runs using `tsconfig.json`. The tsconfig options can be added and/or changed but `outDir` and `include` will be overwritten by Anvil.
+- Added a `launch.json` for script debugging.
+- Added `node_modules/` to default `.gitignore`.
+- Added `scriptui` option to `config.ini`.
+
+### Components
+
+- Added `MovementMeters()` component that takes speed in m/s instead of whatever Minecraft is using.
+- Added `MovementMeters()`, `FollowParent()`, `PlayerRideTamed()`, `InputGroundControlled()`, `FollowOwner()`, `WaterMovement()`, `Panic()`, `ChargeAttack()`, `RamAttack()`, `AvoidMobType()`, `LeapAtTarget()`, `OcelotAttack()`, `Angry()`, `OwnerHurtByTarget()`, `OwnerHurtTarget()`, `RandomSearchAndDig()`, `StompAttack()`, `FollowMob()`, `RandomSwim()`, `RandomBreach()` components.
+- Added `has_damage()`, `is_daytime()`, `rider_count()` filters.
+
+---
+
+## 0.5.3
+
+### Anvil
+
+- Renamed `seed` cli option to `random_seed`.
+- Updated `ITEM_SERVER_VERSION` to `[1.20.30]`.
+- Added a new `generate_technical_notes()` method to `Anvil` class, the method will generate a pdf file containing a list of every entity, block, attachable, item, particle and sounds that were exported.
+- `compile()`, `mcworld()`, `mcaddon()` are now proper methods instead of properties.
+- Removed the `scipy` requirement from `setup.cfg`.
+- Removed and/or replaced rarely used library imports.
+- Added a new `CameraPreset()` class that creates new camera presets.
+- Removed the `vanilla` folder from the `assets` directory, this is a step forward towards removing support for cloning vanilla packs.
+- Scripting API files are now hosted in the `assets/javascript` directory, a quality of life improvement towards full support of js scripting.
+- Anvil CLI will install both `@minecraft/server` and `@minecraft/serve-ui` modules if the `scriptapi` flag is set.
+- Anvil will automatically run `tsc <filename>` on every `.ts` file in `assets/javascript` and copies every `.js` files preserving the relative paths in `BP/scripts`.
+- Moved the scripts folder to host all Python files to `assets/python`, you can place your files anywhere you wish to but this is done to keep inline with javascript files.
+- Anvil now support multiple packs, generation will still take place in a single pack but if you wish to include other packs, add the uuid to `config.ini` separating by a `,` and copy your pack to their respective locations.
+
+### Blocks
+
+- Renamed `FacingDirections`, `BlockFaces` and `VerticalHalf` to `FacingDirectionsTrait`, `BlockFacesTrait` and `VerticalHalfTrait`.
+- Renames properties to states in Block Description.
+
+### Commands
+
+- Fixed an issue with `Camera()` command where the keyword `ease` was not parsed.
+- Added `Time()`, `Stopsound()` commands.
+
+### Components
+
+- Added `is_biome()`, `is_underwater()`, `on_ground()`, `in_water()` filters.
+- Added `Biomes` enum.
+- Added `RandomSitting()`, `StayWhileSitting()`, `UnderwaterMovement()`, `RandomSwim()`, `RandomBreach()`, `MoveToWater()`, `MoveToLand()`, `MoveToLava()`, `LookAtTarget()` components.
+- `Rideable()` family types are now added by passing family strings using `family_types()`.
+
+### Items
+
+- Added `ItemCanDestroyInCreative()` and `ItemHoverTextColor()` components.
+
+### Tools
+
+- `StateMachine()`:
+    - `active_player` counter now runs all the time regardless of the max player count.
+
+---
+
+## 0.5.2
+
+### Anvil
+
+- Split `StainedHardenedClay()` block into 16 individual blocks.
+- Split `StainedGlass()` block into 16 individual blocks.
+- Split `StainedGlassPane()` block into 16 individual blocks.
+- Split `ConcretePowder()` block into 16 individual blocks.
+- Entity names starting with a digit will raise an error.
+- Updated the `SOUND_DEFINITIONS_VERSION` format version to `[1.20.20]`.
+- Updated `BLOCK_SERVER_VERSION` to `[1.20.20]`.
+- sound_definitions now accept both float and integer values for min_distance and max_distance.
+- Added support of Random Seed Generation to both CLI and core Anvil.
+- Updated some vanilla blocks to use `BlockStates.CardinalDirection` instead of `BlockStates.Direction`.
+
+### Components
+
+- Added `can_spread_on_fire` parameter to both `DelayedAttack()` `MeleeAttack()`.
+
+### Molang
+
+- Renamed `block_property` to `block_state`.
+- Renamed `has_block_property` to `has_block_state`.
+
+### Commands
+
+- Added `PlayerSleepingPercentage()` to the `Gamerule` command.
+- Added `ScriptEvent()`.
+- Added `CameraPresets()` and `CameraEasing()` enums.
+- Added `Camera()` command.
+
+### Items
+
+- Added `group`, `category` and `is_hidden_in_commands` to Item Server description.
+- Added `ItemWearable()` component.
+- Added `ItemHandEquipped()` component.
+- Added `ItemGlint()` component.
+- Added `ItemUseDuration()` component.
+- Added `ItemStackedByData()` component.
+- Added `ItemUseAnimation()` component.
+- Added `ItemAllowOffHand()` component.
+- Added `ItemShouldDespawn()` component.
+- Added `ItemLiquidClipped()` component.
+- Added `ItemDamage()` component.
+- Added `ItemDigger()` component.
+- Added `ItemEnchantable()` component.
+- Added `ItemFood()` component.
+- Added `ItemsInteractButton()` component.
+- Removed `LEGACYItemHandEquipped()` component.
+- Removed `LEGACYItemFoil()` component.
+- Removed `LEGACYItemStackedByData()` component.
+- Removed `LEGACYItemUseDuration()` component.
+- Removed `LEGACYItemFood()` component.
+- Removed the `_ItemClient()` class.
+
+### Blocks
+
+- Added `BlockFace` and `VerticalHalf` block states.
+- Removed `BlockClient()` class.
+- Added `traits` property to blocks server description.
+- Added the following enums: `PlacementDirectionTrait`, `PlacementPositionTrait`, `CardinalDirections`, `FacingDirections`, `BlockFaces`, `VerticalHalf`.
+- Renamed `property` keys to `state`.
+
+### Documentation
+
+- Exposed more APIs.
+
+---
+
+## 0.5.1
+
+### Anvil
+
+- Added workflows to publish to pypi and testpypi.
+- Gone Public!!!!!!!!
+
+---
+
+## 0.5.0 - Documentation & Tools
+
+### Anvil
+
+- Docs are now build when pushing to the main branch.
+- Added a universal way to require project specific configuration.
+    - To use call `ANVIL.require_config()` and pass the required configs as arguments.
+- Additional work on documentation.
+- Fonts can now generate a 'numbers' particle texture that contains numbers from 0-999.
+- Replaced `dependecies` with `capabilities` in resource pack manifest.
+- Added a new API module `texture_pack` (WIP).
+- Added `GlobalLighting` and `Atmospherics` to the `texture_pack` module to support the new PBR pipeline.
+- A `version` function will now generate every time there is a compilation, includes the time, Minecraft version and the build version.
+- Rolled `ITEM_SERVER_VERSION` back to `[1.16.0]`, a lot of necessary functionalities are missing, waiting for `[1.12.40]`.
+- Added a new module, `anvil.tools.functions`
+- Added 3 new systems to `anvil.tools.functions`: `StateMachine`, `TimedFunction` and `StepTimedFunction`.
+- Added a new property to Anvil Core `ANVIL.new_score`, this will register and return a new incremental score every time it's called. (Improved the score creation in `TimedFunction`)
+
+### Components
+
+- Added and `_ai_goal()` parent class.
+- Added new components: `MoveTowardsTarget()`, `EntitySensor()`, `AmbientSoundInterval()`.
+- Slightly modified the way components are coded, this allows for much easier use of the `remove` method from events.
+- Fixed a bug that wrapped filters in additional brackets for `all_of`, `any_of` and `none_of` conditions.
+- Fixed a bug with `SendEvent()` that caused it to not write some important data to the json file therefore causing it to not work.
+
+### Actors
+
+- Similar to geometries, animations can now be referenced from other entities, reducing redundancy.
+- Entity Sound Events can now specify a min and max distance of a sound.
+
+### Commands
+
+- Fixed a bug with the `CameraShake()` command returning `None` on export.
+
+### UI
+
+- Added a `Credits Constructor` class method to `AnvilHUDScreen` to facilitate creating UI based credits.
+- Titles and Actionbars will now ignore keywords created in screens other that `anvil_hud`.
+
+### Documentation
+
+- Finished the tutorial for adding an entity.
+- Added a documentation for adding a block.
+- Added a tutorial for creating a One Block SkyBlock map.
+
+---
+
+# 0.4.x
+
+## 0.4.2 - 0.4.2.6
+
+### Anvil
+
+- Updated to release `1.20.11`.
+- Updated `ITEM_SERVER_VERSION` to `[1.12.10]`
+- Added lots of docstrings
+- Changed README from rst to md.
+- Added basic documentations.
+
+### Items
+
+- Added `ItemCooldown`, `ItemRepairable`, `ItemMaxStackSize`, `ItemBlockPlacer`, `ItemRecord`, `ItemShooter`, `ItemProjectile`, `ItemThrowable`.
+
+### Commands
+
+- Block states in commands will use equals instead of colon.
+
+### UI
+
+- Rewrote the UI trigger mechanic to allow for more complex ui elements.
+
+---
+
+## 0.4.1
+
+### Anvil
+
+- Added a proper integration of vanilla blocks.
+- Added a proper `Blocks()` class and `BlockStates` Enumerator to the `vanilla` api. The vanilla blocks will allow you to customize them using their block states.
+- Components and Commands will only accept `vanilla.Blocks()`, `str()` and `Block()` as inputs and will raise an error otherwise.
+- Fixed an issue that caused music and sound to not be compiled.
+- Classes use proper Enumerators.
+- Added `_debug` a rawtext attribute to ANVIL. this can be useful to display score and debug text as actionbar if DEBUG = 1.
+- Added a `_SoundEvent()` class to `core.py`. This call will serve as sound manager for Minecraft Vanilla sound event triggers.
+    - Sound Events are only supported for Entities as of now, a new method was added to `Entity.Client.description` that allows adding default sound triggers.
+
+### Components
+
+- Components that have block inputs will only accept `vanilla.Blocks()`, `str()` and `Block()` instances as inputs and will raise an error otherwise.
+
+### Items
+
+- Rolled `ITEM_SERVER_VERSION` back to `[1.12.1]`.
+- Added a `Client` property to items, used to set the `Name` and `Icon` of an item as a temporary solution until the full list of item components leave experimental.
+
+### Commands
+
+- Added `Setblock()` command.
+- Added `Fill()` command.
+- Added `Music()` command.
+- Updated `Execute().If/Unless.Block()` to use block states instead of legacy data values.
+- Commands that have block inputs will only accept `vanilla.Blocks()`, `str()` and `Block()` instances as inputs and will raise an error otherwise.
+- `Playsound()` no longer appends position by default.
+- `Say()` now wraps all texts with "" by default.
+
+### Molang
+
+- Added the rest of the molang queries.
+    - Some queries need more information to properly implement therefore they may not work.
+
+---
+
+## 0.4.0 - ScriptAPI & PBR Support
+
+### Anvil
+
+- Added support for ScriptAPI
+    - To include scripting in your project use the flag `--scriptapi` when creating a new project.
+    - Scripts can be added or removed anytime from `config.ini`.
+- Added support for PBR
+    - To include pbr in your project use the flag `--pbr` when creating a new project.
+    - PBR can be added or removed anytime from `config.ini`.
+- Removed the #packaging comment from the generated python script, it's outdated and doesn't represent the functionality of the method anymore.
+- Updated to release `1.20.1.0`.
+- Preview builds are no longer tracked, instead focusing solely on releases.
+- Reusable geometries no longer make copies of the same geometry files, instead only reference them. Referenced entities must be queues before the referencing entity.
+- Renamed `Permission` enumerator to `InputPermissions`.
+- `package.py` changes:
+    - Added a lot of docstring.
+    - Removed `RawText`, `random_character_generator`, `CreateImage`, `GetColors`, `CreateTreeFromPath`, `GetPathFromTree`, `MoveFiles`, `DownloadFile`.
+    - Moved `CreateDirectoriesFromTree` to `cli.py`
+    - Moved `ShortenDict` inside the `AddonObject` class.
+- Added docstrings to the `cli` tool.
+- Started moving from the basic `RaiseError` to proper Errors.
+- Removing a component from an Actor no longer results in an error if the component doesn't exist.
+- Empty functions will no longer be exported.
+- Restructured the Schemes function, now it's a proper class.
+- Created a Logger class to track error and operations.
+- Removed type subdirectory from RP animation and render controllers.
+- Added a version enforcing method to components.
+    - Implemented the enforcements in the items components.
+    - Components that require a minimum format version will raise an error if Anvil format version is not equal or higher.
+    - This change will allow us to work on implementing experimental features safely.
+- Added the new Items and Blocks to the vanilla module.
+- Added `all_slots_empty` and `any_slots_empty` filters.
+- Added the `spawn_item_event` key to the `SpawnEntity` component class.
+- Formatted some Logger error messages.
+- Updated `ITEM_SERVER_VERSION` to `1.20.0`
+
+### Breaking Behavior
+
+- Config file is no longer automatically initialized, instead it's an `ANVIL` property.
+- The gloabl variables such as `NAMESPACE` and `PROJECTNAME` are now accessible through the `ANVIL` instance.
+    - `NAMESPACE -> ANVIL.NAMESPACE`
+- Localizing uses a key_value arguments instead of a manual string now
+
+### Components
+
+- Added `InsideBlockNotifier()`, `Transformation()`, `Equipment()`, `EquipItem()`, `FireImmune()`, `SendEvent()` components.
+- Added `is_raider`, `is_variant`, `is_mark_variant`, `is_skin_id` filters.
+- Removed the `particle` argument from the `Particle` component, use `particle_on_hit` method instead.
+
+### Blocks
+
+- Custom blocks textures are moved inside an `anvil` folder to separate them from vanilla textures.
+
+### Commands
+
+- `Give` command always includes the amount and data, this is done to account for possible use of item components.
+- `Summon` command now always wraps nametags inside additional double quotes.
+- `name` argument in the target selectors wraps names inside additional double quotes.
+
+### UI
+
+- New UI screen will automatically populate the `_ui_defs.json` file.
+- Added an `anvil_common` screen to host common elements.
+
+---
+
+# 0.3.x
+
+## 0.3.5
+
+### Anvil
+
+- Updated the extensions of generated files.
+- Vanilla entities are automatically exported to the vanilla directory, regardless of the provided directory.
+- Updated to release `1.19.81.01` and preview `1.20.0.20`.
+- Actors client `scale` values is properly set to a string.
+- `TimedFunction` is no longer tied to an actor and will be executed on the server fake player.
+    - Tags are also no longer required.
+    - To get the scoreboard objective for the TimedFunction, call it's str representation.
+    - To test if the TimedFunction has finished it's run, check if the objective is equal to -1.
+- Added an error validation for path length exceeding 80 characters.
+- Anvil packaging function allows for applying an overlay to keyarts now.
+- Replaced the Exporter Parent class with `AddonObject` and moved extensions and paths to each individual class.
+- Moved `LootTable`, `Recipe`, `Particle` from the old `EngineComponent` to `AddonObject`.
+- `Items` still rely on `EngineComponent` until the rework in `1.20`
+- Removed unnecessary modules.
+- Added an items module in preparation for the new items.
+- Pack versioning is now supported using the `release` key in `config.ini`
+
+### Components
+
+- Added `InsideBlockNotifier()`, `Transformation()`, `Equipment()`, `EquipItem()` components
+- Added `is_raider`, `is_variant`, `is_mark_variant`, `is_skin_id` filters.
+
+### Blocks
+
+- Fully implemented `BlockTransformation`, `BlockDisplayName` and `BlockCraftingTable` components.
+
+### Items
+
+- Added the basic Items class.
+- Added `ItemDurability`, `ItemDisplayName`, `ItemFuel`, `ItemEntityPlacer`.
+- Partially added `ItemIcon`.
+
+### Commands
+
+- Added `InputPermission()` command.
+- Added `haspermission`, `hasitem`, `gamemode` and `scores` arguments to the target Selector.
+- Added `Scoreboard()` command.
+
+### Molang
+
+- `&`, `|` and `~` binary operators wrap the expression in parentheses `()`.
+- Added `RotationToCamera()`, `Health`, `MaxHealth`
+
+### Breaking Behavior
+
+To ensure the interpreter functions as intended, it is recommended to wrap expressions in your own parentheses to insure a proper order of operations, as Anvil wraps expressions left to right, it may result in several bugs.
+
+For instance, consider the following example:
+
+```text
+Query.Property('interacted') & Query.MarkVariant == 1
+```
+
+Although the expression may seem logical at first, it will be compiled to
+
+```text
+"(q.property('starktma:interacted') && q.mark_variant) == 1"
+```
+
+To avoid this issue, we suggest writing the expression as follows:
+
+```text
+Query.Property('interacted') & (Query.MarkVariant == 1)
+```
+
+---
+
+## 0.3.4
+
+### Anvil
+
+- Anvil clones the bedrock samples again, untracked. `https://github.com/Mojang/bedrock-samples.git`
+- Updated to Release `1.19.71.02`
+- Changed the CHANGELOG, README and TODO to md from rst.
+
+### Components
+
+- Added new components: `Projectile()`, `Explode()`, `KnockbackRoar()`, `MobEffect()`, `SpawnEntity()`, `AreaAttack()`, `Loot()`, `Float()`, `RandomStroll()`, `LookAtPlayer()`, `RandomLookAround()`, `HurtByTarget()`, `MeleeAttack()`, `RangedAttack()`, `Shooter()`, `SummonEntity()`, `Boss()`, `DelayedAttack()`, `MoveToBlock()`.
+- Added `actor_health`, `random_chance`, `target_distance` Filters.
+
+### Commands
+
+- The `hide_particles` argument in particle commands has been improved.
+- Added `Playsound()` command.
+
+### Molang
+
+- Added `GetEquippedItemName`, `Position`, `PositionDelta`, `ItemIsCharged`, `ItemInUseDuration`, `IsRiding`, `ModifiedMoveSpeed`, `IsDelayedAttacking`, `IsCharged`, `IsCasting`, `IsRoaring`, `MarkVariant`
+- Fixed some bugs with arithmetic operations.
+
+---
+
+## 0.3.3
+
+### Anvil
+
+- Fixed the attachables class not copying the models to `RP/models/entity`.
+- Updated to Release `1.19.70.02`
+- Updated to Preview `1.19.80.20`
+- Fixed a bug with Anvil UI where it caused asserts if no actionbar visibility condition was added.
+- Fixed some bugs with the generated font characters clipping into each other.
+
+### Blocks
+
+- Updated `BlockSelectionBox()`.
+- Removed `_BlockRotation()` and `_BlockPartVisibility()`.
+- Added `_BlockTransformation()`.
+- Added `permutation(condition)` to block servers.
+
+### Components
+
+- Added `Rideable()` Component.
+- Added `is_riding` Filter.
+
+### Commands
+
+- Added the `ReplaceItem` command.
+
+### Molang
+
+- Expanded operation support to use Python operation natively.
+    - Division: **a/b**
+    - Floor Division: **a//b** → **math.floor(a/b)**
+    - Modulo: **a%b** → **math.mod(a, b)**
+    - Power: **a**b** → **math.pow(a, b)\*\*
+    - Absolute value: **abs(a)** → **math.abs(a)**
+    - Rounded value: **round(a)** → **math.round(a)**
+- Added `BlockProperty`.
+
+---
+
+## 0.3.2
+
+### Anvil
+
+- Added a public to-do list.
+- Added a basic `Animation()` class to create animations within Anvil.
+
+### Molang
+
+- Added `HeadXRotation`, `HeadYRotation`, `IsLocalPlayer`, `IsItemNameAny` queries.
+- Values negation is now supported, `-Query.HeadXRotation`.
+- Arithmetic operations now return a str wrapped in brackets, this is to avoid unintended behavior that may arise because of expressions like this:
+  `q.life_time >= v.timer + 2` → `q.life_time >= (v.timer + 2)`
+
+### Commands
+
+- Expanded commands to support nbt.
+- Added the Give command class with its nbt components.
+- Added the `family` argument to the Target Selector.
+
+### Blocks
+
+- Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
+
+---
+
+## 0.3.1
+
+### New
+
+- Added `generate_font()` to the `Fonts()` class. Now you'll be able to generate the `default8` texture using a ttf/otf files.
+- Added `PreferredPath`, `TargetNearbySensor`, `NearestAttackableTarget`, `RandomLookAround`, and `Timer` components.
+- Added a basic `Geometry()` class to create models within Anvil.
+- Added the filters `is_block`
+- Molang now support subtraction and multiplication.
+- Added a snippets module to serve as a host for useful and quick functions.
+
+### Bug Fixes
+
+- Fixed the ANVIL.mcworld packaging method, now outputs a non corrupted world.
+- Fixed the cli tool not creating the config and .gitignore files.
+- The workspace no longer lists the Minecraft logs folder, it generally has too many files which makes the IDE slow.
+
+---
+
+## 0.3.0 - Materials System
+
+### New
+
+- Added a basic Materials class.
+- Molang variables can now access initiated variables, else throw errors.
+- Added more queries.
+
+### Bug Fixes
+
+- 'enum' properties use the 'values' key instead of 'range'.
+
+---
+
+# 0.2.x
+
+## 0.2.6
+
+- Switch to use ConfigParser for the configuration instead of a simple json file.
+- Added basic Filters class with few filters.
+- Added `EnvironmentSensor` class.
+- Removed automatic imports from `anvil.__init__` , now requires a manual import from `anvil.api` module.
+- Added `DistanceFromCamera` to Query class.
+- Updated the Query, Variable and Math classes methods to @staticmethods and @classmethods.
+- Removed the requirement of using a block geometry in Blocks as the 16x cube is used by default.
+- Removed the oldBlock class.
+- Molang now support native comparison operators (==, !=, <, >, <=, >=), wrapping in strings is no longer necessary. `f'{Query.DistanceFromCamera} <= {sensor_range}'` is the same as `Query.DistanceFromCamera <= sensor_range`
+
+---
+
+## 0.2.5
+
+- Sounds `load_on_low_memory` is set to `False` by default.
+- UI `text_alignment` use `UITextAlignment` now instead of `UIAnchor`.
+
+---
+
+## 0.2.4
+
+- Expanded Molang queries.
+- Some improvements to the structure.
+
+---
+
+## 0.2.3
+
+- Updated the StateManager to use the new Execute commands.
+- Added Entity properties.
+- Added the Holiday Blocks, Blocks components including Experimental, Events and Event Triggers.
+- Added a Score to clock function.
+- Added some queries.
+
+---
+
+## 0.2.2
+
+- Updated to Python 3.11.
+- Moved away from `setup.py` to `pyproject.toml`.
+- Updated the Dialogue class.
+- Added Fog class.
+- Added Fog command.
+- Updated commands classes.
+
+---
+
+## 0.2.1
+
+- Untracked
+
+---
+
+## 0.2.0 - Major Architecture Rewrite
+
+- Updated the Exporter to include file extension formats.
+- Added a `TerrainTextures()` class to manage block textures.
+- Added Music class to manage music, accessible through `ANVIL.music()`.
+- Updated base classes `_Entity` to `_Actor`.
+- Added `Attachables()` class.
+- Added mcaddon function to ANVIL. compiles the project and exports as an `.mcaddon`.
+- Exposed more Minecraft entity components.
+- FileExtensions are now namespace_format dependent.
+- Added a Tools script to host the new `StateManager()`, `Cinematics()` and `TimedFunction()`.
+- Due to the change to the source of Vanilla asset packs, Anvil now relies on the Public Mojang repository `Mojang/bedrock-samples` instead of a local download.
+- Updated Vanilla Items, Blocks and Entities identifiers to `release 1.19.31` and `preview 1.19.50.21`.
+- Implemented a basic UI class with support for element triggers with `title` command and HUD modifications.
+- UI implementations are moved to their own submodule `submodules/ui`.
+- Moved all Actors classes `Entity and Attachable` to it's own submodule `submodules/actors`.
+- Removed the option to download vanilla RP and BP. Vanilla assets are now hosted and maintained by Mojang on GitHub.
+- `get_vanilla` method of entities now pulls directly from GitHub instead of relying on a local copy of Vanilla assets.
+- Exposed more Minecraft entity components.
+
+---
+
+# Early Development
+
+## 0.1.0 - Core Foundation
+
+- Fixed incorrect names for White Dye, Black Dye,
+- Updated boats icons.
+- Finished adding the new spawn rules conditions.
+- Updated StateManager.
+- Functions with more than 10000 lines of code are now split into multiple functions.
+- Entity events now append new entries instead of overwriting them if not called in the same line.
+- Added (_run_command) to Entity Events, proceeded with `_`.
+- Added a command validator to the commands namespace.
+- Server animations now append new commands instead of overwriting them if not called in the same line.
+- Reformatted Tellraw and Titleraw to support text, selector, score and translate of the rawtext components.
+- Updated the Exported class to use the os.path.join function.
+- Integrated AddDespawnMechanic and OptimizeEntity to the NewEntity class, now included with all entities.
+
+---
+
+## 0.0.0 -> 0.1.0
+
+- Anvil was a collection of individual generator scripts with no unified structure or design.

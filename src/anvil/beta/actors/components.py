@@ -1,49 +1,36 @@
-from anvil.api.core.components import (
-    Component,
-)
-from anvil.api.core.types import *
+from typing import Annotated
+
+from anvil.api.actors.entity import Entity
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
-from anvil.lib.schemas import (
-    MinecraftEntityDescriptor,
-)
+from anvil.lib.jsonmodel import EntityId, JsonComponent, json_field
 
 
-class EntityReflectProjectiles(Component):
-    _identifier = "minecraft:reflect_projectiles"
+class EntityReflectProjectiles(JsonComponent):
+    """[EXPERIMENTAL] Allows an entity to reflect projectiles. Needs the experimental flag in anvilconfig.json.
 
-    def __init__(
-        self,
-        azimuth_angle: Molang | str = None,
-        elevation_angle: Molang | str = None,
-        reflected_projectiles: list[MinecraftEntityDescriptor | Identifier] = None,
-        reflection_scale: Molang | str = None,
-        reflection_sound: str = "reflect",
-    ) -> None:
-        """[EXPERIMENTAL] Allows an entity to reflect projectiles.
+    Args:
+        azimuth_angle (Molang | str | float, optional): Angle in degrees added to the projectile's y axis rotation. Game default 0.
+        elevation_angle (Molang | str | float, optional): Angle in degrees added to the projectile's x axis rotation. Game default 0.
+        reflected_projectiles (list[str | Entity], optional): Projectiles that are reflected when they hit the entity.
+        reflection_scale (Molang | str | float, optional): Velocity scale of the reflected projectile. Below 1 slows it, above 1 speeds it up. Game default 1.
+        reflection_sound (str, optional): Sound event played when a projectile is reflected. Game default reflect.
 
-        Parameters:
-            azimuth_angle (Molang | str, optional): [EXPERIMENTAL] A Molang expression defining the angle in degrees to add to the projectile's y axis rotation. Defaults to None.
-            elevation_angle (Molang | str, optional): [EXPERIMENTAL] A Molang expression defining the angle in degrees to add to the projectile's x axis rotation. Defaults to None.
-            reflected_projectiles (list[MinecraftEntityDescriptor | Identifier], optional): [EXPERIMENTAL] An array of strings defining the types of projectiles that are reflected when they hit the entity. Defaults to None.
-            reflection_scale (Molang | str, optional): [EXPERIMENTAL] A Molang expression defining the velocity scaling of the reflected projectile. Values below 1 decrease the projectile's velocity, and values above 1 increase it. Defaults to None.
-            reflection_sound (str, optional): [EXPERIMENTAL] A string defining the name of the sound event to be played when a projectile is reflected. "reflect" unless specified. Defaults to "reflect".
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_reflect_projectiles)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_reflect_projectiles)
-        """
+    identifier = "minecraft:reflect_projectiles"
+
+    azimuth_angle: Molang | str | float | None = json_field(default=None)
+    elevation_angle: Molang | str | float | None = json_field(default=None)
+    reflected_projectiles: list[Annotated[str | Entity, EntityId]] | None = json_field(
+        default=None
+    )
+    reflection_scale: Molang | str | float | None = json_field(default=None)
+    reflection_sound: str | None = json_field(default=None)
+
+    def __validate__(self) -> None:
         if not CONFIG._EXPERIMENTAL:
-            raise NotImplementedError(
-                "The 'EntityReflectProjectiles' component is experimental and requires the experimental flag to be enabled in anvilconfig.json."
+            raise ValueError(
+                "EntityReflectProjectiles is experimental: turn on features.experimental in anvilconfig.json."
             )
-
-        super().__init__("reflect_projectiles")
-        if azimuth_angle is not None:
-            self._add_field("azimuth_angle", azimuth_angle)
-        if elevation_angle is not None:
-            self._add_field("elevation_angle", elevation_angle)
-        if reflected_projectiles is not None:
-            self._add_field("reflected_projectiles", reflected_projectiles)
-        if reflection_scale is not None:
-            self._add_field("reflection_scale", reflection_scale)
-        if reflection_sound != "reflect":
-            self._add_field("reflection_sound", reflection_sound)

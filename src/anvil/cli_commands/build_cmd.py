@@ -1,8 +1,7 @@
-import os
 import sys
 
 import click
-from anvil.lib.config import Config, ConfigOption, ConfigSection
+from anvil.lib.config import CONFIG_FILE, Config, ConfigOption, ConfigSection
 from anvil.lib.lib import process_subcommand
 
 
@@ -97,7 +96,7 @@ def build(
     clean: bool,
     debug: bool,
 ) -> None:
-    if not os.path.exists("anvilconfig.json"):
+    if not CONFIG_FILE.exists():
         click.echo(
             click.style(
                 "No valid Anvil project found, to create a new project run: `anvil create --help`",
@@ -107,7 +106,7 @@ def build(
         return None
 
     config = Config()
-    entry_point = config.get_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT)
+    entry_point = config.get_option(ConfigSection.BUILD, ConfigOption.ENTRY_POINT)
     if not entry_point:
         click.echo(
             click.style(

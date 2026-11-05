@@ -1,13 +1,18 @@
-import os
+import copy
+import re
 import sys
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import MISSING, dataclass, field, fields, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
-from typing import Any, List
+from pathlib import Path
+from typing import Any
 
 import click
-import commentjson as json
-from anvil.__version__ import __version__
+import orjson
+
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     PREVIEW_COM_MOJANG,
@@ -19,15 +24,22 @@ from anvil.lib.reports import ReportCollector
 
 
 class ConfigSection(StrEnum):
-    """Configuration sections for the anvil config file.
+    """The sections of `anvilconfig.json`.
 
-    Defines the main sections that can be present in the configuration file.
+    - `package`: what the project is: its namespace, names, descriptions and target.
+    - `manifest`: what the pack manifests carry: the release version and the UUIDs.
+    - `features`: what the project's content uses: Script API, Script UI, PBR,
+      experimental features and the world's random seed.
+    - `build`: how the project is built and exported.
+    - `anvil`: what Anvil records on its own: the last version check and the latest
+      vanilla version it found.
     """
 
-    ANVIL = "anvil"
-    BUILD = "build"
     PACKAGE = "package"
-    MINECRAFT = "minecraft"
+    MANIFEST = "manifest"
+    FEATURES = "features"
+    BUILD = "build"
+    ANVIL = "anvil"
 
 
 class ConfigOption(StrEnum):
@@ -53,22 +65,28 @@ class ConfigOption(StrEnum):
     RP_UUID = "rp_uuid"
     PACK_UUID = "pack_uuid"
 
-    DEBUG = "debug"
     SCRIPT_API = "scriptapi"
     SCRIPT_UI = "scriptui"
     PBR = "pbr"
     RANDOM_SEED = "random_seed"
-    PASCAL_PROJECT_NAME = "pascal_project_name"
     LAST_CHECK = "last_check"
     EXPERIMENTAL = "experimental"
     SCRIPT_MODULE_UUID = "script_module_uuid"
     DATA_MODULE_UUID = "data_module_uuid"
+    RESOURCE_MODULE_UUID = "resource_module_uuid"
     PREVIEW = "preview"
     ENTRY_POINT = "entry_point"
     JS_BUNDLE_SCRIPT = "js_bundle_script"
     MINIFY = "minify"
     ADD_STAMP = "add_stamp"
     LOCAL_EXPORT = "local_export"
+
+
+class Pack(StrEnum):
+    """The packs an Anvil project writes files to."""
+
+    RP = "resource_pack"
+    BP = "behavior_pack"
 
 
 class ConfigPackageTarget(StrEnum):
@@ -81,15 +99,18 @@ class ConfigPackageTarget(StrEnum):
     ADDON = "addon"
 
 
+CONFIG_FILE = Path("anvilconfig.json")
+"""The project's config file, in the current folder."""
+
+
 class Config:
     """A class used to read and write to the config.ini file."""
 
     def __init__(self, allow_missing: bool = False) -> None:
         """Initializes a Config object."""
         self._config: dict[str, Any] = {}
-        if os.path.exists("anvilconfig.json"):
-            with open("anvilconfig.json", "r", encoding="utf-8") as f:
-                self._config = json.loads(f.read())
+        if CONFIG_FILE.exists():
+            self._config = orjson.loads(CONFIG_FILE.read_bytes())
         elif not allow_missing:
             click.echo(
                 click.style(
@@ -101,13 +122,17 @@ class Config:
 
     def save(self):
         """Saves the anvilconfig.json file."""
-        with open("anvilconfig.json", "w") as f:
-            f.write(json.dumps(self._config, indent=4))
+        with CONFIG_FILE.open("wb") as f:
+            f.write(
+                orjson.dumps(
+                    self._config, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+                )
+            )
 
     def add_section(self, section: str) -> None:
         """Adds a section to the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to add.
         """
         self._config[section] = {}
@@ -115,7 +140,7 @@ class Config:
     def has_section(self, section: str) -> bool:
         """Checks if a section exists in the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to check.
 
         Returns:
@@ -127,11 +152,11 @@ class Config:
         self,
         section: str,
         option: str,
-        value: str | bool | int | float | List[str | bool | int | float],
+        value: str | bool | int | float | list[str | bool | int | float],
     ) -> None:
         """Sets a value in the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to set the value in.
             option (str): The option to set the value in.
             value (Any): The value to set.
@@ -145,7 +170,7 @@ class Config:
     def has_option(self, section: str, option: str) -> bool:
         """Checks if an option exists in the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to check the option in.
             option (str): The option to check.
 
@@ -157,7 +182,7 @@ class Config:
     def get_option(self, section: ConfigSection, option: ConfigOption) -> Any:
         """Gets a value from the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (ConfigSection): The section to get the value from.
             option (ConfigOption): The option to get the value from.
 
@@ -167,259 +192,344 @@ class Config:
         return self._config[section][option]
 
 
-class _AnvilConfig:
-    """Main configuration class for Anvil instances (singleton).
+def _initials(project_name: str) -> str:
+    return "".join(x[0] for x in project_name.split("_")).upper()
 
-    Manages all configuration settings, paths, and initialization
-    for an Anvil project instance.
+
+NAMESPACE_PATTERN = re.compile(r"(?!minecraft$)[a-z][a-z0-9_]{0,7}")
+"""A project namespace: 1 to 8 lowercase letters, digits or `_`, starting with a letter, and
+not `minecraft`."""
+
+PROJECT_NAME_PATTERN = re.compile(r"[a-z][a-z0-9_]{0,15}")
+"""A project name: 1 to 16 lowercase letters, digits or `_`, starting with a letter."""
+
+
+def validate_namespace_project_name(
+    namespace: str, project_name: str, is_addon: bool = False
+) -> None:
+    """Validates the namespace and project name against `NAMESPACE_PATTERN` and
+    `PROJECT_NAME_PATTERN`. An addon's namespace must also end with `_` and the project
+    name's initials, `stark_mp` for `my_project`.
+
+    Args:
+        namespace (str): The namespace to validate.
+        project_name (str): The project name to validate.
+        is_addon (bool, optional): Whether this is for an addon. Defaults to False.
+
+    Raises:
+        ValueError: If validation fails for any requirement.
+    """
+    if not NAMESPACE_PATTERN.fullmatch(namespace):
+        raise ValueError(
+            f"Invalid namespace '{namespace}'. A namespace is 1 to 8 lowercase letters, digits "
+            "or '_', starts with a letter, and cannot be 'minecraft'."
+        )
+
+    if not PROJECT_NAME_PATTERN.fullmatch(project_name):
+        raise ValueError(
+            f"Invalid project name '{project_name}'. A project name is 1 to 16 lowercase "
+            "letters, digits or '_', and starts with a letter."
+        )
+
+    initials = _initials(project_name).lower()
+    if is_addon and not re.fullmatch(rf"[a-z0-9_]+_{initials}", namespace):
+        raise ValueError(
+            f"Invalid namespace '{namespace}'. An addon's namespace must end with the project "
+            f"name's initials, for example '{namespace.split('_')[0]}_{initials}'."
+        )
+
+
+def _option(
+    section: ConfigSection,
+    name: ConfigOption,
+    default: Any = MISSING,
+    *,
+    factory: Any = MISSING,
+    script: bool = False,
+) -> Any:
+    """A setting read from the `name` option of the `section` section of `anvilconfig.json`.
+
+    Args:
+        section (ConfigSection): The section the option is in.
+        name (ConfigOption): The option.
+        default (Any, optional): The value when the option is missing. Without a default or
+            a factory, the option is required.
+        factory (Callable, optional): Makes the value when the option is missing.
+        script (bool, optional): The option is only written to the file for projects that
+            use the Script API.
+    """
+    return field(
+        default=default,
+        default_factory=factory,
+        metadata={"section": section, "name": name, "script": script},
+    )
+
+
+def _new_uuid() -> str:
+    return str(uuid.uuid4())
+
+
+def _now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+@dataclass(kw_only=True)
+class AnvilConfig:
+    """The settings of an Anvil project, read from its `anvilconfig.json`.
+
+    It only holds values: building one never prompts, prints, writes a file or uses the
+    network. `load_project` does that work for the project in the current folder.
+
+    `CONFIG` is the shared instance. It loads the project in the current folder the
+    first time one of its settings is read.
     """
 
-    _instance = None
+    NAMESPACE: str = _option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE)
+    PROJECT_NAME: str = _option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)
+    COMPANY: str = _option(ConfigSection.PACKAGE, ConfigOption.COMPANY)
+    DISPLAY_NAME: str = _option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME)
+    PROJECT_DESCRIPTION: str = _option(
+        ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION
+    )
+    BEHAVIOUR_DESCRIPTION: str = _option(
+        ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION
+    )
+    RESOURCE_DESCRIPTION: str = _option(
+        ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION
+    )
+    _TARGET: str = _option(ConfigSection.PACKAGE, ConfigOption.TARGET, "world")
 
-    COMPANY: str
-    NAMESPACE: str
-    PROJECT_NAME: str
-    DISPLAY_NAME: str
-    PROJECT_DESCRIPTION: str
-    RESOURCE_DESCRIPTION: str
-    BEHAVIOUR_DESCRIPTION: str
+    _RELEASE: str = _option(ConfigSection.MANIFEST, ConfigOption.RELEASE, "1.0.0")
+    _RP_UUID: list[str] = _option(
+        ConfigSection.MANIFEST, ConfigOption.RP_UUID, factory=lambda: [_new_uuid()]
+    )
+    _BP_UUID: list[str] = _option(
+        ConfigSection.MANIFEST, ConfigOption.BP_UUID, factory=lambda: [_new_uuid()]
+    )
+    _PACK_UUID: str = _option(
+        ConfigSection.MANIFEST, ConfigOption.PACK_UUID, factory=_new_uuid
+    )
+    _DATA_MODULE_UUID: str = _option(
+        ConfigSection.MANIFEST, ConfigOption.DATA_MODULE_UUID, factory=_new_uuid
+    )
+    _RESOURCE_MODULE_UUID: str = _option(
+        ConfigSection.MANIFEST, ConfigOption.RESOURCE_MODULE_UUID, factory=_new_uuid
+    )
+    _SCRIPT_MODULE_UUID: str = _option(
+        ConfigSection.MANIFEST,
+        ConfigOption.SCRIPT_MODULE_UUID,
+        factory=_new_uuid,
+        script=True,
+    )
 
-    RP_PATH: str
-    BP_PATH: str
+    _SCRIPT_API: bool = _option(ConfigSection.FEATURES, ConfigOption.SCRIPT_API, False)
+    _SCRIPT_UI: bool = _option(ConfigSection.FEATURES, ConfigOption.SCRIPT_UI, False)
+    PBR: bool = _option(ConfigSection.FEATURES, ConfigOption.PBR, False)
+    _RANDOM_SEED: bool = _option(
+        ConfigSection.FEATURES, ConfigOption.RANDOM_SEED, False
+    )
+    _EXPERIMENTAL: bool = _option(
+        ConfigSection.FEATURES, ConfigOption.EXPERIMENTAL, False
+    )
 
-    _VANILLA_VERSION: str
-    _RELEASE: str
-    _DEBUG: bool
-    _PASCAL_PROJECT_NAME: str
-    _LAST_CHECK: str
-    _TARGET: str
-    _RP_UUID: list[str]
-    _BP_UUID: list[str]
-    _PACK_UUID: str
-    _SCRIPT_API: bool
-    _SCRIPT_UI: bool
-    PBR: bool
-    _RANDOM_SEED: bool
-    _EXPERIMENTAL: bool
-    _DATA_MODULE_UUID: str
-    _SCRIPT_MODULE_UUID: str
-    _MINIFY: bool
-    _ADD_STAMP: bool
-    _LOCAL_EXPORT: bool = False
+    _PREVIEW: bool = _option(ConfigSection.BUILD, ConfigOption.PREVIEW, False)
+    _ENTRY_POINT: str = _option(
+        ConfigSection.BUILD, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
+    )
+    _SCRIPT_BUNDLE_SCRIPT: str = _option(
+        ConfigSection.BUILD,
+        ConfigOption.JS_BUNDLE_SCRIPT,
+        "node esbuild.js",
+        script=True,
+    )
+    _MINIFY: bool = _option(ConfigSection.BUILD, ConfigOption.MINIFY, False)
+    _ADD_STAMP: bool = _option(ConfigSection.BUILD, ConfigOption.ADD_STAMP, True)
+    _LOCAL_EXPORT: bool = _option(
+        ConfigSection.BUILD,
+        ConfigOption.LOCAL_EXPORT,
+        factory=lambda: sys.platform != "win32",
+    )
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(_AnvilConfig, cls).__new__(cls)
-        return cls._instance
+    _LAST_CHECK: str = _option(
+        ConfigSection.ANVIL, ConfigOption.LAST_CHECK, factory=_now
+    )
+    _VANILLA_VERSION: str = _option(
+        ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
+    )
 
-    def __init__(self) -> None:
-        if hasattr(self, "_initialized") and self._initialized:
-            return
+    Report: ReportCollector = field(init=False, repr=False, compare=False)
 
-        self._initialized = True
-
-        self.Config = Config()
-
-        self.Report = ReportCollector()
-        self.Report.add_headers()
-
-        self._load_configs()
-        AnvilDisplay.copyright()
-        AnvilDisplay.project_display(self.DISPLAY_NAME, self._TARGET, self._PREVIEW)
-
-        # GDK Setup preparation / Local export
-        if self._LOCAL_EXPORT:
-            self._COM_MOJANG = os.path.join(os.path.abspath("output"), "com.mojang")
-        else:
-            self._COM_MOJANG = (
-                PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
-            )
-
-        self._WORLD_PATH = os.path.join(
-            self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME
-        )
-        self.RP_PATH = os.path.join(
-            self._COM_MOJANG,
-            "development_resource_packs",
-            f"RP_{self.PROJECT_NAME}",
-        )
-        self.BP_PATH = os.path.join(
-            self._COM_MOJANG,
-            "development_behavior_packs",
-            f"BP_{self.PROJECT_NAME}",
-        )
-
-        if datetime.now() - datetime.strptime(
-            self._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
-        ) > timedelta(hours=24):
-            self._check_new_versions()
-
-    def _handle_config[T](
-        self, section: ConfigSection, option: ConfigOption, prompt: T
-    ) -> T:
-        if not self.Config.has_section(section):
-            self.Config.add_section(section)
-
-        if not self.Config.has_option(section, option):
-            if isinstance(prompt, str) and prompt == "input":
-                self.Config.add_option(section, option, input(f"Missing '{option}': "))
-            elif isinstance(prompt, (str, bool, int, float, list)):
-                self.Config.add_option(section, option, prompt)
-            else:
-                raise ValueError(
-                    f"Invalid prompt value for config option '{option}'. Must be 'input' or a default value."
-                )
-        return self.Config.get_option(section, option)
-
-    def _load_configs(self) -> None:
-        self.NAMESPACE = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input"
-        )
-
-        self.PROJECT_NAME = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input"
-        )
-
-        self.COMPANY = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.COMPANY, "input"
-        )
-        self.DISPLAY_NAME = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input"
-        )
-        self.PROJECT_DESCRIPTION = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input"
-        )
-        self.BEHAVIOUR_DESCRIPTION = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, "input"
-        )
-        self.RESOURCE_DESCRIPTION = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input"
-        )
-        self._DEBUG = "--debug" in sys.argv
-
-        self._PASCAL_PROJECT_NAME = self._handle_config(
-            ConfigSection.ANVIL,
-            ConfigOption.PASCAL_PROJECT_NAME,
-            "".join(x[0] for x in self.PROJECT_NAME.split("_")).upper(),
-        )
-
-        self._VANILLA_VERSION = self._handle_config(
-            ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
-        )
-        self._TARGET = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.TARGET, "world"
-        )
-
-        self._RELEASE = self._handle_config(
-            ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0"
-        )
+    def __post_init__(self) -> None:
         if len(self._RELEASE.split(".")) > 3:
             raise ValueError(
                 "Invalid release version, must be in format X.X.X. Read more at https://semver.org/"
             )
-
-        self._LAST_CHECK = self._handle_config(
-            ConfigSection.ANVIL,
-            ConfigOption.LAST_CHECK,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        )
-
-        self._SCRIPT_API = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.SCRIPT_API, False
-        )
-        self._SCRIPT_UI = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False
-        )
-        self.PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
-
-        self._RANDOM_SEED = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False
-        )
-        self._EXPERIMENTAL = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False
-        )
-        self._PREVIEW = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.PREVIEW, False
-        )
-        self._ENTRY_POINT = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
-        )
-
-        self._RP_UUID = self._handle_config(
-            ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())]
-        )
-        self._BP_UUID = self._handle_config(
-            ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())]
-        )
-        self._PACK_UUID = self._handle_config(
-            ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4())
-        )
-        self._DATA_MODULE_UUID = self._handle_config(
-            ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
-        )
-        if self._SCRIPT_API:
-            self._SCRIPT_MODULE_UUID = self._handle_config(
-                ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4())
-            )
-            self._SCRIPT_BUNDLE_SCRIPT = self._handle_config(
-                ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
-            )
-
         if self._TARGET not in ConfigPackageTarget:
             raise ValueError(
                 f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}."
             )
-
-        self._MINIFY = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.MINIFY, False
+        self._LOCAL_EXPORT = bool(self._LOCAL_EXPORT) or sys.platform != "win32"
+        validate_namespace_project_name(
+            self.NAMESPACE, self.PROJECT_NAME, self._TARGET == ConfigPackageTarget.ADDON
         )
+        self.Report = ReportCollector()
+        self.Report.add_headers()
 
-        self._ADD_STAMP = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.ADD_STAMP, True
-        )
-
-        self._LOCAL_EXPORT = bool(
-            self._handle_config(
-                ConfigSection.ANVIL,
-                ConfigOption.LOCAL_EXPORT,
-                sys.platform != "win32",
+    def __getattr__(self, name: str) -> Any:
+        if self is not CONFIG or self.__dict__ or name.startswith("__"):
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
             )
-        )
-        if sys.platform != "win32":
-            self._LOCAL_EXPORT = True
+        use(load_project())
+        return getattr(self, name)
 
-        AnvilValidator.validate_namespace_project_name(
-            self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon"
+    @classmethod
+    def from_dict(cls, data: dict[str, dict[str, Any]]) -> "AnvilConfig":
+        """Reads the settings of a project from the content of its `anvilconfig.json`.
+
+        Args:
+            data (dict): The `package`, `manifest`, `features`, `build` and `anvil` sections. Missing
+                options other than the package ones get their default.
+
+        Raises:
+            ValueError: A package option is missing, the release is not X.X.X, or the target
+                is unknown.
+        """
+        values = {}
+        for option in fields(cls):
+            if not option.metadata:
+                continue
+            section, name = option.metadata["section"], option.metadata["name"]
+            if name in data.get(section, {}):
+                values[option.name] = data[section][name]
+            elif option.default is MISSING and option.default_factory is MISSING:
+                raise ValueError(
+                    f"Missing '{name}' in the '{section}' section of anvilconfig.json."
+                )
+        return cls(**values)
+
+    @classmethod
+    def from_file(cls, path: str | Path = "anvilconfig.json") -> "AnvilConfig":
+        """Reads the settings of the project whose `anvilconfig.json` is at `path`.
+
+        Args:
+            path (str | Path, optional): The config file. Defaults to the one in the current
+                folder.
+        """
+        return cls.from_dict(orjson.loads(Path(path).read_bytes()))
+
+    @property
+    def _DEBUG(self) -> bool:
+        """If the build was started with `--debug`."""
+        return "--debug" in sys.argv
+
+    @property
+    def _PASCAL_PROJECT_NAME(self) -> str:
+        """The initials of the project name, `sugar_rush` as `SR`."""
+        return _initials(self.PROJECT_NAME)
+
+    @property
+    def _COM_MOJANG(self) -> Path:
+        """The `com.mojang` folder the packs are exported to."""
+        if self._LOCAL_EXPORT:
+            return Path.cwd() / "output" / "com.mojang"
+        return PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
+
+    @property
+    def RP_PATH(self) -> Path:
+        """The development resource pack folder."""
+        return (
+            self._COM_MOJANG / "development_resource_packs" / f"RP_{self.PROJECT_NAME}"
         )
 
-    def _check_new_versions(self):
+    @property
+    def BP_PATH(self) -> Path:
+        """The development behavior pack folder."""
+        return (
+            self._COM_MOJANG / "development_behavior_packs" / f"BP_{self.PROJECT_NAME}"
+        )
+
+    @property
+    def _WORLD_PATH(self) -> Path:
+        """The development world folder."""
+        return self._COM_MOJANG / "minecraftWorlds" / self.PROJECT_NAME
+
+
+CONFIG: AnvilConfig = object.__new__(AnvilConfig)
+
+
+def load_project() -> AnvilConfig:
+    """Loads the project in the current folder.
+
+    Asks for the missing package options, writes them and the defaults of other missing
+    options to `anvilconfig.json`, shows the project banner, checks for new versions
+    once a day and, when run with `--clean`, deletes the development packs.
+
+    Returns:
+        AnvilConfig: The project's settings.
+    """
+    file = Config()
+    options = [option for option in fields(AnvilConfig) if option.metadata]
+    for option in options:
+        section, name = option.metadata["section"], option.metadata["name"]
+        if option.default is MISSING and option.default_factory is MISSING:
+            if name not in file._config.get(section, {}):
+                file.add_option(section, name, input(f"Missing '{name}': "))
+
+    config = AnvilConfig.from_dict(file._config)
+    for option in options:
+        section, name = option.metadata["section"], option.metadata["name"]
+        if option.metadata["script"] and not config._SCRIPT_API:
+            continue
+        if name not in file._config.get(section, {}):
+            file.add_option(section, name, getattr(config, option.name))
+
+    AnvilDisplay.copyright()
+    AnvilDisplay.project_display(config.DISPLAY_NAME, config._TARGET, config._PREVIEW)
+
+    if datetime.now() - datetime.strptime(
+        config._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
+    ) > timedelta(hours=24):
         vanilla_latest_build, latest_build = AnvilValidator.check_new_versions()
-        self.Config.add_option(
-            ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, vanilla_latest_build
+        file.add_option(
+            ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, vanilla_latest_build
         )
-        self.Config.add_option(
-            ConfigSection.ANVIL,
-            ConfigOption.LAST_CHECK,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        )
+        file.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, _now())
 
-    class _Proxy:
-        def __init__(self) -> None:
-            self._instance = None
+    if "--clean" in sys.argv:
+        from anvil.api.core.core import clean_old_dev
 
-        def _resolve(self) -> "_AnvilConfig":
-            if self._instance is None:
-                self._instance = _AnvilConfig()
-            return self._instance
+        clean_old_dev(config)
 
-        def __getattr__(self, name: str) -> "_AnvilConfig":
-            return getattr(self._resolve(), name)
-
-        def __repr__(self) -> str:
-            return repr(self._resolve())
-
-        def __dir__(self):
-            return dir(self._resolve())
+    return config
 
 
-CONFIG: "_AnvilConfig" = _AnvilConfig._Proxy()
+def use(config: AnvilConfig | None) -> None:
+    """Makes `CONFIG` hold the settings of `config`.
+
+    Args:
+        config (AnvilConfig | None): The settings. None empties `CONFIG`, so it loads the
+            project in the current folder on the next read.
+    """
+    CONFIG.__dict__.clear()
+    if config is not None:
+        CONFIG.__dict__.update(config.__dict__)
+
+
+@contextmanager
+def override(config: AnvilConfig | None = None, **values: Any) -> Iterator[AnvilConfig]:
+    """Changes the settings in `CONFIG` for the length of a `with` block.
+
+    Args:
+        config (AnvilConfig, optional): The settings to use. Defaults to the current ones.
+        **values: Settings to change, by attribute name, such as `PBR=True`.
+
+    Yields:
+        AnvilConfig: `CONFIG`.
+    """
+    previous = copy.copy(CONFIG)
+    use(replace(config if config is not None else CONFIG, **values))
+    try:
+        yield CONFIG
+    finally:
+        use(previous)

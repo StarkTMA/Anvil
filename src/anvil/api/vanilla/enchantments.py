@@ -2,7 +2,7 @@ from enum import StrEnum
 
 
 class MinecraftEnchantments(StrEnum):
-    """An enumeration of all vanilla Minecraft enchantments."""
+    """Vanilla enchantment identifiers."""
 
     AquaAffinity = "minecraft:aqua_affinity"
     BaneOfArthropods = "minecraft:bane_of_arthropods"

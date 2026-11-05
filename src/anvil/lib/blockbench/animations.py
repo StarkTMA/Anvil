@@ -3,9 +3,9 @@
 import re
 from collections import defaultdict
 from enum import StrEnum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
-from anvil.api.models.animations import _Animation, Animations
+from anvil.api.models.animations import Animations, _Animation
 
 
 class _ChannelType(StrEnum):
@@ -19,11 +19,8 @@ class _ChannelType(StrEnum):
     TIMELINE = "timeline"
 
 
-def _adjust_value(
-    val: Union[str, float, int], negate: bool = False
-) -> Union[float, str]:
+def _adjust_value(val: str | float | int, negate: bool = False) -> float | str:
     if isinstance(val, str):
-        # Blockbench reads blank values as 0
         val = val.strip() or 0
     is_num = isinstance(val, (int, float)) or (
         isinstance(val, str) and re.match(r"^-?\d+\.?\d*$", val)
@@ -39,13 +36,11 @@ def _adjust_value(
         return str(val)
 
 
-def _process_vector(
-    values: List[Any], negate_indices: List[int]
-) -> List[Union[float, str]]:
+def _process_vector(values: list[Any], negate_indices: list[int]) -> list[float | str]:
     return [_adjust_value(v, i in negate_indices) for i, v in enumerate(values)]
 
 
-def _point_values(point: Dict[str, Any]) -> List[Any]:
+def _point_values(point: dict[str, Any]) -> list[Any]:
     """Keyframe point as [x, y, z], not relying on dict ordering."""
     if all(axis in point for axis in ("x", "y", "z")):
         return [point["x"], point["y"], point["z"]]
@@ -53,10 +48,10 @@ def _point_values(point: Dict[str, Any]) -> List[Any]:
 
 
 def _process_vector_channel(
-    keyframes: List[dict], negate_indices: List[int]
-) -> Dict[float, Any]:
+    keyframes: list[dict], negate_indices: list[int]
+) -> dict[float, Any]:
     """Converts Blockbench position/rotation/scale keyframes to Bedrock values."""
-    target_dict: Dict[float, Any] = {}
+    target_dict: dict[float, Any] = {}
     is_step = False
     parsed_kfs = []
 
@@ -115,7 +110,7 @@ def _process_vector_channel(
     return target_dict
 
 
-def _animation_args(data: Dict[str, Any]) -> Dict[str, Any]:
+def _animation_args(data: dict[str, Any]) -> dict[str, Any]:
     """Arguments for `Animations.animation` from a Blockbench animation."""
     loop_map = {
         "once": False,
@@ -124,14 +119,14 @@ def _animation_args(data: Dict[str, Any]) -> Dict[str, Any]:
     }
     return {
         "name": data.get("name", "animation"),
-        "length": round(data.get("length", 0.0), 4),
+        "length": round(data.get("length", 0.0), 4) or None,
         "loop": loop_map.get(data.get("loop", "once"), False),
         "anim_time_update": data.get("anim_time_update"),
         "override_previous_animation": data.get("override", False),
     }
 
 
-def _populate_animation(anim: _Animation, data: Dict[str, Any]) -> None:
+def _populate_animation(anim: _Animation, data: dict[str, Any]) -> None:
     vector_channels = {
         _ChannelType.POSITION: [0],
         _ChannelType.ROTATION: [0, 1],
@@ -149,7 +144,6 @@ def _populate_animation(anim: _Animation, data: Dict[str, Any]) -> None:
         for kfs in channels.values():
             kfs.sort(key=lambda k: float(k.get("time")))
 
-        # Bones with no keyframes are not created, so they are never emitted.
         has_vectors = any(channels.get(c) for c in vector_channels)
         if has_vectors:
             bone = anim.bone(
@@ -159,10 +153,19 @@ def _populate_animation(anim: _Animation, data: Dict[str, Any]) -> None:
                 ),
             )
             for channel, negate in vector_channels.items():
+                add = getattr(bone, f"add_{channel}")
                 for time, value in _process_vector_channel(
                     channels.get(channel, []), negate
                 ).items():
-                    bone._set_keyframe(str(channel), time, value)
+                    if isinstance(value, dict):
+                        add(
+                            time,
+                            value["post"],
+                            pre=value.get("pre"),
+                            lerp_mode=value.get("lerp_mode"),
+                        )
+                    else:
+                        add(time, value)
 
         for kf in channels.get(_ChannelType.PARTICLE, []):
             time = round(float(kf.get("time")), 4)
@@ -185,7 +188,7 @@ def _populate_animation(anim: _Animation, data: Dict[str, Any]) -> None:
 
         for kf in channels.get(_ChannelType.TIMELINE, []):
             time = round(float(kf.get("time")), 4)
-            anim.timeline(time, kf.get("data_points")[0]["script"])
+            anim.add_timeline(time, kf.get("data_points")[0]["script"])
 
 
 class _AnimationsManager:
@@ -193,8 +196,8 @@ class _AnimationsManager:
         self._name = name
         self._source = source
 
-        self._file: Optional[Animations] = None
-        self._bb_animations: Dict[str, dict] = {}
+        self._file: Animations | None = None
+        self._bb_animations: dict[str, dict] = {}
 
         for anim_dict in bbmodel.get("animations", []):
             self._bb_animations[_animation_args(anim_dict)["name"]] = anim_dict
