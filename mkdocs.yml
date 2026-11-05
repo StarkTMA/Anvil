@@ -138,6 +138,7 @@ nav:
                 - Overview: api/vanilla/index.md
                 - Entities: api/vanilla/entities.md
                 - Items: api/vanilla/items.md
+                - Beta: api/vanilla/beta.md
           - Camera:
                 - Camera Presets: api/camera/camera.md
                 - Aim Assist: api/camera/aim_assist.md

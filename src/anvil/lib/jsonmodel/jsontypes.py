@@ -393,18 +393,28 @@ class IndexInto(JsonType):
 
 
 @cache
-def _vanilla_ids(kind: str) -> frozenset[str]:
+def _vanilla_ids(kind: str, experimental: bool) -> frozenset[str]:
+    """The vanilla ids of a kind, with the experimental ones when `experimental`."""
     if kind == "item":
         from anvil.api.vanilla.items import vanilla_items_ids
+        from anvil.beta.vanilla.items import vanilla_items_ids as beta_items_ids
 
-        return frozenset(vanilla_items_ids())
+        return frozenset(
+            [*vanilla_items_ids(), *(beta_items_ids() if experimental else ())]
+        )
     if kind == "block":
         from anvil.api.vanilla.blocks import vanilla_block_ids
+        from anvil.beta.vanilla.blocks import vanilla_block_ids as beta_block_ids
 
-        return frozenset(vanilla_block_ids())
+        return frozenset(
+            [*vanilla_block_ids(), *(beta_block_ids() if experimental else ())]
+        )
     from anvil.api.vanilla.entities import vanilla_entities_ids
+    from anvil.beta.vanilla.entities import vanilla_entities_ids as beta_entities_ids
 
-    return frozenset(vanilla_entities_ids())
+    return frozenset(
+        [*vanilla_entities_ids(), *(beta_entities_ids() if experimental else ())]
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -422,6 +432,7 @@ class VanillaId(JsonType):
 
     def validate(self, name: str, value: Any) -> None:
         from anvil.api.blocks.descriptor import BlockDescriptor
+        from anvil.lib.config import CONFIG
 
         from .identifier import Identifier
 
@@ -429,7 +440,9 @@ class VanillaId(JsonType):
             value = value.name
         if not isinstance(value, Identifier) or not value.is_vanilla:
             return
-        if f"{value.namespace}:{value.name}" not in _vanilla_ids(self.kind):
+        if f"{value.namespace}:{value.name}" not in _vanilla_ids(
+            self.kind, CONFIG._EXPERIMENTAL
+        ):
             raise ValueError(f"'{value}' is not a vanilla {self.kind}. Field [{name}]")
 
 

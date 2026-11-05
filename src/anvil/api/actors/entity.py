@@ -23,11 +23,24 @@ class Entity:
         from anvil.api.actors.client import EntityClient
         from anvil.api.actors.server import EntityServer
         from anvil.api.vanilla.entities import vanilla_entities_ids
+        from anvil.beta.vanilla.entities import (
+            vanilla_entities_ids as beta_vanilla_entities_ids,
+        )
 
         self.identifier = Identifier.parse(
             name, vanilla=is_vanilla, object_type=self._object_type
         )
-        if self.identifier.is_vanilla and self.identifier not in vanilla_entities_ids():
+        experimental = self.identifier in beta_vanilla_entities_ids()
+        if (
+            self.identifier.is_vanilla
+            and self.identifier not in vanilla_entities_ids()
+            and not (experimental and CONFIG._EXPERIMENTAL)
+        ):
+            if experimental:
+                raise ValueError(
+                    f"Vanilla entity '{self.identifier}' is experimental: turn on "
+                    f"features.experimental in anvilconfig.json. Entity [{self.identifier}]"
+                )
             raise ValueError(
                 f"Invalid vanilla entity '{self.identifier}'. Please use a valid vanilla "
                 f"entity from MinecraftEntityTypes. Entity [{self.identifier}]"

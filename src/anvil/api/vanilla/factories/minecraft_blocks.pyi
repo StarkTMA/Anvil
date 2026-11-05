@@ -1510,9 +1510,6 @@ class DioriteWallStates(TypedDict, total=False):
     wall_connection_type_west: Literal["none", "short", "tall"] | None
     wall_post_bit: bool | None
 
-class DiscPressStates(TypedDict, total=False):
-    minecraft_cardinal_direction: Literal["south", "west", "north", "east"] | None
-
 class DispenserStates(TypedDict, total=False):
     facing_direction: Literal[0, 1, 2, 3, 4, 5] | None
     triggered_bit: bool | None
@@ -1970,14 +1967,6 @@ class HornCoralFanStates(TypedDict, total=False):
 
 class HornCoralWallFanStates(TypedDict, total=False):
     coral_direction: Literal[0, 1, 2, 3] | None
-
-class IceCrystalStates(TypedDict, total=False):
-    minecraft_block_face: Literal["down", "up", "north", "south", "west", "east"] | None
-
-class IcicleStates(TypedDict, total=False):
-    attached_bit: bool | None
-    dripstone_thickness: Literal["tip", "frustum", "middle", "base", "merge"] | None
-    hanging: bool | None
 
 class InfestedDeepslateStates(TypedDict, total=False):
     pillar_axis: Literal["y", "x", "z"] | None
@@ -5423,7 +5412,6 @@ def DioriteWall(
 ) -> Identifier | BlockDescriptor: ...
 def Dirt() -> Identifier: ...
 def DirtWithRoots() -> Identifier: ...
-def DiscPress(**states: Unpack[DiscPressStates]) -> Identifier | BlockDescriptor: ...
 def Dispenser(**states: Unpack[DispenserStates]) -> Identifier | BlockDescriptor: ...
 def DoubleCutCopperSlab(
     **states: Unpack[DoubleCutCopperSlabStates],
@@ -5831,8 +5819,6 @@ def HornCoralWallFan(
     **states: Unpack[HornCoralWallFanStates],
 ) -> Identifier | BlockDescriptor: ...
 def Ice() -> Identifier: ...
-def IceCrystal(**states: Unpack[IceCrystalStates]) -> Identifier | BlockDescriptor: ...
-def Icicle(**states: Unpack[IcicleStates]) -> Identifier | BlockDescriptor: ...
 def InfestedChiseledStoneBricks() -> Identifier: ...
 def InfestedCobblestone() -> Identifier: ...
 def InfestedCrackedStoneBricks() -> Identifier: ...

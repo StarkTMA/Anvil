@@ -25,16 +25,30 @@ class Block:
 
         Raises:
             ValueError: When the name is not valid (see `Identifier.parse`), or a vanilla
-                block is not in `MinecraftBlockTypes`.
+                block is not in `MinecraftBlockTypes`, or is an experimental one
+                (`anvil.beta.vanilla`) without `features.experimental`.
         """
         from anvil.api.blocks.client import BlockClient
         from anvil.api.blocks.server import BlockServer
         from anvil.api.vanilla.blocks import vanilla_block_ids
+        from anvil.beta.vanilla.blocks import (
+            vanilla_block_ids as beta_vanilla_block_ids,
+        )
 
         self.identifier = Identifier.parse(
             name, vanilla=is_vanilla, object_type=self._object_type
         )
-        if self.identifier.is_vanilla and self.identifier not in vanilla_block_ids():
+        experimental = self.identifier in beta_vanilla_block_ids()
+        if (
+            self.identifier.is_vanilla
+            and self.identifier not in vanilla_block_ids()
+            and not (experimental and CONFIG._EXPERIMENTAL)
+        ):
+            if experimental:
+                raise ValueError(
+                    f"Vanilla block '{self.identifier}' is experimental: turn on "
+                    f"features.experimental in anvilconfig.json. Block [{self.identifier}]"
+                )
             raise ValueError(
                 f"Invalid vanilla block '{self.identifier}'. Please use a valid vanilla "
                 f"block from MinecraftBlockTypes. Block [{self.identifier}]"

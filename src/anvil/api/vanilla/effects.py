@@ -72,7 +72,6 @@ class MinecraftEffects(StrEnum):
     Darkness = "minecraft:darkness"
     FatalPoison = "minecraft:fatal_poison"
     FireResistance = "minecraft:fire_resistance"
-    Freezing = "minecraft:freezing"
     Haste = "minecraft:haste"
     HealthBoost = "minecraft:health_boost"
     Hunger = "minecraft:hunger"
