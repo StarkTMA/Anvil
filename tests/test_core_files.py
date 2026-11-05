@@ -407,6 +407,43 @@ def test_manifest_settings():
     assert ManifestRP()._dropdown_options("testns:wind") is None
 
 
+def test_manifest_multiselect_setting():
+    ManifestRP().settings.multiselect(
+        "biomes", "Biomes", [("hot", "Hot"), ("cold", "Cold")], ["cold"], "Picked"
+    ).multiselect("mobs", "Mobs", [("a", "A"), ("b", "B")], ["a", "b"])
+
+    assert _check(ManifestRP())["settings"] == [
+        {
+            "type": "multiselect",
+            "name": "testns:biomes",
+            "text": "pack.manifest.setting.multiselect_0",
+            "options": [
+                {"name": "hot", "text": "pack.manifest.setting.multiselect_0.option_0"},
+                {
+                    "name": "cold",
+                    "text": "pack.manifest.setting.multiselect_0.option_1",
+                },
+            ],
+            "defaults": ["cold"],
+            "selection_text": "pack.manifest.setting.multiselect_0.selection_text",
+        },
+        {
+            "type": "multiselect",
+            "name": "testns:mobs",
+            "text": "pack.manifest.setting.multiselect_1",
+            "options": [
+                {"name": "a", "text": "pack.manifest.setting.multiselect_1.option_0"},
+                {"name": "b", "text": "pack.manifest.setting.multiselect_1.option_1"},
+            ],
+            "defaults": ["a", "b"],
+        },
+    ]
+    assert ManifestRP()._setting_names("multiselect") == [
+        "testns:biomes",
+        "testns:mobs",
+    ]
+
+
 @pytest.mark.parametrize(
     "build",
     [
@@ -415,6 +452,15 @@ def test_manifest_settings():
         lambda settings: settings.slider("s", "S", 0, 10, 1, 50),
         lambda settings: settings.dropdown("d", "D", [("a", "A")], "b"),
         lambda settings: settings.dropdown("d", "D", [], "b"),
+        lambda settings: settings.dropdown("d", "D", [("a", "A")], "a"),
+        lambda settings: settings.multiselect("m", "M", [("a", "A")], ["a"]),
+        lambda settings: settings.multiselect("m", "M", [("a", "A"), ("b", "B")], []),
+        lambda settings: settings.multiselect(
+            "m", "M", [("a", "A"), ("b", "B")], ["c"]
+        ),
+        lambda settings: settings.multiselect(
+            "m", "M", [(str(index), "X") for index in range(21)], ["0"]
+        ),
     ],
 )
 def test_manifest_settings_are_checked(build):
