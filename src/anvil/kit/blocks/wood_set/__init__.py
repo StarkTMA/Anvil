@@ -30,7 +30,7 @@ sets. Each model holds the textures of every set, named as above:
   animations.
 
 Their names are `MODEL` and `BOAT_MODEL` in `blocks/__init__.py`. When one is missing
-from `assets/bbmodels`, building a set offers to copy Anvil's base model there (the files in
+from `assets/bbmodels`, building a set copies Anvil's base model there (the files in
 `models/`), and never overwrites an existing one.
 
 Leaves and saplings: a leaves block's `natural` state is off for leaves a player placed,
@@ -40,11 +40,12 @@ feature, which `/place feature` builds at its position. See docs/kit for the det
 """
 
 import shutil
-import sys
 from collections.abc import Callable, Iterable
 from enum import Flag, auto
 from pathlib import Path
 from typing import NamedTuple
+
+import click
 
 from anvil.api.actors.entity import Entity
 from anvil.api.blocks.blocks import Block
@@ -266,7 +267,7 @@ class WoodSet(dict[str, WoodSetPart]):
                 "into: call `.tree(...)`, or exclude WoodBlock.SAPLING."
             )
 
-        _offer_base_models()
+        _copy_base_models()
 
         selected = {kind.name.lower() for kind in BLOCKS if kind in self.blocks}
 
@@ -356,11 +357,11 @@ def create_wood_set(
     return wood.build()
 
 
-def _offer_base_models() -> None:
-    """Offers to copy the base Blockbench models into the project when they aren't there.
+def _copy_base_models() -> None:
+    """Copies the base Blockbench models into the project when they aren't there.
 
-    Nothing is ever overwritten: a model that exists is the user's. Without a terminal to
-    ask on, nothing is copied and the missing model is reported when the blocks load it.
+    Nothing is ever overwritten: a model that exists is the user's. Each copy is reported,
+    so the user knows which model to finish with the set's textures.
     """
     models = Path("assets") / "bbmodels"
     missing = [
@@ -368,17 +369,18 @@ def _offer_base_models() -> None:
         for name in (MODEL, BOAT_MODEL)
         if not (models / f"{name}.bbmodel").exists()
     ]
-    if not missing or not sys.stdin.isatty():
+    if not missing:
         return
 
-    files = " and ".join(f"{name}.bbmodel" for name in missing)
-    answer = input(
-        f"Wood sets need {files} in {models}. Copy the base to work with? [Y/n] "
-    )
-    if answer.strip().lower() in ("", "y", "yes"):
-        models.mkdir(parents=True, exist_ok=True)
-        for name in missing:
-            shutil.copy(BASE_MODELS / f"{name}.bbmodel", models)
+    models.mkdir(parents=True, exist_ok=True)
+    for name in missing:
+        shutil.copy(BASE_MODELS / f"{name}.bbmodel", models)
+        click.echo(
+            click.style(
+                f"\r[INFO]: {name}.bbmodel not found in {models}. Copied the base wood set model there to finish.",
+                fg="yellow",
+            )
+        )
 
 
 def _add_creative_group(name: str, items: list[Item]) -> None:
