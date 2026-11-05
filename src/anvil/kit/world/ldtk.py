@@ -31,7 +31,7 @@ class LDtk:
 
             for tile in tileset["customData"]:
                 self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]] = {
-                    "origin": self._default_origin_block.identifier,
+                    "origin": self._default_origin_block,
                     "properties": "",
                 }
                 for tile_custom_data in tile["data"].split("\n"):
@@ -136,7 +136,7 @@ class LDtk:
         filename: str,
         *,
         clear_chunks: bool = False,
-        default_origin_block=MinecraftBlockTypes.Air(),
+        default_origin_block= MinecraftBlockTypes.Air(),
     ) -> None:
         """Converts LDtk map to Minecraft worlds.
 

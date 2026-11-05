@@ -57,8 +57,8 @@ class _EntityServerDescription(JsonObject):
     __required__: ClassVar[tuple[str, ...]] = ("identifier",)
 
     identifier: Identifier | None = None
-    is_spawnable: bool = json_field(default=True, omit_default=True)
-    is_summonable: bool = json_field(default=True, omit_default=True)
+    is_spawnable: bool = json_field(default=True)
+    is_summonable: bool = json_field(default=True)
     is_experimental: bool = json_field(default=False, omit_default=True)
     spawn_category: SpawnCategory | None = None
     runtime_identifier: str | None = None
@@ -124,8 +124,8 @@ class _EntityServerDescription(JsonObject):
             | None
         ) = None,
     ) -> "_EntityServerDescription":
-        """Sets how the entity can be spawned. Values equal to the game defaults are left
-        out.
+        """Sets how the entity can be spawned. `is_spawnable` and `is_summonable` are always
+        written, because the game treats them as False when they are missing.
 
         Args:
             is_summonable (bool, optional): Lets commands such as /summon spawn it.

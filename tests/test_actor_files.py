@@ -308,6 +308,7 @@ def test_entity_server_description():
         "animations": {"tick": "animation.testns.mob.tick"},
         "scripts": {"animate": ["tick"]},
         "is_spawnable": False,
+        "is_summonable": True,
         "properties": {
             "testns:mode": {
                 "type": "enum",
