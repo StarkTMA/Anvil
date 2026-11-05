@@ -325,3 +325,18 @@ def test_tree_cherry_trunk_base_must_be_two():
     tree = TreeFeature("tree").cherry_trunk("test:log", base_height=1)
     with pytest.raises(ValueError):
         _json(tree._document)
+
+
+def test_tree_mega_trunk_width_takes_a_range():
+    tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=(3, 2))
+    tree.mega_canopy("test:leaves")
+    assert _body(tree)["mega_trunk"]["trunk_width"] == {"range_min": 2, "range_max": 3}
+    tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=2)
+    tree.mega_canopy("test:leaves")
+    assert _body(tree)["mega_trunk"]["trunk_width"] == 2
+
+
+def test_tree_mega_trunk_width_range_must_be_at_least_one():
+    tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=(0, 2))
+    with pytest.raises(ValueError):
+        _json(tree._document)

@@ -1182,6 +1182,7 @@ class _JigsawStructure(JsonFile[_JigsawFile]):
             "apply_waterlogging", "ignore_waterlogging"
         ] = "apply_waterlogging",
         start_height_from_sea: bool = False,
+        on_placed: str | None = None,
     ) -> None:
         """Initializes a jigsaw structure.
 
@@ -1197,6 +1198,7 @@ class _JigsawStructure(JsonFile[_JigsawFile]):
             liquid_settings (Literal["apply_waterlogging", "ignore_waterlogging"], optional):
                 Whether waterloggable blocks in liquid get waterlogged.
             start_height_from_sea (bool, optional): A single start height is from sea level.
+            on_placed (str, optional): Specifies a callback function to run when the structure is placed. The interface is still in development so this parameter has no effect yet. Defaults to None.
         """
         super().__init__(name)
         if not isinstance(start_pool, JigsawStructureTemplatePool):

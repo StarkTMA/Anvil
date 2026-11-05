@@ -124,7 +124,6 @@ nav:
                 - Particles: api/world/particles.md
                 - Features: api/world/features.md
                 - Dialogue: api/world/dialogue.md
-                - Dimensions: api/world/dimensions.md
                 - Trade Tables: api/world/trade_tables.md
           - Biomes:
                 - Overview: api/biomes/index.md
@@ -139,6 +138,9 @@ nav:
                 - Entities: api/vanilla/entities.md
                 - Items: api/vanilla/items.md
                 - Beta: api/vanilla/beta.md
+          - Dimension:
+                - Dimension Configuration: api/dimension/dimension.md
+                - Components: api/dimension/components.md
           - Camera:
                 - Camera Presets: api/camera/camera.md
                 - Aim Assist: api/camera/aim_assist.md
