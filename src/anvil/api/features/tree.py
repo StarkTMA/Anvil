@@ -433,7 +433,9 @@ class _MegaTrunk(JsonObject):
     """A `mega_trunk`."""
 
     trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
-    trunk_width: Annotated[int, AtLeastOne] = json_field()
+    trunk_width: Annotated[int | tuple[int, int], AtLeastOne, RangeMinMax] = (
+        json_field()
+    )
     trunk_height: _TrunkHeight = json_field()
     height_modifier: Annotated[int | tuple[int, int], ExactRangeMinMax] | None = None
     branches: _MegaBranches | None = None
@@ -1052,7 +1054,7 @@ class TreeFeature(Feature[_TreeFeatureFile]):
     def mega_trunk(
         self,
         trunk_block: str | Block | BlockDescriptor,
-        trunk_width: int = 2,
+        trunk_width: int | tuple[int, int] = 2,
         base_height: int = 15,
         height_intervals: Sequence[int] | None = None,
         height_modifier: int | tuple[int, int] | None = None,
@@ -1065,7 +1067,8 @@ class TreeFeature(Feature[_TreeFeatureFile]):
 
         Args:
             trunk_block (str | Block | BlockDescriptor): The block of the trunk.
-            trunk_width (int, optional): The width of the trunk. At least 1. Defaults to 2.
+            trunk_width (int | tuple[int, int], optional): The width of the trunk, or a
+                range. At least 1. Defaults to 2.
             base_height (int, optional): The least height. At least 1. Defaults to 15.
             height_intervals (Sequence[int], optional): Each adds a random number below it
                 to the height.

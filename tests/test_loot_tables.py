@@ -242,3 +242,24 @@ def test_schema_validates_export():
         0, "white", [("creeper", "lime")]
     ).ExplosionDecay().SetOminousBottleAmplifier((0, 4)).SetStewEffect([1])
     jsonschema.validate(_json(table._document), LootTable.__schema__())
+
+
+def test_loot_table_has_a_format_version():
+    table = LootTable("format")
+    table.pool().entry("minecraft:stick")
+    assert _json(table._document)["format_version"] == "1.26.60"
+    assert next(iter(_json(table._document))) == "format_version"
+
+
+def test_biome_has_tag_condition():
+    conds = (
+        LootConditions()
+        .biome_has_tag("sulfur_caves")
+        .biome_has_tag("birch", operator="!=")
+    )
+    assert _json(conds) == [
+        {"condition": "biome_has_tag", "tag": "sulfur_caves"},
+        {"condition": "biome_has_tag", "tag": "birch", "operator": "!="},
+    ]
+    with pytest.raises(ValueError):
+        _json(LootConditions().biome_has_tag("birch", operator="=="))

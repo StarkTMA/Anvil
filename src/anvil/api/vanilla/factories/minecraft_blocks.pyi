@@ -118,7 +118,11 @@ class BlockStateKeys(StrEnum):
     PropaguleStage = "propagule_stage"
     RailDataBit = "rail_data_bit"
     RailDirection = "rail_direction"
+    RedstoneEast = "redstone_east"
+    RedstoneNorth = "redstone_north"
     RedstoneSignal = "redstone_signal"
+    RedstoneSouth = "redstone_south"
+    RedstoneWest = "redstone_west"
     RehydrationLevel = "rehydration_level"
     RepeaterDelay = "repeater_delay"
     RespawnAnchorCharge = "respawn_anchor_charge"
@@ -985,6 +989,14 @@ class ChiseledQuartzBlockStates(TypedDict, total=False):
 class ChorusFlowerStates(TypedDict, total=False):
     age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
 
+class ChorusPlantStates(TypedDict, total=False):
+    minecraft_connection_down: bool | None
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_up: bool | None
+    minecraft_connection_west: bool | None
+
 class CinnabarBrickDoubleSlabStates(TypedDict, total=False):
     minecraft_vertical_half: Literal["bottom", "top"] | None
 
@@ -1609,6 +1621,11 @@ class FenceGateStates(TypedDict, total=False):
 
 class FireStates(TypedDict, total=False):
     age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
+    minecraft_connection_east: bool | None
+    minecraft_connection_north: bool | None
+    minecraft_connection_south: bool | None
+    minecraft_connection_up: bool | None
+    minecraft_connection_west: bool | None
 
 class FireCoralFanStates(TypedDict, total=False):
     coral_fan_direction: Literal[0, 1] | None
@@ -3326,9 +3343,13 @@ class RedstoneTorchStates(TypedDict, total=False):
     )
 
 class RedstoneWireStates(TypedDict, total=False):
+    redstone_east: Literal["none", "side", "up"] | None
+    redstone_north: Literal["none", "side", "up"] | None
     redstone_signal: (
         Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
     )
+    redstone_south: Literal["none", "side", "up"] | None
+    redstone_west: Literal["none", "side", "up"] | None
 
 class ReedsStates(TypedDict, total=False):
     age: Literal[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] | None
@@ -4999,7 +5020,9 @@ def ChiseledTuffBricks() -> Identifier: ...
 def ChorusFlower(
     **states: Unpack[ChorusFlowerStates],
 ) -> Identifier | BlockDescriptor: ...
-def ChorusPlant() -> Identifier: ...
+def ChorusPlant(
+    **states: Unpack[ChorusPlantStates],
+) -> Identifier | BlockDescriptor: ...
 def Cinnabar() -> Identifier: ...
 def CinnabarBrickDoubleSlab(
     **states: Unpack[CinnabarBrickDoubleSlabStates],

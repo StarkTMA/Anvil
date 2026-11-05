@@ -2,10 +2,10 @@ from enum import StrEnum
 
 from .factories import minecraft_items as MinecraftItemTypes
 
-__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_item_ids"]
+__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_items_ids"]
 
 
-def vanilla_item_ids() -> list[str]:
+def vanilla_items_ids() -> list[str]:
     return [
         "minecraft:acacia_boat",
         "minecraft:acacia_button",

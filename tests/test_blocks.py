@@ -746,6 +746,14 @@ def test_vanilla_block_factories_and_descriptors():
         _export(BlockDescriptor())
     with pytest.raises(ValueError):
         _export(BlockDescriptor(states={"a": 1}, tags="q.any_tag('stone')"))
+    with pytest.raises(ValueError, match="cannot have states"):
+        _export(
+            BlockDescriptor(
+                name=Identifier.parse("minecraft:stone", vanilla=True),
+                states={"a": 1},
+                tags="q.any_tag('stone')",
+            )
+        )
 
     BlockId.validate("block", stone)
     BlockId.validate("block", log)
@@ -758,3 +766,195 @@ def test_vanilla_block_factories_and_descriptors():
             "block",
             BlockDescriptor(name=Identifier.parse("minecraft:apple", vanilla=True)),
         )
+
+
+def test_block_entity_container_title_is_localized():
+    from anvil.api.blocks.components import BlockEntity
+    from anvil.api.blocks.server import BlockServer
+    from anvil.lib import config
+    from anvil.lib.translator import AnvilTranslator
+
+    server = BlockServer(name="crate")
+    server.components.add(
+        BlockEntity(dynamic_properties=True).set_container(slot_count=27, title="Crate")
+    )
+    with config.override(_EXPERIMENTAL=True):
+        server._before_export()
+        server._before_export()
+        key = f"tile.{server.identifier}.container_title"
+        assert server.components.__json__()["components"]["minecraft:block_entity"] == {
+            "container": {"slot_count": 27, "title": key},
+            "dynamic_properties": True,
+        }
+    assert AnvilTranslator().get_localization_value(key) == "Crate"
+
+
+def test_block_entity_storage_is_experimental():
+    from anvil.api.blocks.components import BlockEntity
+    from anvil.lib import config
+
+    with pytest.raises(ValueError, match="experimental"):
+        _export(BlockEntity(entity_storage=True))
+    with config.override(_EXPERIMENTAL=True):
+        assert _export(BlockEntity(entity_storage=True)) == {
+            "minecraft:block_entity": {"entity_storage": True}
+        }
+
+
+def test_block_entity_container_title_is_experimental():
+    from anvil.api.blocks.components import BlockEntity
+    from anvil.lib import config
+
+    entity = BlockEntity().set_container(slot_count=9, title="Crate")
+    with pytest.raises(ValueError, match="container title is experimental"):
+        _export(entity)
+    with config.override(_EXPERIMENTAL=True):
+        assert _export(entity) == {
+            "minecraft:block_entity": {"container": {"slot_count": 9, "title": "Crate"}}
+        }
+    assert _export(BlockEntity().set_container(slot_count=9)) == {
+        "minecraft:block_entity": {"container": {"slot_count": 9}}
+    }
+
+
+def test_beta_block_components():
+    from anvil.beta.blocks.components import (
+        BlockEnchantmentPowerTransmitter,
+        BlockNeighborChange,
+        BlockVibrationProperties,
+    )
+    from anvil.lib import config
+
+    components = [
+        BlockEnchantmentPowerTransmitter(),
+        BlockVibrationProperties(dampen_vibrations=True),
+        BlockNeighborChange(neighbor_directions=["up", "down"]),
+    ]
+    for component in components:
+        with pytest.raises(ValueError, match="experimental"):
+            _export(component)
+    with config.override(_EXPERIMENTAL=True):
+        assert [_export(component) for component in components] == [
+            {"minecraft:enchantment_power_transmitter": True},
+            {"minecraft:vibration_properties": {"dampen_vibrations": True}},
+            {"minecraft:neighbor_change": {"neighbor_directions": ["up", "down"]}},
+        ]
+        assert _export(
+            BlockVibrationProperties(dampen_vibrations=False, occlude_vibrations=True)
+        ) == {
+            "minecraft:vibration_properties": {
+                "dampen_vibrations": False,
+                "occlude_vibrations": True,
+            }
+        }
+        with pytest.raises(ValueError, match="alone"):
+            _export(BlockNeighborChange(neighbor_directions=["all", "up"]))
+        with pytest.raises(ValueError, match="repeats"):
+            _export(BlockNeighborChange(neighbor_directions=["up", "up"]))
+        with pytest.raises(ValueError):
+            _export(BlockNeighborChange(neighbor_directions=[]))
+        with pytest.raises(ValueError):
+            _export(BlockNeighborChange(neighbor_directions=["side"]))
+
+
+def test_collision_box_min_max_is_experimental():
+    from anvil.api.blocks.components import BlockCollisionBox
+    from anvil.api.blocks.server import BlockServer
+    from anvil.beta.blocks.components import BlockCollisionBoxMinMax
+    from anvil.lib import config
+    from anvil.lib.jsonmodel import validate_components
+
+    box = BlockCollisionBoxMinMax(min=(4, 0, 0), max=(16, 24, 8))
+    with pytest.raises(ValueError, match="experimental"):
+        _export(box)
+    with config.override(_EXPERIMENTAL=True):
+        assert _export(box.add_box(min=(0, 0, 0), max=(4, 8, 4))) == {
+            "minecraft:collision_box": [
+                {"min": [4, 0, 0], "max": [16, 24, 8]},
+                {"min": [0, 0, 0], "max": [4, 8, 4]},
+            ]
+        }
+        with pytest.raises(ValueError, match="must stay within"):
+            _export(BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 25, 16)))
+        with pytest.raises(ValueError, match="must not be above"):
+            _export(BlockCollisionBoxMinMax(min=(8, 0, 0), max=(4, 8, 8)))
+        crowded = BlockCollisionBoxMinMax(min=(0, 0, 0), max=(1, 1, 1))
+        for _ in range(32):
+            crowded.add_box(min=(0, 0, 0), max=(1, 1, 1))
+        with pytest.raises(ValueError, match="at most 32"):
+            _export(crowded)
+
+    server = BlockServer(name="clash")
+    server.components.add(BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16)))
+    with pytest.raises(ValueError, match="BlockCollisionBoxMinMax"):
+        server.components.add(BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)))
+    with pytest.raises(ValueError, match="clashes"):
+        BlockServer(name="clash_back").components.add(
+            BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)),
+            BlockCollisionBox(enabled=False),
+        )
+    server.permutation("q.block_state('test:open')").add(
+        BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16))
+    )
+    with pytest.raises(ValueError, match="clashes"):
+        validate_components(
+            server, server.components, server.permutations, is_block=True
+        )
+
+
+def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
+    import orjson
+
+    from anvil.api.models.voxel_shape import VoxelShape
+    from anvil.beta.blocks.components import BlockCollisionBoxMinMax
+    from anvil.lib import config
+    from anvil.lib.blockbench import _Blockbench
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(_Blockbench, "_loaded_blockbench_models", {})
+    folder = tmp_path / "assets" / "bbmodels"
+    folder.mkdir(parents=True)
+    model = {
+        "meta": {"format_version": "5.0", "model_format": "bedrock"},
+        "model_identifier": "lantern",
+        "resolution": {"width": 16, "height": 16},
+        "elements": [
+            {
+                "uuid": "box",
+                "name": "box",
+                "type": "bounding_box",
+                "from": [-4, 0, -4],
+                "to": [4, 8, 4],
+            }
+        ],
+        "outliner": ["box"],
+        "groups": [],
+        "textures": [],
+    }
+    (folder / "lantern.bbmodel").write_bytes(orjson.dumps(model))
+
+    with config.override(_EXPERIMENTAL=True, _LOCAL_EXPORT=True):
+        shape = VoxelShape("slab")
+        assert _export(BlockCollisionBoxMinMax().set_voxel_shape(shape)) == {
+            "minecraft:collision_box": shape.shape_identifier
+        }
+        component = BlockCollisionBoxMinMax().set_voxel_shape(blockbench="lantern")
+        assert _export(component) == {
+            "minecraft:collision_box": f"{config.CONFIG.NAMESPACE}:lantern_culling_shape"
+        }
+        model = _Blockbench("lantern", "blocks").model
+        assert "lantern" in model._queued_voxel_shapes
+        with pytest.raises(ValueError, match="either voxel_shape or blockbench"):
+            BlockCollisionBoxMinMax().set_voxel_shape()
+        with pytest.raises(ValueError, match="either voxel_shape or blockbench"):
+            BlockCollisionBoxMinMax().set_voxel_shape(shape, blockbench="lantern")
+        with pytest.raises(ValueError, match="collection only applies"):
+            BlockCollisionBoxMinMax().set_voxel_shape(shape, collection="top")
+        with pytest.raises(ValueError, match="not both"):
+            _export(
+                BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)).set_voxel_shape(
+                    shape
+                )
+            )
+        with pytest.raises(ValueError, match="needs both min and max"):
+            _export(BlockCollisionBoxMinMax(min=(0, 0, 0)))

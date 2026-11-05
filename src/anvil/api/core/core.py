@@ -522,10 +522,8 @@ def compile_objects(
     BlocksJSONObject().queue()
     MaterialsObject().queue()
     _Blockbench.__export__()
+    ServerSoundDefinition().queue()
     anvil.__queue__(AnvilTranslator())
-
-    if CONFIG._PREVIEW:
-        ServerSoundDefinition().queue()
 
     pack_art(apply_overlay=apply_overlay)
 

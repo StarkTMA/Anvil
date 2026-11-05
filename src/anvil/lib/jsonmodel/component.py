@@ -41,7 +41,8 @@ class JsonComponent(JsonObject, abstract=True):
             with `Identifier.parse`, which refuses another namespace than `minecraft`.
         _placement: Where the component may go: root, groups (permutations for blocks), or both.
         _requires: Component classes that must be present next to this one.
-        _clashes: Component classes that must not be present next to this one.
+        _clashes: Component classes that must not be present next to this one, in the same
+            container or, for a group, in the root. Checked both ways, so one side is enough.
     """
 
     _placement: ClassVar[ComponentPlacement] = ComponentPlacement.ANY

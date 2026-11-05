@@ -196,18 +196,39 @@ def test_server_sound_definitions():
     SoundDefinition().sound_reference(
         "battle",
         SoundCategory.Music,
-        server_sound=MusicInfo(tags=["combat"], duration=8.0, artist="me"),
+        server_sound=MusicInfo(
+            tags=[("mood", "combat"), ("biomes", ["plains", "desert"])],
+            duration=8.0,
+            artist="me",
+            broadcast_range=32,
+        ),
     )
     assert _check(ServerSoundDefinition())["minecraft:server_sound_definitions"] == [
         {
-            "testns:battle": {
-                "music_info": {"artist": "me"},
-                "duration_info": {"tracking": "game_time", "duration": 8.0},
-                "tags": ["combat"],
-            }
+            "sound_event_name": "testns:battle",
+            "duration_info": {"mode": "game_time", "seconds": 8.0},
+            "music_info": {"artist": "me"},
+            "tags": {"mood": "combat", "biomes": ["plains", "desert"]},
+            "broadcast_range": 32,
         }
     ]
     assert DurationInfoMode.GameTime == "game_time"
+
+
+def test_server_sound_tags_have_no_whitespace():
+    ServerSoundDefinition().server_sound_reference(
+        "testns:calm", MusicInfo(tags=[("mood", "very calm")])
+    )
+    with pytest.raises(ValueError, match="whitespace"):
+        ServerSoundDefinition().__export__()
+
+
+def test_server_sound_tags_are_set_once():
+    ServerSoundDefinition().server_sound_reference(
+        "testns:twice", MusicInfo(tags=[("mood", "calm"), ("mood", "dark")])
+    )
+    with pytest.raises(ValueError, match="more than once"):
+        ServerSoundDefinition().__export__()
 
 
 def test_sound_events():
@@ -386,6 +407,43 @@ def test_manifest_settings():
     assert ManifestRP()._dropdown_options("testns:wind") is None
 
 
+def test_manifest_multiselect_setting():
+    ManifestRP().settings.multiselect(
+        "biomes", "Biomes", [("hot", "Hot"), ("cold", "Cold")], ["cold"], "Picked"
+    ).multiselect("mobs", "Mobs", [("a", "A"), ("b", "B")], ["a", "b"])
+
+    assert _check(ManifestRP())["settings"] == [
+        {
+            "type": "multiselect",
+            "name": "testns:biomes",
+            "text": "pack.manifest.setting.multiselect_0",
+            "options": [
+                {"name": "hot", "text": "pack.manifest.setting.multiselect_0.option_0"},
+                {
+                    "name": "cold",
+                    "text": "pack.manifest.setting.multiselect_0.option_1",
+                },
+            ],
+            "defaults": ["cold"],
+            "selection_text": "pack.manifest.setting.multiselect_0.selection_text",
+        },
+        {
+            "type": "multiselect",
+            "name": "testns:mobs",
+            "text": "pack.manifest.setting.multiselect_1",
+            "options": [
+                {"name": "a", "text": "pack.manifest.setting.multiselect_1.option_0"},
+                {"name": "b", "text": "pack.manifest.setting.multiselect_1.option_1"},
+            ],
+            "defaults": ["a", "b"],
+        },
+    ]
+    assert ManifestRP()._setting_names("multiselect") == [
+        "testns:biomes",
+        "testns:mobs",
+    ]
+
+
 @pytest.mark.parametrize(
     "build",
     [
@@ -394,6 +452,15 @@ def test_manifest_settings():
         lambda settings: settings.slider("s", "S", 0, 10, 1, 50),
         lambda settings: settings.dropdown("d", "D", [("a", "A")], "b"),
         lambda settings: settings.dropdown("d", "D", [], "b"),
+        lambda settings: settings.dropdown("d", "D", [("a", "A")], "a"),
+        lambda settings: settings.multiselect("m", "M", [("a", "A")], ["a"]),
+        lambda settings: settings.multiselect("m", "M", [("a", "A"), ("b", "B")], []),
+        lambda settings: settings.multiselect(
+            "m", "M", [("a", "A"), ("b", "B")], ["c"]
+        ),
+        lambda settings: settings.multiselect(
+            "m", "M", [(str(index), "X") for index in range(21)], ["0"]
+        ),
     ],
 )
 def test_manifest_settings_are_checked(build):

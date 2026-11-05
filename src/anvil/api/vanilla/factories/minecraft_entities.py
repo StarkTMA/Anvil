@@ -28,10 +28,10 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    from anvil.api.vanilla.entities import vanilla_entity_ids
+    from anvil.api.vanilla.entities import vanilla_entities_ids
 
     identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
-    if name.startswith("_") or identifier not in vanilla_entity_ids():
+    if name.startswith("_") or identifier not in vanilla_entities_ids():
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     func = _make_factory(name)
     globals()[name] = func

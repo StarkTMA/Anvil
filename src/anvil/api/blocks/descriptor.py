@@ -31,3 +31,8 @@ class BlockDescriptor(JsonObject):
             raise ValueError(
                 f"States need a block name. Block descriptor [tags={self.tags}]"
             )
+        if self.states and self.tags is not None:
+            raise ValueError(
+                f"A block descriptor with tags cannot have states. Block descriptor "
+                f"[name={self.name}, tags={self.tags}]"
+            )

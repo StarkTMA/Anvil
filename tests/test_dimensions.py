@@ -1,6 +1,13 @@
 import jsonschema
 import pytest
 
+from anvil.api.biomes.components import BiomeClimate
+from anvil.api.dimension import (
+    DimensionClouds,
+    DimensionConfiguration,
+    DimensionDefaultBiome,
+    DimensionHeight,
+)
 from anvil.lib import config
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.jsonmodel.enums import Dimension
@@ -17,15 +24,22 @@ def _exported(file):
     return AnvilIO._normalize_json_like(file._document)
 
 
-def test_overworld_bounds():
-    from anvil.api.world.dimensions import DimensionConfiguration
-
-    overworld = DimensionConfiguration(Dimension.Overworld).height_bounds((-128, 256))
+def test_overworld_components():
+    overworld = DimensionConfiguration(Dimension.Overworld)
+    overworld.components.add(
+        DimensionHeight(min_y=-64, height_range=384),
+        DimensionDefaultBiome(biome="minecraft:plains"),
+        DimensionClouds(height=192),
+    )
     assert _exported(overworld) == {
-        "format_version": "1.18.0",
+        "format_version": "1.26.50",
         "minecraft:dimension": {
             "description": {"identifier": "minecraft:overworld"},
-            "components": {"minecraft:dimension_bounds": {"min": -128, "max": 256}},
+            "components": {
+                "minecraft:dimension_height": {"min_y": -64, "height_range": 384},
+                "minecraft:default_biome": {"biome": "minecraft:plains"},
+                "minecraft:clouds": {"height": 192},
+            },
         },
     }
     assert overworld.identifier.is_vanilla
@@ -33,28 +47,34 @@ def test_overworld_bounds():
 
 
 def test_nether_is_void():
-    from anvil.api.world.dimensions import DimensionConfiguration
-
     nether = DimensionConfiguration(Dimension.Nether)
     assert _exported(nether)["minecraft:dimension"]["components"] == {
         "minecraft:generation": {"generator_type": "void"}
     }
-    with pytest.raises(ValueError, match="Only the Overworld"):
-        nether.height_bounds((-64, 320))
 
 
-@pytest.mark.parametrize("bounds", [(-127, 256), (256, -128), (-528, 256)])
-def test_bad_bounds_raise_on_export(bounds):
-    from anvil.api.world.dimensions import DimensionConfiguration
-
-    overworld = DimensionConfiguration(Dimension.Overworld).height_bounds(bounds)
+@pytest.mark.parametrize(
+    "component",
+    [
+        lambda: DimensionHeight(min_y=-64, height_range=100),
+        lambda: DimensionHeight(min_y=-64, height_range=2048),
+        lambda: DimensionHeight(min_y=-600, height_range=384),
+        lambda: DimensionClouds(height=600),
+    ],
+)
+def test_bad_components_raise_on_export(component):
     with pytest.raises(ValueError):
-        _exported(overworld)
+        AnvilIO._normalize_json_like(component())
+
+
+def test_only_dimension_components():
+    overworld = DimensionConfiguration(Dimension.Overworld)
+    overworld.components.add(BiomeClimate(temperature=1))
+    with pytest.raises(ValueError, match="not a dimension component"):
+        overworld.__export__()
 
 
 def test_dimensions_refused_in_addons():
-    from anvil.api.world.dimensions import DimensionConfiguration
-
     with config.override(_TARGET=ConfigPackageTarget.ADDON, NAMESPACE="test_t"):
         with pytest.raises(ValueError):
             DimensionConfiguration(Dimension.Overworld)

@@ -24,15 +24,27 @@ class Item:
 
         Raises:
             ValueError: When the name is not valid (see `Identifier.parse`), or a vanilla
-                item is not in `MinecraftItemTypes`.
+                item is not in `MinecraftItemTypes`, or is an experimental one
+                (`anvil.beta.vanilla`) without `features.experimental`.
         """
         from anvil.api.items.server import ItemServer
-        from anvil.api.vanilla.items import vanilla_item_ids
+        from anvil.api.vanilla.items import vanilla_items_ids
+        from anvil.beta.vanilla.items import vanilla_items_ids as beta_vanilla_items_ids
 
         self.identifier = Identifier.parse(
             name, vanilla=is_vanilla, object_type=self._object_type
         )
-        if self.identifier.is_vanilla and self.identifier not in vanilla_item_ids():
+        experimental = self.identifier in beta_vanilla_items_ids()
+        if (
+            self.identifier.is_vanilla
+            and self.identifier not in vanilla_items_ids()
+            and not (experimental and CONFIG._EXPERIMENTAL)
+        ):
+            if experimental:
+                raise ValueError(
+                    f"Vanilla item '{self.identifier}' is experimental: turn on "
+                    f"features.experimental in anvilconfig.json. Item [{self.identifier}]"
+                )
             raise ValueError(
                 f"Invalid vanilla item '{self.identifier}'. Please use a valid vanilla "
                 f"item from MinecraftItemTypes. Item [{self.identifier}]"

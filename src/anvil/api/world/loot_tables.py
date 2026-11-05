@@ -8,6 +8,7 @@ from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG, Pack
+from anvil.lib.format_versions import LOOT_TABLE_VERSION
 from anvil.lib.jsonmodel import (
     AtLeastOne,
     Bounds,
@@ -96,6 +97,14 @@ class _EntityKilled(JsonObject):
 class _HasVariant(JsonObject):
     condition: Literal["has_variant"] = json_field(default="has_variant", init=False)
     value: int = json_field()
+
+
+class _BiomeHasTag(JsonObject):
+    condition: Literal["biome_has_tag"] = json_field(
+        default="biome_has_tag", init=False
+    )
+    tag: str = json_field()
+    operator: Literal["!="] | None = None
 
 
 class _HasMarkVariant(JsonObject):
@@ -189,6 +198,7 @@ class _LootConditions(JsonValue):
         | _HasVariant
         | _HasMarkVariant
         | _EntityProperties
+        | _BiomeHasTag
     ] = json_field(default_factory=list)
 
     def match_tool(
@@ -380,6 +390,22 @@ class _LootConditions(JsonValue):
         self.conditions.append(condition)
         return self
 
+    def biome_has_tag(
+        self, tag: str, operator: Literal["!="] | None = None
+    ) -> _LootConditions:
+        """Requires the biome at the loot's position to have a tag, or with `operator="!="`
+        not to have it.
+
+        Args:
+            tag (str): The biome tag, such as `birch`.
+            operator (Literal["!="], optional): `"!="` requires the biome not to have the tag.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+        """
+        self.conditions.append(_BiomeHasTag(tag=tag, operator=operator))
+        return self
+
     MatchTool = match_tool
     RandomChance = random_chance
     RandomChanceWithLooting = random_chance_with_looting
@@ -392,6 +418,7 @@ class _LootConditions(JsonValue):
     HasVariant = has_variant
     HasMarkVariant = has_mark_variant
     EntityProperties = entity_properties
+    BiomeHasTag = biome_has_tag
 
 
 LootConditions = _LootConditions
@@ -1042,6 +1069,9 @@ class _LootPool(JsonObject):
 class _LootTableFile(JsonObject):
     """The content of `loot_tables/<namespace>/<name>.loot_table.json`."""
 
+    __required__: ClassVar[tuple[str, ...]] = ("format_version",)
+
+    format_version: str = json_field(default=LOOT_TABLE_VERSION, init=False)
     pools: list[_LootPool] = json_field(default_factory=list)
 
     def add_pool(self, rolls: int | tuple[int, int] = 1) -> _LootPool:

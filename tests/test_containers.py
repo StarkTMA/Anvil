@@ -128,11 +128,24 @@ def test_validate_requires_and_clashes():
         validate_components(
             OWNER, JsonContainer(name="components").add(_NeedsHealth()), []
         )
-    with pytest.raises(ValueError, match="clashes with 'minecraft:health'"):
+    clashing = JsonContainer(name="components").add(_Health(value=1))
+    clashing._components.append(_ClashesWithHealth())
+    with pytest.raises(ValueError, match="_Health.*clashes with.*_ClashesWithHealth"):
+        validate_components(OWNER, clashing, [])
+
+
+def test_add_refuses_clashing_components():
+    container = JsonContainer(name="components").add(_Health(value=1))
+    with pytest.raises(ValueError, match="clashes"):
+        container.add(_ClashesWithHealth())
+    with pytest.raises(ValueError, match="clashes"):
+        JsonContainer(name="components").add(_ClashesWithHealth(), _Health(value=1))
+
+
+def test_group_clashes_with_root():
+    with pytest.raises(ValueError, match="clashes"):
         validate_components(
             OWNER,
-            JsonContainer(name="components").add(
-                _ClashesWithHealth(), _Health(value=1)
-            ),
-            [],
+            JsonContainer(name="components").add(_Health(value=1)),
+            [JsonContainer(name="g").add(_ClashesWithHealth())],
         )

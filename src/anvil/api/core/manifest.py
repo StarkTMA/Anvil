@@ -137,7 +137,9 @@ class _DropdownSetting(JsonObject):
     type: Literal["dropdown"] = json_field(default="dropdown", init=False)
     name: str = json_field()
     text: str = json_field()
-    options: Annotated[list[_DropdownOption], Length(minimum=1)] = json_field()
+    options: Annotated[list[_DropdownOption], Length(minimum=2, maximum=20)] = (
+        json_field()
+    )
     default: str = json_field()
 
     def __validate__(self) -> None:
@@ -145,6 +147,28 @@ class _DropdownSetting(JsonObject):
             raise ValueError(
                 f"Dropdown '{self.name}': default '{self.default}' is not one of its options."
             )
+
+
+class _MultiSelectSetting(JsonObject):
+    """A list of options in the pack settings, any of which can be selected."""
+
+    type: Literal["multiselect"] = json_field(default="multiselect", init=False)
+    name: str = json_field()
+    text: str = json_field()
+    options: Annotated[list[_DropdownOption], Length(minimum=2, maximum=20)] = (
+        json_field()
+    )
+    defaults: Annotated[list[str], Length(minimum=1, maximum=20)] = json_field()
+    selection_text: str | None = None
+
+    def __validate__(self) -> None:
+        names = [option.name for option in self.options]
+        for default in self.defaults:
+            if default not in names:
+                raise ValueError(
+                    f"Multiselect '{self.name}': default '{default}' is not one of its "
+                    "options."
+                )
 
 
 class _Manifest(JsonObject):
@@ -169,7 +193,11 @@ class _Manifest(JsonObject):
     ] = json_field(default_factory=list, omit_default=True)
     metadata: _ManifestMetadata | None = None
     settings: list[
-        _LabelSetting | _ToggleSetting | _SliderSetting | _DropdownSetting
+        _LabelSetting
+        | _ToggleSetting
+        | _SliderSetting
+        | _DropdownSetting
+        | _MultiSelectSetting
     ] = json_field(default_factory=list, omit_default=True)
 
     def set_header(self, uuid: str, version: str, min_engine_version: str) -> None:
@@ -220,7 +248,13 @@ class _Manifest(JsonObject):
 
     def add_setting(
         self,
-        setting: _LabelSetting | _ToggleSetting | _SliderSetting | _DropdownSetting,
+        setting: (
+            _LabelSetting
+            | _ToggleSetting
+            | _SliderSetting
+            | _DropdownSetting
+            | _MultiSelectSetting
+        ),
     ) -> None:
         """Adds a pack setting. Two settings cannot share a name."""
         name = getattr(setting, "name", None)
@@ -349,6 +383,46 @@ class _ManifestSettings:
         )
         return self
 
+    def multiselect(
+        self,
+        id: str,
+        text: str,
+        options: Sequence[tuple[str, str]],
+        defaults: Sequence[str],
+        selection_text: str | None = None,
+    ) -> "_ManifestSettings":
+        """Adds a list of options the player can select any of.
+
+        Args:
+            id (str): The setting's name, written as `<namespace>:<id>`.
+            text (str): The text shown next to it.
+            options (Sequence[tuple[str, str]]): Each option as `(name, text)`, 2 to 20.
+            defaults (Sequence[str]): The names of the options selected until the player
+                changes them, at least 1.
+            selection_text (str, optional): The text shown for the selection.
+        """
+        count = self._document.count_settings(_MultiSelectSetting)
+        prefix = f"multiselect_{count}"
+        self._document.add_setting(
+            _MultiSelectSetting(
+                name=f"{CONFIG.NAMESPACE}:{id}",
+                text=self._text(prefix, text),
+                options=[
+                    _DropdownOption(
+                        name=name, text=self._text(f"{prefix}.option_{index}", label)
+                    )
+                    for index, (name, label) in enumerate(options)
+                ],
+                defaults=list(defaults),
+                selection_text=(
+                    None
+                    if selection_text is None
+                    else self._text(f"{prefix}.selection_text", selection_text)
+                ),
+            )
+        )
+        return self
+
 
 # endregion
 # region Manifests
@@ -384,7 +458,7 @@ class _PackManifest(JsonFile[_Manifest]):
         return _ManifestSettings(self)
 
     def _setting_names(
-        self, kind: Literal["toggle", "slider", "dropdown"]
+        self, kind: Literal["toggle", "slider", "dropdown", "multiselect"]
     ) -> list[str]:
         """The names of the manifest's settings of a kind."""
         return [

@@ -12,6 +12,7 @@ from anvil.lib.jsonmodel import (
     BlockId,
     Chance,
     EntityId,
+    ExactMinMax,
     InRange,
     ItemId,
     JsonComponent,
@@ -896,7 +897,7 @@ class EntityMovementJump(EntityMovementControl):
 
     identifier = "minecraft:movement.jump"
 
-    jump_delay: Annotated[float | tuple[float, float], RangeMinMax] | None = json_field(
+    jump_delay: Annotated[float | tuple[float, float], ExactMinMax] | None = json_field(
         default=None
     )
 
