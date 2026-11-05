@@ -746,6 +746,14 @@ def test_vanilla_block_factories_and_descriptors():
         _export(BlockDescriptor())
     with pytest.raises(ValueError):
         _export(BlockDescriptor(states={"a": 1}, tags="q.any_tag('stone')"))
+    with pytest.raises(ValueError, match="cannot have states"):
+        _export(
+            BlockDescriptor(
+                name=Identifier.parse("minecraft:stone", vanilla=True),
+                states={"a": 1},
+                tags="q.any_tag('stone')",
+            )
+        )
 
     BlockId.validate("block", stone)
     BlockId.validate("block", log)

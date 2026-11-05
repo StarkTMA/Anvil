@@ -669,6 +669,8 @@ Ordered = OrderedPair()
 Fraction = NumeratorDenominator()
 
 MinMax = Bounds("min", "max")
+ExactMinMax = Bounds("min", "max", exact=True)
+"""A range as `min`/`max`, a single number as both ends."""
 RangeMinMax = Bounds("range_min", "range_max")
 ExactRangeMinMax = Bounds("range_min", "range_max", exact=True)
 """A range as `range_min`/`range_max`, a single number as both ends."""

@@ -23,6 +23,7 @@ from anvil.lib.jsonmodel import (
     JsonObject,
     JsonValue,
     Keyed,
+    MinMax,
     NonNegative,
     PropertyName,
     RangeMinMax,
@@ -803,10 +804,12 @@ class EntityEconomyTradeTable(JsonComponent):
 
     table: TradeTable | str = json_field()
     convert_trades_economy: bool | None = json_field(default=None)
-    cured_discount: tuple[int, int] | None = json_field(default=None)
+    cured_discount: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
     display_name: str | None = json_field(default=None)
     hero_demand_discount: int | None = json_field(default=None)
-    max_cured_discount: tuple[int, int] | None = json_field(default=None)
+    max_cured_discount: Annotated[tuple[int, int], MinMax] | None = json_field(
+        default=None
+    )
     max_nearby_cured_discount: int | None = json_field(default=None)
     nearby_cured_discount: int | None = json_field(default=None)
     new_screen: bool | None = json_field(default=None)

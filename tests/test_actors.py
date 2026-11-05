@@ -286,7 +286,8 @@ def test_entity_ranges():
     assert payload(EntityHorseJumpStrength(value=(0.4, 1.0))) == {
         "value": {"range_min": 0.4, "range_max": 1.0}
     }
-    assert payload(EntityAttack(damage=(2, 4))) == {"damage": [2, 4]}
+    assert payload(EntityAttack(damage=(4, 2))) == {"damage": {"min": 2, "max": 4}}
+    assert payload(EntityAttack(damage=3)) == {"damage": 3}
 
 
 def test_entity_speeds_in_meters():
@@ -425,7 +426,7 @@ def test_entity_timer_time_or_choices():
     assert payload(timer) == {
         "time_down_event": {"event": "ring", "target": "self"},
         "looping": False,
-        "time": [1, 3],
+        "time": {"min": 1, "max": 3},
     }
     with pytest.raises(ValueError):
         payload(
@@ -597,8 +598,25 @@ def test_entity_transformation():
     }
     assert payload(EntityTransformation(into="minecraft:zombie", delay=5)) == {
         "into": "minecraft:zombie",
-        "delay": 5,
+        "delay": {"value": 5},
     }
+    assert payload(
+        EntityTransformation(
+            into="minecraft:zombie",
+            begin_transform_sound=["unfect"],
+            transformation_sound=["remedy"],
+        )
+    ) == {
+        "into": "minecraft:zombie",
+        "begin_transform_sound": ["unfect"],
+        "transformation_sound": ["remedy"],
+    }
+    with pytest.raises(ValueError):
+        payload(
+            EntityTransformation(into="minecraft:zombie").set_delay(block_radius=-1)
+        )
+    with pytest.raises(ValueError):
+        payload(EntityTransformation(into="minecraft:zombie", delay=-1))
 
 
 def test_entity_interact():
@@ -671,7 +689,7 @@ def test_entity_movement_and_navigation():
 
     assert payload(EntityMovementJump(jump_delay=(0.5, 1.5), max_turn=20)) == {
         "max_turn": 20,
-        "jump_delay": {"range_min": 0.5, "range_max": 1.5},
+        "jump_delay": {"min": 0.5, "max": 1.5},
     }
     assert EntityMovementDolphin().__json__() == {"minecraft:movement.dolphin": {}}
     assert payload(
@@ -829,3 +847,50 @@ def test_part_builders_match_constructor_parts():
     ]
     for built, constructed in pairs:
         assert payload(built) == payload(constructed)
+
+
+def test_strict_float_ranges_write_objects():
+    from anvil.api.actors.components import EntityMovementJump, EntityTimer
+
+    assert payload(EntityTimer(time_down_event="ring", time=3.5))["time"] == {
+        "min": 3.5,
+        "max": 3.5,
+    }
+    assert payload(EntityMovementJump(jump_delay=0.1))["jump_delay"] == {
+        "min": 0.1,
+        "max": 0.1,
+    }
+
+
+def test_economy_trade_table_cured_discounts_are_objects():
+    from anvil.api.actors.components import EntityEconomyTradeTable
+
+    table = EntityEconomyTradeTable(
+        table="trading/test.json",
+        cured_discount=(-20, -25),
+        max_cured_discount=(-25, -20),
+    )
+    body = payload(table)
+    assert body["cured_discount"] == {"min": -25, "max": -20}
+    assert body["max_cured_discount"] == {"min": -25, "max": -20}
+
+
+def test_entity_trail_radius_range():
+    from anvil.api.actors.components import EntityTrail
+
+    trail = EntityTrail(
+        block_type="minecraft:snow_layer",
+        radius=2,
+        replaceable_blocks=["minecraft:air", "minecraft:short_grass"],
+        force_replace_matched_blocks=True,
+    )
+    assert payload(trail) == {
+        "block_type": "minecraft:snow_layer",
+        "force_replace_matched_blocks": True,
+        "radius": 2,
+        "replaceable_blocks": ["minecraft:air", "minecraft:short_grass"],
+    }
+    with pytest.raises(ValueError):
+        payload(EntityTrail(radius=17))
+    with pytest.raises(ValueError):
+        payload(EntityTrail(radius=-2))

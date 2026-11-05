@@ -14,6 +14,7 @@ from anvil.lib.jsonmodel import (
     JsonComponent,
     JsonObject,
     Length,
+    MinMax,
     NonNegative,
     Ordered,
     RangeMinMax,
@@ -164,7 +165,7 @@ class EntityAttack(JsonComponent):
     """Defines an entity's melee attack damage and any additional status effects applied on hit. Typical damage values range from 3 (zombie, creeper) to 7-21 (iron golem).
 
     Args:
-        damage (float | tuple[float, float]): The damage the melee attack deals, or a `(min, max)` range of the random amount. A negative value heals the entity instead.
+        damage (float | tuple[float, float]): The damage the melee attack deals, or a `(min, max)` range of the random amount. A negative value heals the entity instead. A range is written as `{min, max}`.
         effect_amplifier (int, optional): Amplifier level (potion tier) of the status ailment applied to the damaged entity. Game default 0.
         effect_duration (float, optional): Duration in seconds of the status ailment applied to the damaged entity. Game default 0.
         effect_name (MinecraftEffects | str, optional): Identifier of the status ailment to apply to an entity attacked by this entity's melee attack.
@@ -174,7 +175,7 @@ class EntityAttack(JsonComponent):
 
     identifier = "minecraft:attack"
 
-    damage: float | tuple[float, float] = json_field()
+    damage: Annotated[float | tuple[float, float], MinMax] = json_field()
     effect_amplifier: Annotated[int, NonNegative] | None = json_field(default=None)
     effect_duration: Annotated[float, NonNegative] | None = json_field(default=None)
     effect_name: MinecraftEffects | str | None = json_field(default=None)

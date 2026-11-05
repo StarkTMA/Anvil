@@ -15,6 +15,7 @@ from anvil.lib.jsonmodel import (
     Chance,
     EffectName,
     EntityId,
+    ExactMinMax,
     IndexInto,
     InRange,
     ItemId,
@@ -609,8 +610,8 @@ class TransformationDelay(JsonObject):
     range_max: Annotated[float, NonNegative] | None = json_field(default=None)
     block_assist_chance: Annotated[float, Chance] | None = json_field(default=None)
     block_chance: Annotated[float, Chance] | None = json_field(default=None)
-    block_max: int | None = json_field(default=None)
-    block_radius: int | None = json_field(default=None)
+    block_max: Annotated[int, NonNegative] | None = json_field(default=None)
+    block_radius: Annotated[int, NonNegative] | None = json_field(default=None)
     block_types: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
         json_field(default=None)
     )
@@ -1976,7 +1977,9 @@ class EntityTimer(JsonComponent):
     time_down_event: Annotated[EventTrigger | str, Trigger] = json_field()
     looping: bool | None = json_field(default=None)
     randomInterval: bool | None = json_field(default=None)
-    time: float | tuple[float, float] | None = json_field(default=None)
+    time: Annotated[float | tuple[float, float], ExactMinMax] | None = json_field(
+        default=None
+    )
     random_time_choices: list[TimeChoice] | None = json_field(default=None)
 
     def __validate__(self) -> None:
@@ -2009,7 +2012,7 @@ class EntityTrail(JsonComponent):
     Args:
         block_type (str | Block | BlockDescriptor, optional): The block spawned behind the entity. Game default air.
         force_replace_matched_blocks (bool, optional): Replaces matching blocks even where placement rules prevent it. Game default false.
-        radius (int, optional): Spawns blocks over a (2 * radius + 1) square around the offset. Game default -1.
+        radius (int, optional): Spawns blocks over a (2 * radius + 1) square around the offset, from -1 to 16. -1 is the legacy four-corner placement. Game default -1.
         replaceable_blocks (list[str | Block | BlockDescriptor], optional): Blocks the trail may replace. Game default air only.
         spawn_filter (Filter, optional): Conditions for the block to spawn.
         spawn_offset (tuple[float, float, float], optional): Offset from the entity where the block spawns, at most 16 blocks. Game default (0, 0, 0).
@@ -2023,7 +2026,7 @@ class EntityTrail(JsonComponent):
         default=None
     )
     force_replace_matched_blocks: bool | None = json_field(default=None)
-    radius: int | None = json_field(default=None)
+    radius: Annotated[int, InRange(-1, 16)] | None = json_field(default=None)
     replaceable_blocks: (
         list[Annotated[str | Block | BlockDescriptor, BlockId]] | None
     ) = json_field(default=None)
@@ -2037,14 +2040,14 @@ class EntityTransformation(JsonComponent):
     Args:
         into (str | Entity): The entity to transform into. Add an event to run on it as `"namespace:name<event>"`.
         add (list[str], optional): Component groups added after the transformation. Add more with `add_component_groups`.
-        begin_transform_sound (str, optional): Sound played when the transformation starts.
-        delay (float | TransformationDelay, optional): Seconds before the entity transforms, or the full delay options. Set it with `set_delay`.
+        begin_transform_sound (list[str], optional): Level sound events played when the transformation starts, such as `unfect`.
+        delay (float | TransformationDelay, optional): Seconds before the entity transforms, written as `{"value": seconds}`, or the full delay options. Set it with `set_delay`.
         drop_equipment (bool, optional): The entity drops its equipment. Game default false.
         drop_inventory (bool, optional): The entity drops its inventory. Game default false.
         keep_level (bool, optional): A trader keeps its level. Game default false.
         keep_owner (bool, optional): An owned entity stays owned. Game default false.
         preserve_equipment (bool, optional): The entity keeps its equipment. Game default false.
-        transformation_sound (str, optional): Sound played when the transformation is done.
+        transformation_sound (list[str], optional): Level sound events played when the transformation is done, such as `remedy`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transformation)
     """
@@ -2055,14 +2058,18 @@ class EntityTransformation(JsonComponent):
     add: Annotated[list[str], Wrapped("component_groups")] = json_field(
         default_factory=list, omit_default=True
     )
-    begin_transform_sound: str | None = json_field(default=None)
+    begin_transform_sound: list[str] | None = json_field(default=None)
     delay: float | TransformationDelay | None = json_field(default=None)
     drop_equipment: bool | None = json_field(default=None)
     drop_inventory: bool | None = json_field(default=None)
     keep_level: bool | None = json_field(default=None)
     keep_owner: bool | None = json_field(default=None)
     preserve_equipment: bool | None = json_field(default=None)
-    transformation_sound: str | None = json_field(default=None)
+    transformation_sound: list[str] | None = json_field(default=None)
+
+    def __post_init__(self) -> None:
+        if isinstance(self.delay, (int, float)):
+            self.delay = TransformationDelay(value=self.delay)
 
     def add_component_groups(self, *component_groups: str) -> "EntityTransformation":
         """Adds component groups added after the transformation."""
