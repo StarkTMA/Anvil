@@ -1,107 +1,121 @@
 # Contributing to Anvil
 
-Thank you for your interest in contributing to Anvil! Anvil is intended to be a community project, and contributions are strongly encouraged. This guide covers the easiest ways to report bugs, suggest improvements, and submit code changes for this repository.
+Thank you for your interest in contributing to Anvil! Anvil is a community project, and bug reports, format updates, documentation fixes and code are all welcome.
 
 ## Before You Contribute
 
-- Check the existing issues first. If your bug or feature request is already reported, add a comment with any new details.
-- Use the provided bug report template at `.github/ISSUE_TEMPLATE/bug_report.yml` when reporting an issue.
-- Keep contributions focused on Minecraft Bedrock addon tooling, documentation improvements, and Python SDK features.
+- Search the existing issues first. If your bug or request is already there, add any new details as a comment.
+- Open an issue before starting a large change, so the design can be agreed before you write the code.
+- Keep contributions focused on Minecraft Bedrock add-on tooling, its documentation, and the Python API.
 
-## How to Report Bugs
+## Reporting Issues
 
-1. Open a new issue in this repository.
-2. Choose the bug report template.
-3. Provide:
-    - a concise reproduction path,
-    - the expected behavior,
-    - the actual behavior,
-    - any Minecraft Learn portal or engine documentation links if the issue is tied to a specific Bedrock feature.
-4. Attach relevant snippets or generated JSON examples whenever possible.
+There are two templates:
 
-## Feature Requests
+| Template | Use it for |
+| --- | --- |
+| 🐛 Bug Report | Anvil writes wrong or outdated JSON, crashes, the game rejects a file Anvil wrote, or the docs are wrong. |
+| ✨ Feature Request | Something Anvil can't do yet: a missing Bedrock component, a new API, workflow or kit. |
 
-If you want to suggest a new API or workflow:
-
-- Open an issue with a clear description of the problem you want to solve.
-- Explain the expected behavior and how it would fit into Anvil's existing component-based design.
-- If the request is related to Minecraft Bedrock content capabilities, include a reference link to the Learn portal or official docs.
+A good report has a minimal `main.py`, the JSON you expected, the JSON Anvil wrote, and a link to the Microsoft Learn page or bedrock-samples file that shows the correct format.
 
 ## Development Setup
 
 Anvil is developed and tested on Windows with Python 3.15 or newer.
 
-### Clone the repository
-
 ```powershell
 git clone https://github.com/StarkTMA/Anvil.git
 cd Anvil
-```
-
-### Install dependencies
-
-```powershell
 python -m pip install -U pip
-python -m pip install -e .
+python -m pip install -e .[test]
 ```
 
-### Run Anvil locally
-
-From the repository root:
+Run the test suite before every push:
 
 ```powershell
-anvil --help
+python -m pytest tests/
 ```
 
-For project-specific tests, use the `scripts/python/main.py` example flow or any sample project created with `anvil init` (or `anvil create`).
+To try a change in a real project, run `anvil init` in an empty folder, then `anvil build`.
 
-## Submitting Pull Requests
+## Branches
 
-1. Fork the repository and create a feature branch.
-2. Keep changes small and focused.
-3. Update documentation when adding or changing public APIs.
-4. Include a short description of the change and the reason behind it.
-5. If your change fixes an issue, reference the issue number in the PR.
+`main` is the released code. A push to `main` that changes `src/anvil/__version__.py` publishes a release to PyPI, so nobody pushes to `main` directly: every change reaches it through a pull request.
 
-### PR Checklist
+Name your branch `<type>/<short-description>`, in lowercase kebab case, with the issue number first when there is one:
 
-- [ ] I have tested the change locally.
-- [ ] I have updated documentation if needed.
-- [ ] I have followed the repository style and formatting conventions.
-- [ ] I have used strong type hints for all public and internal APIs.
-- [ ] I have added argument validation where appropriate.
-- [ ] I have included links to any relevant Bedrock documentation if the change involves engine-specific behavior.
-- [ ] I have included a minimal sample Anvil project (see "Sample Project" section below).
+| Type | For |
+| --- | --- |
+| `feat/` | A new API, format or feature. |
+| `fix/` | A bug fix. |
+| `format/` | A Bedrock format update: new or changed components and fields. |
+| `refactor/` | Code changes that keep the output identical. |
+| `docs/` | Documentation only. |
+| `test/` | Tests only. |
+| `chore/` | Tooling, CI, dependencies, vanilla data updates. |
 
-## Sample Project
+Examples: `fix/142-pushable-by-block`, `format/1.26.60`, `docs/custom-biome-guide`.
 
-Every pull request must include a minimal Anvil project that directly exercises the changed API surface. This lets maintainers verify your PR immediately — **no manual project setup required**.
+Each release is assembled on a `release/<version>` branch (for example `release/1.1.0`) created from `main`. Feature and format branches merge into it with `git merge --no-ff`, and the release branch reaches `main` through one pull request, merged with a merge commit, once the version is bumped.
 
-### What to include
+## Commits
 
-Place your sample project inside a `sample/` directory at the root of your PR branch. It needs only the bare minimum for a successful compilation and error-free test run:
+Commits follow [Conventional Commits](https://www.conventionalcommits.org): `<type>(<scope>): <summary>`, where the scope is the area you changed (`actors`, `blocks`, `items`, `biomes`, `features`, `world`, `pbr`, `ui`, `jsonmodel`, `vanilla`, `cli`, `kit`...). Use the imperative mood and keep the summary under 72 characters. Add a short bullet list in the body when the change needs explaining.
+
+```
+fix(actors): always write is_summonable and is_spawnable
+
+- The game treats a missing key as false, so leaving out the default made entities unsummonable.
+```
+
+Pull requests are squash-merged, so the pull request title becomes the commit on `main` and must follow the same format.
+
+## Code Conventions
+
+Anvil turns typed Python objects into Bedrock JSON. New code follows the same patterns as the existing modules:
+
+- **Typed documents.** Every file Anvil writes is a `JsonFile` with a typed `_document`, built from `JsonObject` and `JsonComponent` dataclasses. No raw dicts.
+- **Field names are JSON keys.** A field is named exactly like its key in the Microsoft Learn reference. Unset options are `None` and left out, so the game defaults apply.
+- **Formats come from the source.** Check every format against the Microsoft Learn reference, and against Mojang's [bedrock-samples](https://github.com/Mojang/bedrock-samples) when the two disagree: the game wins.
+- **Metadata, not aliases.** Constraints and JSON shapes go in `Annotated[...]` metadata from `anvil.lib.jsonmodel.jsontypes`. Type aliases and enums live only in `anvil.lib.jsonmodel.types` and `anvil.lib.jsonmodel.enums`, and never appear in function signatures. Use a `Literal` for a value set, not a `StrEnum`.
+- **Builders.** Fields are read-only from outside the class. Change them through `add_*` / `set_*` builders that return the object. Never override `__init__` on a `JsonObject`; use `__post_init__`.
+- **Errors.** A user mistake raises `ValueError` with a message that names the object and the value.
+- **Paths.** Use `pathlib` for every path.
+- **Comments.** No `#` comments in `src/` or `tools/` (region markers excepted). Explain in docstrings.
+- **Typing.** Built-in generics and `X | None`, `collections.abc` for abstract types.
+- **Formatting.** Run `black` and `isort --profile black` on the files you changed.
+- **Tests.** Every change comes with tests. No `unittest.mock`: use `config.override(...)`, real files in `tmp_path`, and `monkeypatch` with plain fakes.
+
+## Pull Requests
+
+1. Branch from `main`, or from the `release/` branch you are targeting, using the naming above.
+2. Keep each pull request to one change.
+3. Fill in the pull request template, link the issue it closes, and include the Bedrock references for format changes.
+4. Update `docs/` when you change a public API.
+5. Make sure `python -m pytest tests/` passes on your branch.
+
+### Sample Project
+
+Every pull request that changes generated output includes a minimal Anvil project that exercises the change, so maintainers can verify it right away:
 
 ```
 sample/
-├── anvilconfig.json          # Minimal project config
+├── anvilconfig.json
 └── scripts/
     └── python/
-        └── main.py           # Entry point that exercises your change
+        └── main.py
 ```
 
-### Guidelines
+- It only needs enough to compile cleanly with `anvil build` from the `sample/` folder.
+- For a new component, entity, block or item, add at least one instance of it.
+- For a bug fix, include the code that triggered the bug.
 
-- The sample does **not** need to be a fully fledged project — just enough to compile cleanly and demonstrate the feature.
-- If your change involves a new component, entity type, block, or item, add at least one instance of it to the sample.
-- If your change involves a bug fix, include the code pattern that previously caused the bug.
-- The sample should compile without errors when run from the `sample/` directory with `anvil build`.
+## Documentation
 
-## Documentation and Style
-
-- Use the existing project docs as a model for formatting and terminology.
-- Prefer clear examples over complex abstractions in docs.
-- Keep Markdown files readable and concise.
+- Use the existing guides as a model for structure and terminology.
+- Code in the guides must run against the current API.
+- Prefer short, complete examples over abstractions.
 
 ## Community Support
 
-If you're unsure how to proceed, open an issue first and describe what you want to work on. Contributors are welcome to ask for guidance before writing code, and we appreciate every contribution that helps make Anvil more useful for everyone.
+If you are unsure where to start, open an issue and describe what you would like to work on. Questions are welcome before you write any code.

@@ -1,3 +1,5 @@
+> This changelog is archived and covers Anvil up to 0.9.101. From 1.0.0 on, release notes are published on [GitHub Releases](https://github.com/starktma/anvil/releases).
+
 # Table of Contents
 
 ## 0.9.x
