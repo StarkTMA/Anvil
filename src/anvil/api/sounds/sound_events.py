@@ -265,7 +265,7 @@ class SoundEvent(JsonFile[_SoundsFile]):
             variant_map (str, optional): The value of `variant_query` the sound is for.
             subtitle (str, optional): The subtitle text.
             server_sound (MusicInfo, optional): Also registers the sound in the behavior
-                pack's (experimental) server sound definitions.
+                pack's server sound definitions.
 
         Returns:
             _SoundDescription: The sound definition; add its files with `add_sound`.
@@ -322,7 +322,7 @@ class SoundEvent(JsonFile[_SoundsFile]):
             min_distance (float, optional): The distance the sound starts to fade at.
             subtitle (str, optional): The subtitle text.
             server_sound (MusicInfo, optional): Also registers the sound in the behavior
-                pack's (experimental) server sound definitions.
+                pack's server sound definitions.
 
         Returns:
             _SoundDescription: The sound definition; add its files with `add_sound`.
@@ -368,7 +368,7 @@ class SoundEvent(JsonFile[_SoundsFile]):
             min_distance (float, optional): The distance the sound starts to fade at.
             subtitle (str, optional): The subtitle text.
             server_sound (MusicInfo, optional): Also registers the sound in the behavior
-                pack's (experimental) server sound definitions.
+                pack's server sound definitions.
 
         Returns:
             _SoundDescription: The sound definition; add its files with `add_sound`.
@@ -434,7 +434,7 @@ class SoundEvent(JsonFile[_SoundsFile]):
             min_distance (float, optional): The distance the sound starts to fade at.
             subtitle (str, optional): The subtitle text.
             server_sound (MusicInfo, optional): Also registers the sound in the behavior
-                pack's (experimental) server sound definitions.
+                pack's server sound definitions.
 
         Returns:
             _SoundDescription: The sound definition; add its files with `add_sound`.

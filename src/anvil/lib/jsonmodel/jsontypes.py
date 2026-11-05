@@ -794,6 +794,12 @@ AsObject = Encoded(
 )
 """`(key, value)` pairs as one object, both written as text."""
 
+Pairs = Encoded(
+    lambda pairs: {str(key): item for key, item in pairs},
+    {"type": "object"},
+)
+"""`(key, value)` pairs as one object, the values written as they are."""
+
 ExpandFaces = Encoded(_faces)
 """Block faces with `side` and `all` written as the faces they stand for."""
 

@@ -94,7 +94,7 @@ class MusicDefinition(JsonFile[_MusicDefinitionsFile]):
             max_delay (int, optional): The longest wait between two tracks, in seconds.
                 Defaults to 180.
             server_sound (MusicInfo, optional): Also registers the music in the behavior
-                pack's (experimental) server sound definitions.
+                pack's server sound definitions.
 
         Returns:
             _SoundDescription: The music's sound definition; add its files with `add_sound`.

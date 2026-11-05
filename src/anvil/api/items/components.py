@@ -69,7 +69,7 @@ class DurabilityThreshold(JsonObject):
     Args:
         durability (int): The effects are emitted when the item durability is less than or equal to this value.
         particle_type (str, optional): Particle effect to emit when the threshold is met.
-        sound_event (str, optional): Sound effect to emit when the threshold is met.
+        sound_event (str, optional): Sound event emitted when the threshold is met: a built-in sound event, or any sound event from `sound_definitions.json`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor_durability_threshold)
     """
@@ -183,7 +183,7 @@ class ItemUseModifiers(JsonComponent):
         use_duration (float): Time, in seconds, that the item takes to use. Minimum 0.
         movement_modifier (float, optional): Multiplier applied to the player's movement speed while the item is in use. At most 1.
         emit_vibrations (bool, optional): Whether vibrations are emitted when the item starts or stops being used. Game default true.
-        start_sound (str, optional): Sound event played when the item starts being used.
+        start_sound (str, optional): Sound event played when the item starts being used: a built-in sound event, or any sound event from `sound_definitions.json`.
         start_using (ItemStartUsing, optional): When the player begins using the item. Game default "always". Requires format version 1.26.30.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers)

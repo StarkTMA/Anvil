@@ -1,29 +1,37 @@
 """The behavior pack's server sound definitions: music information and duration of
 sounds, for the server."""
 
+import re
 from dataclasses import dataclass
-from typing import Annotated, Any, ClassVar
+from typing import Annotated, ClassVar
 
 from anvil.lib.config import Pack
 from anvil.lib.format_versions import SERVER_SOUND_DEFINITIONS_VERSION
-from anvil.lib.jsonmodel import JsonFile, JsonObject, NonNegative, json_field
+from anvil.lib.jsonmodel import JsonFile, JsonObject, NonNegative, Pairs, json_field
 from anvil.lib.jsonmodel.enums import DurationInfoMode
+
+_NO_SPACE = re.compile(r"^\S+$")
 
 
 @dataclass(kw_only=True)
 class MusicInfo:
     """The server-side information of a sound, registered with `server_sound=` on the
-    sound methods. Experimental, from Minecraft 26.40.
+    sound methods.
 
     Args:
-        genres (list[str], optional): The music genres.
-        moods (list[str], optional): The music moods.
-        artist (str, optional): The artist.
-        title (str, optional): The title.
-        duration (float, optional): The length of the sound, in seconds.
-        duration_tracking (DurationInfoMode, optional): How the duration is tracked.
-            Defaults to game time.
-        tags (list[str], optional): Tags of the sound.
+        genres (list[str], optional): Free-form genre labels.
+        moods (list[str], optional): Free-form mood labels.
+        artist (str, optional): The artist, as display text or a translation key.
+        title (str, optional): The title, as display text or a translation key.
+        duration (float, optional): The length of the sound, in seconds. When set, the
+            server tracks the sound's lifetime.
+        duration_tracking (DurationInfoMode, optional): How the duration drains: by game
+            ticks or by wall-clock time. Defaults to game time.
+        tags (list[tuple[str, str | list[str]]], optional): Pack-defined `(name, value)`
+            tags, the value a string or a list of strings. Names and values have no
+            whitespace, and each name is used once.
+        broadcast_range (float, optional): A broadcast play of the sound reaches players
+            within this many blocks, capped by their view distance.
     """
 
     genres: list[str] | None = None
@@ -32,7 +40,8 @@ class MusicInfo:
     title: str | None = None
     duration: float | None = None
     duration_tracking: DurationInfoMode = DurationInfoMode.GameTime
-    tags: list[str] | None = None
+    tags: list[tuple[str, str | list[str]]] | None = None
+    broadcast_range: float | None = None
 
 
 class _ServerMusicInfo(JsonObject):
@@ -45,26 +54,27 @@ class _ServerMusicInfo(JsonObject):
 
 
 class _ServerDurationInfo(JsonObject):
-    """The `duration_info` of a server sound."""
+    """The `duration_info` of a server sound: the server tracks the sound's lifetime."""
 
-    tracking: DurationInfoMode = json_field()
-    duration: Annotated[float, NonNegative] = json_field()
+    mode: DurationInfoMode = json_field()
+    seconds: Annotated[float, NonNegative] = json_field()
 
 
 class _ServerSound(JsonObject):
-    """One server sound, written as `{identifier: {...}}`.
+    """One server sound definition."""
 
-    Args:
-        identifier (str): The sound name, as in the resource pack's sound definitions.
-    """
+    __required__: ClassVar[tuple[str, ...]] = ("sound_event_name",)
 
-    identifier: str = json_field(exclude=True)
-    music_info: _ServerMusicInfo | None = None
+    sound_event_name: str = json_field()
     duration_info: _ServerDurationInfo | None = None
-    tags: list[str] = json_field(default_factory=list, omit_default=True)
+    music_info: _ServerMusicInfo | None = None
+    tags: Annotated[list[tuple[str, str | list[str]]], Pairs] = json_field(
+        default_factory=list, omit_default=True
+    )
+    broadcast_range: Annotated[float, NonNegative] | None = None
 
     @classmethod
-    def from_music_info(cls, identifier: str, info: MusicInfo) -> "_ServerSound":
+    def from_music_info(cls, sound_event_name: str, info: MusicInfo) -> "_ServerSound":
         """The server sound of a `MusicInfo`."""
         music = _ServerMusicInfo(
             genres=list(info.genres or []),
@@ -73,34 +83,41 @@ class _ServerSound(JsonObject):
             title=info.title,
         )
         return cls(
-            identifier=identifier,
-            music_info=music if music.__json__() else None,
+            sound_event_name=sound_event_name,
             duration_info=(
                 None
                 if info.duration is None
                 else _ServerDurationInfo(
-                    tracking=info.duration_tracking, duration=info.duration
+                    mode=info.duration_tracking, seconds=info.duration
                 )
             ),
+            music_info=music if music.__json__() else None,
             tags=list(info.tags or []),
+            broadcast_range=info.broadcast_range,
         )
 
-    def __json__(self) -> Any:
-        return {self.identifier: JsonObject.__json__(self)}
-
-    @classmethod
-    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
-        body = JsonObject.__schema_body__.__func__(cls, definitions)
-        return {
-            "type": "object",
-            "minProperties": 1,
-            "maxProperties": 1,
-            "additionalProperties": body,
-        }
+    def __validate__(self) -> None:
+        names = [name for name, _ in self.tags]
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            raise ValueError(
+                f"Server sound '{self.sound_event_name}': tags {duplicates} are set more "
+                "than once."
+            )
+        words = [self.sound_event_name, *names]
+        for _, value in self.tags:
+            words += [value] if isinstance(value, str) else value
+        for word in words:
+            if not _NO_SPACE.match(word):
+                raise ValueError(
+                    f"Server sound '{self.sound_event_name}': '{word}' must be one word "
+                    "with no whitespace."
+                )
 
 
 class _ServerSoundDefinitionsFile(JsonObject):
-    """The content of the behavior pack's `sounds/sound_definitions.json`."""
+    """The content of the behavior pack's `sounds/sound_definitions.json`: a list of server
+    sound definitions."""
 
     __required__: ClassVar[tuple[str, ...]] = (
         "format_version",
@@ -120,7 +137,7 @@ class _ServerSoundDefinitionsFile(JsonObject):
 
 
 class ServerSoundDefinition(JsonFile[_ServerSoundDefinitionsFile]):
-    """The behavior pack's server sound definitions (experimental, from Minecraft 26.40):
+    """The behavior pack's server sound definitions:
     duration, music information and tags of sounds the resource pack defines.
 
     Server sounds are registered through `server_sound=` on `SoundDefinition.sound_reference`

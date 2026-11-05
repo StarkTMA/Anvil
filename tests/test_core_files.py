@@ -196,18 +196,39 @@ def test_server_sound_definitions():
     SoundDefinition().sound_reference(
         "battle",
         SoundCategory.Music,
-        server_sound=MusicInfo(tags=["combat"], duration=8.0, artist="me"),
+        server_sound=MusicInfo(
+            tags=[("mood", "combat"), ("biomes", ["plains", "desert"])],
+            duration=8.0,
+            artist="me",
+            broadcast_range=32,
+        ),
     )
     assert _check(ServerSoundDefinition())["minecraft:server_sound_definitions"] == [
         {
-            "testns:battle": {
-                "music_info": {"artist": "me"},
-                "duration_info": {"tracking": "game_time", "duration": 8.0},
-                "tags": ["combat"],
-            }
+            "sound_event_name": "testns:battle",
+            "duration_info": {"mode": "game_time", "seconds": 8.0},
+            "music_info": {"artist": "me"},
+            "tags": {"mood": "combat", "biomes": ["plains", "desert"]},
+            "broadcast_range": 32,
         }
     ]
     assert DurationInfoMode.GameTime == "game_time"
+
+
+def test_server_sound_tags_have_no_whitespace():
+    ServerSoundDefinition().server_sound_reference(
+        "testns:calm", MusicInfo(tags=[("mood", "very calm")])
+    )
+    with pytest.raises(ValueError, match="whitespace"):
+        ServerSoundDefinition().__export__()
+
+
+def test_server_sound_tags_are_set_once():
+    ServerSoundDefinition().server_sound_reference(
+        "testns:twice", MusicInfo(tags=[("mood", "calm"), ("mood", "dark")])
+    )
+    with pytest.raises(ValueError, match="more than once"):
+        ServerSoundDefinition().__export__()
 
 
 def test_sound_events():
