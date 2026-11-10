@@ -486,11 +486,15 @@ def load_project() -> AnvilConfig:
 
     AnvilDisplay.copyright()
     AnvilDisplay.project_display(config.DISPLAY_NAME, config._TARGET, config._PREVIEW)
+    if config._SCRIPT_API:
+        AnvilValidator.check_script_versions(config._PREVIEW, config._EXPERIMENTAL)
 
     if datetime.now() - datetime.strptime(
         config._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
     ) > timedelta(hours=24):
-        vanilla_latest_build, latest_build = AnvilValidator.check_new_versions()
+        vanilla_latest_build, latest_build = AnvilValidator.check_new_versions(
+            config._PREVIEW, config._EXPERIMENTAL
+)
         file.add_option(
             ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, vanilla_latest_build
         )
