@@ -1,6 +1,7 @@
 import sys
 
 import click
+
 from anvil.lib.config import CONFIG_FILE, Config, ConfigOption, ConfigSection
 from anvil.lib.lib import process_subcommand
 

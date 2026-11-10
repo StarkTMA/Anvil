@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import click
+
 from anvil.lib.config import CONFIG_FILE, Config, ConfigOption, ConfigSection
 from anvil.lib.lib import OUTPUT, PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG
 

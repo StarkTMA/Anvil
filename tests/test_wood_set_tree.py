@@ -1,13 +1,13 @@
-import pytest
 from types import SimpleNamespace
 
+import pytest
 
 from anvil.api.blocks import components as block_components
-from anvil.kit.blocks.wood_set.components import BlockWoodSetSapling
 from anvil.api.core.core import ANVIL
 from anvil.api.features import WeightedRandomFeature
 from anvil.kit.blocks.wood_set import WoodBlock, create_wood_set
 from anvil.kit.blocks.wood_set.blocks import sapling
+from anvil.kit.blocks.wood_set.components import BlockWoodSetSapling
 
 
 @pytest.fixture(autouse=True)

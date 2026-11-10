@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+
 from anvil.api.actors.components import (
     EntityProjectile,
     ProjectileArrowEffect,
@@ -12,8 +13,8 @@ from anvil.api.actors.components import (
     ProjectileStickInGround,
 )
 from anvil.api.core.components import EventTrigger
-from anvil.lib.lib import AnvilIO
 from anvil.lib.jsonmodel import JsonComponent
+from anvil.lib.lib import AnvilIO
 
 
 def payload(obj):

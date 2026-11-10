@@ -181,7 +181,9 @@ def create(
         ItemDisplayName(value=display_name),
         ItemFuel(duration=5),
     )
-    block.item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Buttons)
+    block.item.server.description.set_menu_category(
+        ItemCategory.Items, ItemGroups.Buttons
+    )
 
     block.queue()
 

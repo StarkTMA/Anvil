@@ -130,7 +130,9 @@ def create(
         ItemFuel(duration=15),
         ItemTags(tags=[MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
     )
-    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Wood)
+    block.item.server.description.set_menu_category(
+        ItemCategory.Nature, ItemGroups.Wood
+    )
 
     block.queue()
 
