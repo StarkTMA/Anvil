@@ -10,7 +10,7 @@ from anvil.api.core.core import clean_old_dev
 from anvil.cli_commands.clear_cmd import get_project_dev_pack_paths
 from anvil.cli_commands.init_cmd import handle_configuration
 from anvil.lib.config import Config, ConfigOption, ConfigSection, load_project
-from anvil.lib.lib import PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG, validate_platform
+from anvil.lib.lib import PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG
 
 
 @pytest.fixture
@@ -63,17 +63,6 @@ def make_project(tmp_path, monkeypatch):
         return tmp_path
 
     return _create
-
-
-def test_validate_platform(monkeypatch):
-    """Only Windows, macOS, and Linux are supported."""
-    for platform in ("win32", "darwin", "linux", "linux2"):
-        monkeypatch.setattr(sys, "platform", platform)
-        validate_platform()
-    for platform in ("android", "freebsd"):
-        monkeypatch.setattr(sys, "platform", platform)
-        with pytest.raises(OSError, match="only supports Windows, macOS, and Linux"):
-            validate_platform()
 
 
 def test_windows_local_export_false_defaults_to_mojang(make_project, monkeypatch):

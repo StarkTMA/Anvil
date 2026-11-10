@@ -14,26 +14,19 @@ import click
 import orjson
 import requests
 
-from anvil.lib.format_versions import MANIFEST_BUILD
+from anvil.lib.format_versions import (
+    MANIFEST_BUILD,
+    MANIFEST_BUILD_PREVIEW,
+    MODULE_MINECRAFT_SERVER,
+    MODULE_MINECRAFT_SERVER_PREVIEW,
+    MODULE_MINECRAFT_SERVER_UI,
+    MODULE_MINECRAFT_SERVER_UI_PREVIEW,
+)
 
 from ..__version__ import __version__
 
 if TYPE_CHECKING:
     from anvil.lib.jsonmodel.types import Color
-
-
-def validate_platform() -> None:
-    """Validates that Anvil is running on a supported platform.
-
-    Only Linux, macOS, and Windows are supported.
-    """
-    if sys.platform not in ("win32", "darwin") and not sys.platform.startswith("linux"):
-        raise OSError(
-            f"Anvil only supports Windows, macOS, and Linux (current platform: '{sys.platform}')."
-        )
-
-
-validate_platform()
 
 
 USERPROFILE: Path = Path(os.getenv("USERPROFILE", Path.home()))
