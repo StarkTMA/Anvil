@@ -2,6 +2,7 @@
 
 import orjson
 import pytest
+
 from anvil.lib.config import (
     Config,
     ConfigOption,

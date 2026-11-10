@@ -14,26 +14,19 @@ import click
 import orjson
 import requests
 
-from anvil.lib.format_versions import MANIFEST_BUILD
+from anvil.lib.format_versions import (
+    MANIFEST_BUILD,
+    MANIFEST_BUILD_PREVIEW,
+    MODULE_MINECRAFT_SERVER,
+    MODULE_MINECRAFT_SERVER_PREVIEW,
+    MODULE_MINECRAFT_SERVER_UI,
+    MODULE_MINECRAFT_SERVER_UI_PREVIEW,
+)
 
 from ..__version__ import __version__
 
 if TYPE_CHECKING:
     from anvil.lib.jsonmodel.types import Color
-
-
-def validate_platform() -> None:
-    """Validates that Anvil is running on a supported platform.
-
-    Only Linux, macOS, and Windows are supported.
-    """
-    if sys.platform not in ("win32", "darwin") and not sys.platform.startswith("linux"):
-        raise OSError(
-            f"Anvil only supports Windows, macOS, and Linux (current platform: '{sys.platform}')."
-        )
-
-
-validate_platform()
 
 
 USERPROFILE: Path = Path(os.getenv("USERPROFILE", Path.home()))
@@ -700,10 +693,112 @@ class AnvilFormatter:
 
 
 class AnvilValidator:
+    @staticmethod
+    def _version_key(version: str) -> tuple[int, int, int, bool] | None:
+        """Orders npm versions by major.minor.patch.
+
+        A pre-release (`-beta`, `-preview`) sorts above the release of the same number,
+        because it carries APIs that release does not have.
+
+        Returns:
+            tuple[int, int, int, bool] | None: The sort key, or None when `version` is not
+                a `major.minor.patch` version.
+        """
+        core, _, prerelease = version.partition("-")
+        parts = core.split(".")
+        if len(parts) != 3 or not all(part.isdigit() for part in parts):
+            return None
+        return int(parts[0]), int(parts[1]), int(parts[2]), bool(prerelease)
+
     @classmethod
-    def check_new_versions(cls):
+    def supported_npm_versions(
+        cls, preview: bool = False, experimental: bool = False
+    ) -> dict[str, str]:
+        """The newest version of each Script API npm package that Anvil targets.
+
+        `@minecraft/server` and `@minecraft/server-ui` follow the behavior pack manifest's
+        module dependencies, which use the beta modules only for preview projects with
+        experimental features. `@minecraft/vanilla-data` follows the game version.
+
+        Args:
+            preview (bool, optional): The project builds for Minecraft Preview.
+            experimental (bool, optional): The project uses experimental features.
+        """
+        beta = preview and experimental
+        return {
+            "@minecraft/server": (
+                MODULE_MINECRAFT_SERVER_PREVIEW if beta else MODULE_MINECRAFT_SERVER
+            ),
+            "@minecraft/server-ui": (
+                MODULE_MINECRAFT_SERVER_UI_PREVIEW
+                if beta
+                else MODULE_MINECRAFT_SERVER_UI
+            ),
+            "@minecraft/vanilla-data": (
+                f"{MANIFEST_BUILD_PREVIEW}-preview" if preview else MANIFEST_BUILD
+            ),
+        }
+
+    @classmethod
+    def _capped_latest(
+        cls, name: str, current: str, latest: str, supported: dict[str, str]
+    ) -> str | None:
+        """The latest version to report for an outdated npm package.
+
+        Script API packages are capped at the version Anvil supports.
+
+        Returns:
+            str | None: The version to report, or None when the package should not be
+                reported because it is already at the supported version or above it.
+        """
+        if name not in supported:
+            return latest
+        cap = cls._version_key(supported[name])
+        latest_key = cls._version_key(latest)
+        if cap is None or latest_key is None or latest_key <= cap:
+            return latest
+        current_key = cls._version_key(current)
+        if current_key is not None and current_key >= cap:
+            return None
+        return supported[name]
+
+    @classmethod
+    def check_script_versions(
+        cls, preview: bool = False, experimental: bool = False
+    ) -> None:
+        """Warns about installed Script API npm packages newer than what Anvil supports.
+
+        The manifest still pins the module versions Anvil supports, so the game uses
+        those. A newer package only exposes APIs that will not work in game.
+
+        Args:
+            preview (bool, optional): The project builds for Minecraft Preview.
+            experimental (bool, optional): The project uses experimental features.
+        """
+        for name, supported in cls.supported_npm_versions(
+            preview, experimental
+        ).items():
+            package_file = Path("node_modules", *name.split("/"), "package.json")
+            try:
+                installed = str(orjson.loads(package_file.read_bytes())["version"])
+            except (OSError, orjson.JSONDecodeError, KeyError, TypeError):
+                continue
+            installed_key = cls._version_key(installed)
+            supported_key = cls._version_key(supported)
+            if installed_key and supported_key and installed_key > supported_key:
+                click.echo(
+                    click.style(
+                        f"[WARN]: {name} {installed} is newer than {supported}, the version "
+                        "Anvil supports. APIs added after it will not work in game.",
+                        fg="red",
+                    )
+                )
+
+    @classmethod
+    def check_new_versions(cls, preview: bool = False, experimental: bool = False):
         click.echo(click.style("Checking for package updates...", fg="cyan"))
         outdated_packages: list[dict[str, str]] = []
+        supported = cls.supported_npm_versions(preview, experimental)
 
         try:
             res = subprocess.run(
@@ -717,28 +812,42 @@ class AnvilValidator:
                     npm_data = orjson.loads(res.stdout)
                     for pkg_name, pkg_info in npm_data.items():
                         if isinstance(pkg_info, dict):
+                            current = str(pkg_info.get("current", "N/A"))
+                            latest = cls._capped_latest(
+                                pkg_name,
+                                current,
+                                str(
+                                    pkg_info.get(
+                                        "latest", pkg_info.get("wanted", "N/A")
+                                    )
+                                ),
+                                supported,
+                            )
+                            if latest is None:
+                                continue
                             outdated_packages.append(
                                 {
                                     "name": pkg_name,
                                     "type": "npm",
-                                    "current": str(pkg_info.get("current", "N/A")),
-                                    "latest": str(
-                                        pkg_info.get(
-                                            "latest", pkg_info.get("wanted", "N/A")
-                                        )
-                                    ),
+                                    "current": current,
+                                    "latest": latest,
                                 }
                             )
                 except orjson.JSONDecodeError:
                     for line in res.stdout.splitlines():
                         parts = line.split()
                         if len(parts) >= 4 and not line.startswith("Package"):
+                            latest = cls._capped_latest(
+                                parts[0], parts[1], parts[3], supported
+                            )
+                            if latest is None:
+                                continue
                             outdated_packages.append(
                                 {
                                     "name": parts[0],
                                     "type": "npm",
                                     "current": parts[1],
-                                    "latest": parts[3],
+                                    "latest": latest,
                                 }
                             )
         except (OSError, subprocess.SubprocessError):

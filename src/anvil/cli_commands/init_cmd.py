@@ -338,4 +338,4 @@ def init(
                 f'xdg-open "{workspace_full_path}"',
                 "Unable to start the project vscode workspace",
             )
-    AnvilValidator.check_new_versions()
+    AnvilValidator.check_new_versions(preview)

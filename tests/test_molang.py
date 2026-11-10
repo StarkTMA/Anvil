@@ -384,7 +384,6 @@ class TestQuery:
             ("CanSwim", "q.can_swim"),
             ("CanWalk", "q.can_walk"),
             ("CapeFlapAmount", "q.cape_flap_amount"),
-            ("CardinalBlockFacePlacedOn", "q.cardinal_block_face_placed_on"),
             ("CardinalFacing", "q.cardinal_facing"),
             ("CardinalFacing2D", "q.cardinal_facing_2d"),
             ("CardinalPlayerFacing", "q.cardinal_player_facing"),
@@ -407,7 +406,6 @@ class TestQuery:
             ("GetAnimationFrame", "q.get_animation_frame"),
             ("GetDefaultBonePivot", "q.get_default_bone_pivot"),
             ("GetLocatorOffset", "q.get_locator_offset"),
-            ("GetName", "q.get_name"),
             ("GetRootLocatorOffset", "q.get_root_locator_offset"),
             ("GroundSpeed", "q.ground_speed"),
             ("HasCape", "q.has_cape"),
@@ -533,8 +531,6 @@ class TestQuery:
             ("Noise", "q.noise"),
             ("OnFireTime", "q.on_fire_time"),
             ("OutOfControl", "q.out_of_control"),
-            ("OverlayAlpha", "q.overlay_alpha"),
-            ("OwnerIdentifier", "q.owner_identifier"),
             ("PlayerLevel", "q.player_level"),
             ("PreviousSquishValue", "q.previous_squish_value"),
             ("RemainingDurability", "q.remaining_durability"),
@@ -597,6 +593,21 @@ class TestQuery:
         assert str(result) == expected
         assert isinstance(result, Molang)
 
+    @pytest.mark.parametrize(
+        "method, expected",
+        [
+            ("CardinalBlockFacePlacedOn", "q.cardinal_block_face_placed_on"),
+            ("GetName", "q.get_name"),
+            ("OverlayAlpha", "q.overlay_alpha"),
+            ("OwnerIdentifier", "q.owner_identifier"),
+        ],
+    )
+    def test_deprecated_query_output(self, method, expected):
+        with pytest.deprecated_call():
+            result = getattr(Query, method)()
+        assert str(result) == expected
+        assert isinstance(result, Molang)
+
     # --- methods with arguments ---
 
     def test_AboveTopSolid(self):
@@ -629,13 +640,6 @@ class TestQuery:
     def test_tag_queries_reject_a_bare_string(self, query, args):
         with pytest.raises(TypeError, match="takes a list of tags"):
             query(*args, "mob")
-
-    @pytest.mark.parametrize(
-        "query", [Query.GetName, Query.OwnerIdentifier, Query.OverlayAlpha]
-    )
-    def test_deprecated_queries_warn(self, query):
-        with pytest.deprecated_call():
-            query()
 
     def test_Any(self):
         assert (
@@ -753,8 +757,9 @@ class TestQuery:
             Query.EquippedItemIsAttachable(5)
 
     def test_GetEquippedItemName_range(self):
-        assert str(Query.GetEquippedItemName(0)) == "q.get_equipped_item_name(0, 0)"
-        with pytest.raises(ValueError):
+        with pytest.deprecated_call():
+            assert str(Query.GetEquippedItemName(0)) == "q.get_equipped_item_name(0, 0)"
+        with pytest.deprecated_call(), pytest.raises(ValueError):
             Query.GetEquippedItemName(5)
 
     def test_HadComponentGroup(self):

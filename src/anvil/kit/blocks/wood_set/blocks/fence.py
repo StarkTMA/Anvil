@@ -78,7 +78,9 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Fence"
 
-    block.server.description.traits.set_connection([ConnectionTrait.CardinalConnections])
+    block.server.description.traits.set_connection(
+        [ConnectionTrait.CardinalConnections]
+    )
 
     for combo in product([False, True], repeat=len(ARMS)):
         boxes = [POST]

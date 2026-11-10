@@ -172,7 +172,9 @@ def create(
         ItemTags(tags=[MinecraftItemTags.Leaves]),
         ItemCompostable(composting_chance=30),
     )
-    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Leaves)
+    block.item.server.description.set_menu_category(
+        ItemCategory.Nature, ItemGroups.Leaves
+    )
 
     block.queue()
     return block

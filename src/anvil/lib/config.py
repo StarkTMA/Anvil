@@ -13,6 +13,7 @@ from typing import Any
 import click
 import orjson
 
+from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     PREVIEW_COM_MOJANG,
@@ -50,6 +51,7 @@ class ConfigOption(StrEnum):
     """
 
     VANILLA_VERSION = "vanilla_version"
+    ANVIL_VERSION = "anvil_version"
     COMPANY = "company"
     NAMESPACE = "namespace"
     PROJECT_NAME = "project_name"
@@ -356,6 +358,9 @@ class AnvilConfig:
     _VANILLA_VERSION: str = _option(
         ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
     )
+    _ANVIL_VERSION: str = _option(
+        ConfigSection.ANVIL, ConfigOption.ANVIL_VERSION, __version__
+    )
 
     Report: ReportCollector = field(init=False, repr=False, compare=False)
 
@@ -486,11 +491,16 @@ def load_project() -> AnvilConfig:
 
     AnvilDisplay.copyright()
     AnvilDisplay.project_display(config.DISPLAY_NAME, config._TARGET, config._PREVIEW)
+    if config._SCRIPT_API:
+        AnvilValidator.check_script_versions(config._PREVIEW, config._EXPERIMENTAL)
+    file.add_option(ConfigSection.ANVIL, ConfigOption.ANVIL_VERSION, __version__)
 
     if datetime.now() - datetime.strptime(
         config._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
     ) > timedelta(hours=24):
-        vanilla_latest_build, latest_build = AnvilValidator.check_new_versions()
+        vanilla_latest_build, latest_build = AnvilValidator.check_new_versions(
+            config._PREVIEW, config._EXPERIMENTAL
+        )
         file.add_option(
             ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, vanilla_latest_build
         )

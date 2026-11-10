@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import Annotated, Literal
 
 import pytest
+
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger

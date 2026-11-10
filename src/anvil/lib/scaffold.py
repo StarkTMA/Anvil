@@ -360,7 +360,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.15"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -388,7 +388,7 @@ _WORKFLOW_RELEASE = """\
 
           path = Path("anvilconfig.json")
           config = json.loads(path.read_text(encoding="utf-8"))
-          config.setdefault("anvil", {})["local_export"] = True
+          config.setdefault("build", {})["local_export"] = True
           path.write_text(json.dumps(config, indent=4), encoding="utf-8")
           PY
 
@@ -407,7 +407,7 @@ _WORKFLOW_RELEASE = """\
               raise SystemExit("anvilconfig.json not found")
 
           config = json.loads(config_path.read_text(encoding="utf-8"))
-          version = str(config["build"]["release"]).strip()
+          version = str(config["manifest"]["release"]).strip()
           target = str(config["package"].get("target", "world")).strip().lower()
           project_name = str(config["package"]["display_name"]).strip()
 

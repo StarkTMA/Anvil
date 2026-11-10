@@ -136,7 +136,7 @@ class LDtk:
         filename: str,
         *,
         clear_chunks: bool = False,
-        default_origin_block= MinecraftBlockTypes.Air(),
+        default_origin_block=MinecraftBlockTypes.Air(),
     ) -> None:
         """Converts LDtk map to Minecraft worlds.
 

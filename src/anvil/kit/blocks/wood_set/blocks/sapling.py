@@ -111,7 +111,9 @@ def create(
         ItemDisplayName(value=display_name),
         ItemIcon(textures=TextureComponents(color=f"{wood}_sapling")),
     )
-    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Sapling)
+    block.item.server.description.set_menu_category(
+        ItemCategory.Nature, ItemGroups.Sapling
+    )
 
     block.queue()
     return block
