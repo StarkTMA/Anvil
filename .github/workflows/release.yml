@@ -1,0 +1,55 @@
+name: Release
+
+on:
+    workflow_call:
+        inputs:
+            version:
+                description: "Version to release, e.g. 0.9.98"
+                required: true
+                type: string
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        env:
+            GH_TOKEN: ${{ github.token }}
+            TAG: v${{ inputs.version }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Skip if the release already exists
+              id: exists
+              run: |
+                  if gh release view "$TAG" >/dev/null 2>&1; then
+                      echo "Release $TAG already exists, nothing to do."
+                      echo "skip=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "skip=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Build release notes from the version commit
+              if: steps.exists.outputs.skip == 'false'
+              run: |
+                  # The commit that last changed the version file is the version bump.
+                  COMMIT=$(git log -1 --format=%H -- src/anvil/__version__.py)
+                  # Drop the subject line (the version) and the blank lines after it.
+                  git log -1 --format=%b "$COMMIT" | sed -e '/./,$!d' > notes.md
+                  if [ ! -s notes.md ]; then
+                      echo "Release $TAG" > notes.md
+                  fi
+                  echo "Using commit $COMMIT:"
+                  cat notes.md
+
+            - name: Create release
+              if: steps.exists.outputs.skip == 'false'
+              run: |
+                  gh release create "$TAG" \
+                      --target "$GITHUB_SHA" \
+                      --title "$TAG" \
+                      --notes-file notes.md \
+                      --latest

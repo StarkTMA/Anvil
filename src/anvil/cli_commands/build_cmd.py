@@ -1,8 +1,8 @@
-import os
 import sys
 
 import click
-from anvil.lib.config import Config, ConfigOption, ConfigSection
+
+from anvil.lib.config import CONFIG_FILE, Config, ConfigOption, ConfigSection
 from anvil.lib.lib import process_subcommand
 
 
@@ -77,6 +77,13 @@ from anvil.lib.lib import process_subcommand
     show_default=True,
     help="Compile a clean new build (Clears previous build artifacts).",
 )
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Enable debug mode for the build process.",
+)
 def build(
     js_only: bool,
     nocompile: bool,
@@ -88,8 +95,9 @@ def build(
     workflow: bool,
     minify: bool,
     clean: bool,
+    debug: bool,
 ) -> None:
-    if not os.path.exists("anvilconfig.json"):
+    if not CONFIG_FILE.exists():
         click.echo(
             click.style(
                 "No valid Anvil project found, to create a new project run: `anvil create --help`",
@@ -99,7 +107,7 @@ def build(
         return None
 
     config = Config()
-    entry_point = config.get_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT)
+    entry_point = config.get_option(ConfigSection.BUILD, ConfigOption.ENTRY_POINT)
     if not entry_point:
         click.echo(
             click.style(
@@ -130,8 +138,11 @@ def build(
         command.append("--minify")
     if clean:
         command.append("--clean")
+    if debug:
+        command.append("--debug")
 
     process_subcommand(
         " ".join(command),
         "Unable to run the anvil project.",
+        exit_on_error=True,
     )

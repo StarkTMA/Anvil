@@ -1,25 +1,39 @@
 name: ✨ Feature Request
-description: Propose a new Bedrock schema abstraction
+description: Something Anvil can't do yet, from a missing Bedrock component to a new API or kit.
 labels: ["enhancement"]
 body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Missing Bedrock component, field or file type
+        - New API or workflow
+        - New kit
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
-      label: The Problem
-      description: Is there a specific Bedrock component Anvil does not yet abstract efficiently?
+      label: The problem
+      description: What are you trying to build, and what makes it hard with Anvil today?
     validations:
       required: true
   - type: textarea
-    id: solution
+    id: proposal
     attributes:
-      label: Proposed Solution
-      description: How should the Python interface look for this feature?
+      label: Proposed API or JSON
+      description: How the Python code should look. For a missing component, a working JSON example the game accepts.
+      render: python
       placeholder: |
-        I suggest adding a 'WorldGenManager' method that handles...
+        entity.server.description.add_int_property("level", (0, 10), default=1)
     validations:
       required: true
-  - type: textarea
-    id: alternatives
+  - type: input
+    id: reference_link
     attributes:
-      label: Alternatives Considered
-      description: How are you currently handling this in your Python code?
+      label: Reference
+      description: Microsoft Learn page, changelog entry or bedrock-samples file. Required for a missing component.
+      placeholder: https://learn.microsoft.com/minecraft/creator/
+    validations:
+      required: false

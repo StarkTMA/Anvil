@@ -1,9 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:sequence_feature": {
-        "description": {
-            "identifier": "{{ identifier }}"
-        },
-        "features": []
-    }
-}

@@ -1,5 +1,0 @@
-{
-    "resource_pack_name": "{{ resource_pack_name }}",
-    "texture_name": "atlas.items",
-    "texture_data": {}
-}

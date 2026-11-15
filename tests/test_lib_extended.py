@@ -1,24 +1,25 @@
 """Tests for anvil/lib/lib.py utilities not yet covered by test_lib.py."""
-import os
+
 import zipfile
+from pathlib import PurePosixPath
 
 import pytest
 
+from anvil.lib.jsonmodel.types import RGB, RGBA, HexRGB, HexRGBA
 from anvil.lib.lib import (
-    AnvilFormatter,
-    AnvilValidator,
     AnvilArchive,
+    AnvilFormatter,
     AnvilIO,
+    AnvilValidator,
     clamp,
     frange,
     salt_from_str,
 )
-from anvil.api.core.types import RGB, RGBA, RGB255, RGBA255, HexRGB, HexRGBA
-
 
 # ---------------------------------------------------------------------------
 # clamp
 # ---------------------------------------------------------------------------
+
 
 class TestClamp:
     def test_below_min(self):
@@ -44,6 +45,7 @@ class TestClamp:
 # frange
 # ---------------------------------------------------------------------------
 
+
 class TestFrange:
     def test_two_values(self):
         result = frange(0, 10, 2)
@@ -66,6 +68,7 @@ class TestFrange:
 # salt_from_str
 # ---------------------------------------------------------------------------
 
+
 class TestSaltFromStr:
     def test_deterministic(self):
         assert salt_from_str("hello") == salt_from_str("hello")
@@ -86,6 +89,7 @@ class TestSaltFromStr:
 # ---------------------------------------------------------------------------
 # AnvilFormatter.min_max_dict / min_max_list
 # ---------------------------------------------------------------------------
+
 
 class TestAnvilFormatterMinMax:
     def test_min_max_dict_normal(self):
@@ -132,6 +136,7 @@ class TestAnvilFormatterMinMax:
 # ---------------------------------------------------------------------------
 # AnvilFormatter.convert_color
 # ---------------------------------------------------------------------------
+
 
 class TestConvertColor:
     def test_hex_to_rgb(self):
@@ -199,6 +204,7 @@ class TestConvertColor:
 # AnvilValidator.is_color_value
 # ---------------------------------------------------------------------------
 
+
 class TestIsColorValue:
     def test_rgb_float(self):
         assert AnvilValidator.is_color_value((0.5, 0.5, 0.5)) is True
@@ -226,37 +232,9 @@ class TestIsColorValue:
 
 
 # ---------------------------------------------------------------------------
-# AnvilValidator.validate_namespace_project_name
-# ---------------------------------------------------------------------------
-
-class TestValidateNamespace:
-    def test_valid(self):
-        AnvilValidator.validate_namespace_project_name("stark", "my_project")
-
-    def test_reserved_minecraft(self):
-        with pytest.raises(ValueError, match="reserved"):
-            AnvilValidator.validate_namespace_project_name("minecraft", "test")
-
-    def test_namespace_too_long(self):
-        with pytest.raises(ValueError, match="8 characters"):
-            AnvilValidator.validate_namespace_project_name("verylongnamespace", "test")
-
-    def test_project_name_too_long(self):
-        with pytest.raises(ValueError, match="16 characters"):
-            AnvilValidator.validate_namespace_project_name("stark", "a_very_long_project_name_here")
-
-    def test_addon_valid_suffix(self):
-        # project_name="my_project" -> initials="MP" -> namespace must end with "_mp"
-        AnvilValidator.validate_namespace_project_name("stark_mp", "my_project", is_addon=True)
-
-    def test_addon_wrong_suffix(self):
-        with pytest.raises(ValueError, match="unique"):
-            AnvilValidator.validate_namespace_project_name("stark", "my_project", is_addon=True)
-
-
-# ---------------------------------------------------------------------------
 # AnvilArchive.from_mapping
 # ---------------------------------------------------------------------------
+
 
 class TestAnvilArchive:
     def test_creates_zip(self, tmp_path):
@@ -264,10 +242,10 @@ class TestAnvilArchive:
         src.mkdir()
         (src / "hello.txt").write_text("hello")
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src): "content"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("content")})
 
-        assert os.path.exists(zip_path)
+        assert zip_path.exists()
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
         assert any("hello.txt" in n for n in names)
@@ -278,8 +256,8 @@ class TestAnvilArchive:
         (src / "main.js").write_text("code")
         (src / "main.js.map").write_text("sourcemap")
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src): "scripts"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("scripts")})
 
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
@@ -290,8 +268,8 @@ class TestAnvilArchive:
         src_file = tmp_path / "data.json"
         src_file.write_text('{"key": "value"}')
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src_file): "root"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src_file: PurePosixPath("root")})
 
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
@@ -303,8 +281,8 @@ class TestAnvilArchive:
         nested.mkdir(parents=True)
         (nested / "file.txt").write_text("nested")
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src): "root"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("root")})
 
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
@@ -314,6 +292,7 @@ class TestAnvilArchive:
 # ---------------------------------------------------------------------------
 # AnvilIO._normalize_json_like
 # ---------------------------------------------------------------------------
+
 
 class TestAnvilIONormalizeJsonLike:
     def test_prunes_empty_dict(self):

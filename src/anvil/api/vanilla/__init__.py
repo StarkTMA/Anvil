@@ -1,1 +1,1 @@
-# @minecraft/vanilla-data version: 1.21.130
+"""Vanilla data from Mojang/bedrock-samples v1.26.60.5."""

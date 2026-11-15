@@ -1,6 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:spawn_rules": {
-        "conditions": []
-    }
-}

@@ -26,10 +26,10 @@ def create_path_processor():
     # Don't replace existing blocks with Structure Void/Air
     processor.add_block_ignore_processor([MinecraftBlockTypes.Air()])
 
-    # Rule: Turn Grass Path -> Dirt when placed on top of certain blocks
-    processor.add_block_rule(MinecraftBlockTypes.GrassPath()).input_predicate.block_state_match(
-        MinecraftBlockTypes.Dirt()
-    )
+    # Rule: structure dirt is placed as a grass path
+    rule = processor.add_block_rule()
+    rule.input_predicate.block_state_match(MinecraftBlockTypes.Dirt())
+    rule.set_output_state(MinecraftBlockTypes.GrassPath())
     return processor
 
 ignore_air = create_path_processor()
@@ -78,7 +78,7 @@ The **Structure Set** ties everything together. It defines the generation rules 
 ```python
 from anvil.api.world.structures import JigsawStructureSet
 from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.actors.components import Filter
+from anvil.api.core.filters import Filter
 
 def generate_dungeon():
     # 1. Initialize pools
@@ -86,8 +86,8 @@ def generate_dungeon():
     rooms_pool()
 
     # 2. Create the set
-    # separation=4, spacing=10 means structures are 4-10 chunks apart
-    dungeon_set = JigsawStructureSet("my_dungeon", separation=4)
+    # one structure per 10x10 chunk cell, kept 4 chunks from the cell edge
+    dungeon_set = JigsawStructureSet("my_dungeon", separation=4, spacing=10)
 
     # 3. Add the main structure configuration
     main_structure = dungeon_set.add_jigsaw_structure(
@@ -102,12 +102,14 @@ def generate_dungeon():
     # 4. Add Biome Filters
     main_structure.add_biome_filters(
         Filter.any_of(
-            Filter.has_biome_tag(MinecraftBiomeTags.Plains),
-            Filter.has_biome_tag(MinecraftBiomeTags.Forest)
+            [
+                Filter.has_biome_tag(MinecraftBiomeTags.Plains),
+                Filter.has_biome_tag(MinecraftBiomeTags.Forest),
+            ]
         )
     )
 
-    # 6. Queue everything
+    # 5. Queue everything
     for pool in pools:
         pool.queue()
     dungeon_set.queue()

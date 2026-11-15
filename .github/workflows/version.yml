@@ -1,0 +1,40 @@
+name: Version
+
+on:
+    workflow_call:
+        outputs:
+            changed:
+                description: "true when the current version has no v<version> tag yet, so it still needs a release"
+                value: ${{ jobs.version.outputs.changed }}
+            version:
+                description: "The current version, e.g. 0.9.98"
+                value: ${{ jobs.version.outputs.version }}
+
+jobs:
+    version:
+        runs-on: ubuntu-latest
+        outputs:
+            changed: ${{ steps.check.outputs.changed }}
+            version: ${{ steps.check.outputs.version }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - name: Check whether the current version is already released
+              id: check
+              run: |
+                  VERSION=$(sed -nE 's/^__version__ *= *"([^"]+)".*/\1/p' src/anvil/__version__.py)
+                  if [ -z "$VERSION" ]; then
+                      echo "Could not read the version from src/anvil/__version__.py" >&2
+                      exit 1
+                  fi
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+                  # The release job creates the tag last, so a run that failed before it is retried on the next push.
+                  if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+                      echo "v$VERSION is already tagged."
+                      echo "changed=false" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "v$VERSION is not tagged yet."
+                      echo "changed=true" >> "$GITHUB_OUTPUT"
+                  fi

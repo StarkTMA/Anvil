@@ -1,3 +1,3 @@
 # Core - Types Module
 
-::: anvil.api.core.types
+::: anvil.lib.jsonmodel.types

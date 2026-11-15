@@ -1,7 +1,7 @@
 from .factories import minecraft_entities as MinecraftEntityTypes
 
 
-def vanilla_entity_ids():
+def vanilla_entities_ids() -> list[str]:
     return [
         "minecraft:agent",
         "minecraft:allay",

@@ -16,7 +16,7 @@ pool.entry(MinecraftItemTypes.Apple(), weight=5)
 pool.entry(MinecraftItemTypes.GoldenApple(), weight=1)
 
 # Add complex items with functions
-pool.entry(MinecraftItemTypes.DiamondSword(), weight=1).enchant_with_levels(30)
+pool.entry(MinecraftItemTypes.DiamondSword(), weight=1).functions.EnchantWithLevels((30, 30))
 
 table.queue()
 ```

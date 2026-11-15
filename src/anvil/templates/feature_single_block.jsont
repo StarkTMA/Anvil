@@ -1,9 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:single_block_feature": {
-        "description": {
-            "identifier": "{{ identifier }}"
-        },
-        "places_block": []
-    }
-}

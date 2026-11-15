@@ -1,218 +1,203 @@
-import os
-from typing import Any, List, Union
+from __future__ import annotations
 
-from anvil.api.core.types import Identifier
-from anvil.lib.config import CONFIG
-from anvil.lib.schemas import AddonObject, MinecraftItemDescriptor
+from pathlib import Path, PurePosixPath
+from typing import Annotated
 
-from .loot_tables import _LootPoolEntryFunctions
+from anvil.api.items.items import Item
+from anvil.lib.config import CONFIG, Pack
+from anvil.lib.jsonmodel import (
+    JsonFile,
+    JsonObject,
+    MinMax,
+    NonNegative,
+    json_field,
+)
 
-__all__: List[Identifier] = ["TradeTable"]
+from .loot_tables import _LootFunctionBuilder, _LootFunctions
+
+__all__ = ["TradeTable"]
 
 
-class _TradeItemWants:
-    """Represents an item that a trader wants."""
+class _TradeItemWants(JsonObject):
+    """An item the trader wants."""
 
-    def __init__(
+    item: str = json_field()
+    quantity: Annotated[int | tuple[int, int], MinMax] = json_field(default=1)
+    price_multiplier: Annotated[float, NonNegative] = json_field(default=0.05)
+
+
+class _TradeItemGives(JsonObject, _LootFunctionBuilder):
+    """An item the trader gives. Its function builders (`EnchantWithLevels(...)`...) add
+    functions to it and return it, to chain them."""
+
+    item: str = json_field()
+    quantity: Annotated[int | tuple[int, int], MinMax] = json_field(default=1)
+    functions: _LootFunctions = json_field(default_factory=_LootFunctions)
+
+    def _add_function(self, function: JsonObject) -> None:
+        self.functions._add_function(function)
+
+
+class _Trade(JsonObject):
+    """A trade: what the trader wants and what it gives."""
+
+    wants: list[_TradeItemWants] = json_field(default_factory=list)
+    gives: list[_TradeItemGives] = json_field(default_factory=list)
+    trader_exp: Annotated[int, NonNegative] = json_field(default=1)
+    max_uses: Annotated[int, NonNegative] = json_field(default=7)
+    reward_exp: bool = json_field(default=True)
+
+    def add_wants(
         self,
-        item: Union[MinecraftItemDescriptor, Identifier, str],
-        quantity: int = 1,
+        item: Item | str,
+        quantity: int | tuple[int, int] = 1,
         price_multiplier: float = 0.05,
-    ) -> None:
-        self.item: MinecraftItemDescriptor | str = item
-        self.quantity: int = quantity
-        self.price_multiplier: float = price_multiplier
-
-    def to_json(self):  # -> dict[str, Any]:
-        return {
-            "item": str(self.item),
-            "quantity": self.quantity,
-            "price_multiplier": self.price_multiplier,
-        }
-
-
-class _TradeItemGives(_LootPoolEntryFunctions):
-    """Represents an item that a trader gives, supporting functions like enchantments."""
-
-    def __init__(
-        self, item: Union[MinecraftItemDescriptor, Identifier, str], quantity: int = 1
-    ) -> None:
-        super().__init__()
-        self.item: MinecraftItemDescriptor | str = item
-        self.quantity: int = quantity
-        # self._function is initialized by super().__init__()
-
-    def to_json(self) -> dict[str, Any]:
-        data: dict[str, Any] = {"item": str(self.item), "quantity": self.quantity}
-        if self._function:
-            data["functions"] = self._function
-        return data
-
-
-class _Trade:
-    """Represents a single trade definition."""
-
-    def __init__(
-        self, max_uses: int = 7, reward_exp: bool = True, trader_exp: int = 1
-    ) -> None:
-        self.wants_list: List[_TradeItemWants] = []
-        self.gives_list: List[_TradeItemGives] = []
-        self.max_uses: int = max_uses
-        self.reward_exp: bool = reward_exp
-        self.trader_exp: int = trader_exp
-
-    def wants(
-        self,
-        item: Union[MinecraftItemDescriptor, str],
-        quantity: int = 1,
-        price_multiplier: float = 0.05,
-    ):
-        """Adds an item cost to this trade.
+    ) -> _Trade:
+        """Adds an item the trader wants.
 
         Args:
-            item: The item identifier or descriptor.
-            quantity: Amount required. Defaults to 1.
-            price_multiplier: Impact on price when demand is high/low. Defaults to 0.05.
+            item (Item | str): The item.
+            quantity (int | tuple[int, int], optional): How many, or the minimum and maximum.
+                Defaults to 1.
+            price_multiplier (float, optional): How much the price moves with supply and
+                demand. Defaults to 0.05.
 
         Returns:
-            _Trade: Self for chaining (e.g. .wants(...).wants(...)).
+            _Trade: Self, to add more items.
         """
         if item is None:
             raise ValueError("Item cannot be None.")
-
-        obj = _TradeItemWants(item, quantity, price_multiplier)
-        self.wants_list.append(obj)
+        self.wants.append(
+            _TradeItemWants(
+                item=str(item), quantity=quantity, price_multiplier=price_multiplier
+            )
+        )
         return self
 
-    def gives(self, item: Union[MinecraftItemDescriptor, str], quantity: int = 1):
-        """Adds an item reward to this trade.
+    def add_gives(
+        self, item: Item | str, quantity: int | tuple[int, int] = 1
+    ) -> _TradeItemGives:
+        """Adds an item the trader gives.
 
         Args:
-            item: The item identifier or descriptor.
-            quantity: Amount given. Defaults to 1.
+            item (Item | str): The item.
+            quantity (int | tuple[int, int], optional): How many, or the minimum and maximum.
+                Defaults to 1.
 
         Returns:
-            _TradeItemGives: The created item object, to allow adding functions (e.g. .gives(...).Enchant(...)).
+            _TradeItemGives: The item, to add functions such as `EnchantWithLevels(...)`.
         """
         if item is None:
             raise ValueError("Item cannot be None.")
-        obj = _TradeItemGives(item, quantity)
-        self.gives_list.append(obj)
-        return obj
-
-    def to_json(self):
-        return {
-            "wants": [w.to_json() for w in self.wants_list],
-            "gives": [g.to_json() for g in self.gives_list],
-            "trader_exp": self.trader_exp,
-            "max_uses": self.max_uses,
-            "reward_exp": self.reward_exp,
-        }
+        given = _TradeItemGives(item=str(item), quantity=quantity)
+        self.gives.append(given)
+        return given
 
 
-class _TradeGroup:
-    """Represents a group of trades from which a selection is made."""
+class _TradeGroup(JsonObject):
+    """A group of trades, of which `num_to_select` are offered."""
 
-    def __init__(self, num_to_select: int = 1):
-        self.num_to_select = num_to_select
-        self.trades_list: List[_Trade] = []
+    num_to_select: Annotated[int, NonNegative] = json_field(default=1)
+    trades: list[_Trade] = json_field(default_factory=list)
 
-    def trade(self, max_uses: int = 7, reward_exp: bool = True, trader_exp: int = 1):
-        """Adds a new trade option to this group.
+    def trade(
+        self, max_uses: int = 7, reward_exp: bool = True, trader_exp: int = 1
+    ) -> _Trade:
+        """Adds a trade to the group.
 
         Args:
-            max_uses: Maximum times this trade can be used before locking. Defaults to 7.
-            reward_exp: Whether the player gets XP. Defaults to True.
-            trader_exp: Experience gained by the villager. Defaults to 1.
+            max_uses (int, optional): Uses before the trade locks until the trader restocks.
+                Defaults to 7.
+            reward_exp (bool, optional): The player gets experience. Defaults to True.
+            trader_exp (int, optional): Experience the trader gains. Defaults to 1.
 
         Returns:
-            _Trade: The created trade object.
+            _Trade: The trade, to add what it wants and gives.
         """
-        t = _Trade(max_uses, reward_exp, trader_exp)
-        self.trades_list.append(t)
-        return t
-
-    def to_json(self):
-        return {
-            "num_to_select": self.num_to_select,
-            "trades": [t.to_json() for t in self.trades_list],
-        }
+        trade = _Trade(max_uses=max_uses, reward_exp=reward_exp, trader_exp=trader_exp)
+        self.trades.append(trade)
+        return trade
 
 
-class _TradeTier:
-    """Represents a trading tier (level) for a villager."""
+class _TradeTier(JsonObject):
+    """A tier of trades, unlocked once the trader has `total_exp_required` experience."""
 
-    def __init__(self, total_exp_required: int):
-        self.total_exp_required = total_exp_required
-        self.groups_list: List[_TradeGroup] = []
+    total_exp_required: Annotated[int, NonNegative] = json_field(default=0)
+    groups: list[_TradeGroup] = json_field(default_factory=list)
 
-    def group(self, num_to_select: int = 1):
-        """Adds a group of trades to this tier.
+    def group(self, num_to_select: int = 1) -> _TradeGroup:
+        """Adds a group of trades to the tier.
 
         Args:
-            num_to_select: How many trades from this group will be unlocked. Defaults to 1.
+            num_to_select (int, optional): How many of its trades are offered. Defaults to 1.
 
         Returns:
-            _TradeGroup: The created trade group.
+            _TradeGroup: The group, to add trades to.
         """
-        g = _TradeGroup(num_to_select)
-        self.groups_list.append(g)
-        return g
-
-    def to_json(self):
-        return {
-            "total_exp_required": self.total_exp_required,
-            "groups": [g.to_json() for g in self.groups_list],
-        }
+        group = _TradeGroup(num_to_select=num_to_select)
+        self.groups.append(group)
+        return group
 
 
-class TradeTable(AddonObject):
-    """A Minecraft Bedrock trade table for defining villager trades.
+class _TradeTableFile(JsonObject):
+    """The content of `trading/<namespace>/<name>.json`."""
 
-    Used to customize the trades available from villagers and wandering traders.
-    Supports tiers, groups, and randomized trade selections.
+    tiers: list[_TradeTier] = json_field(default_factory=list)
+
+    def add_tier(self, total_exp_required: int) -> _TradeTier:
+        """Adds a tier and returns it."""
+        tier = _TradeTier(total_exp_required=total_exp_required)
+        self.tiers.append(tier)
+        return tier
+
+
+class TradeTable(JsonFile[_TradeTableFile]):
+    """A trade table: the trades of a villager or wandering trader, in tiers unlocked by the
+    trader's experience.
+
+    ```python
+    table = TradeTable("fisher")
+    trade = table.tier(0).group().trade()
+    trade.wants("minecraft:emerald", 3)
+    trade.gives("minecraft:fishing_rod").EnchantWithLevels((5, 19))
+    table.queue()
+    ```
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/createtradetable?view=minecraft-bedrock-stable)
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "trading", CONFIG.NAMESPACE)
+    _pack = Pack.BP
     _object_type = "Trade Table"
 
     def __init__(self, name: str) -> None:
-        super().__init__(name)
-        self.tiers_list: List[_TradeTier] = []
-        self._content = {"tiers": []}
-
-    def tier(self, total_exp_required: int) -> "_TradeTier":
-        """Adds a new level/tier of trades.
+        """Initializes a trade table.
 
         Args:
-            total_exp_required: Experience required for the villager to unlock this tier.
+            name (str): The trade table name.
+        """
+        super().__init__(name)
+        self._folder = Path("trading", CONFIG.NAMESPACE)
+
+    def tier(self, total_exp_required: int) -> _TradeTier:
+        """Adds a tier of trades.
+
+        Args:
+            total_exp_required (int): The trader experience that unlocks the tier. The first
+                tier is always unlocked.
 
         Returns:
-            _TradeTier: The created tier object.
+            _TradeTier: The tier, to add groups of trades to.
         """
-        t = _TradeTier(total_exp_required)
-        self.tiers_list.append(t)
-        return t
+        return self._document.add_tier(total_exp_required)
 
     @property
     def table_path(self) -> str:
-        """Get the relative path of this loot table for referencing.
-
-        Returns:
-            str: Relative path from behavior pack root.
-        """
-        return os.path.join(
-            "trading",
-            CONFIG.NAMESPACE,
-            self._name + self._extension,
-        )
+        """The trade table's path from the behavior pack root, as entities reference it."""
+        return PurePosixPath(
+            "trading", CONFIG.NAMESPACE, self.identifier.name + self._extension
+        ).as_posix()
 
     def queue(self) -> "TradeTable":
-        """Queue this trade table for generation.
-
-        Constructs the final JSON structure and registers it for export.
-        """
-        self._content["tiers"] = [t.to_json() for t in self.tiers_list]
-        self.content(self._content)
+        """Queues the trade table for export."""
         return super().queue()

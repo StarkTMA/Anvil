@@ -1,0 +1,30 @@
+name: Docs
+
+on:
+    workflow_call:
+
+permissions:
+    contents: write
+
+jobs:
+    build-docs:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: 3.x
+            - name: Install package
+              run: pip install -e ".[docs]"
+            - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+            - uses: actions/cache@v4
+              with:
+                  key: zensical-${{ env.cache_id }}
+                  path: .cache
+                  restore-keys: |
+                      zensical-
+            - run: pip install ghp-import
+            - run: zensical build --clean
+            - run: echo "anvil.starktma.net" > site/CNAME
+            # Zensical has no gh-deploy, so push site/ to the same branch MkDocs used.
+            - run: ghp-import --no-jekyll --push --force --branch generated --message "Deploy docs" site

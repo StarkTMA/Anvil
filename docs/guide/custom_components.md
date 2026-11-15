@@ -4,44 +4,61 @@ Custom Components allow you to run custom Logic in your blocks and items using t
 
 ## 1. Defining the Component in Python
 
-Instead of adding a generic component, you should define your own component class by inheriting from `BlockCustomComponents` or `ItemCustomComponents`. This allows you to manage parameters and identifiers cleanly.
+Define your own component class by subclassing `BlockCustomComponent` or `ItemCustomComponent`. A component is a dataclass: set its `identifier` and declare its parameters as fields with `json_field`. Don't write an `__init__`.
+
+The identifier is in your project namespace. A bare name such as `"my_block_logic"` becomes `<namespace>:my_block_logic`.
 
 ### Block Component
 
 ```python
-from anvil import CONFIG
-from anvil.api.blocks.components import BlockCustomComponents
+from anvil.api.blocks.components import BlockCustomComponent
+from anvil.lib.jsonmodel import json_field
 
-class MyBlockLogic(BlockCustomComponents):
-    # The identifier includes the namespace from anvilconfig
-    _identifier = f"{CONFIG.NAMESPACE}:my_block_logic"
-
-    def __init__(self) -> None:
-        super().__init__(self._identifier)
+class MyBlockLogic(BlockCustomComponent):
+    identifier = "my_block_logic"
 
 # Usage in your block definition
-block.server.components.add(
-    MyBlockLogic()
-)
+block.server.components.add(MyBlockLogic())
 ```
 
 ### Item Component
 
 ```python
-from anvil import CONFIG
-from anvil.api.items.components import ItemCustomComponents
+from anvil.api.items.components import ItemCustomComponent
+from anvil.lib.jsonmodel import json_field
 
-class MyItemLogic(ItemCustomComponents):
-    _identifier = f"{CONFIG.NAMESPACE}:my_item_logic"
-
-    def __init__(self) -> None:
-        super().__init__(self._identifier)
+class MyItemLogic(ItemCustomComponent):
+    identifier = "my_item_logic"
 
 # Usage in your item definition
-item.server.components.add(
-    MyItemLogic()
-)
+item.server.components.add(MyItemLogic())
 ```
+
+### Parameters
+
+Each field is a parameter your script reads. The annotation says what the field accepts, and Anvil checks it when the pack is exported. Bounds and JSON shapes go in `Annotated`, after the real type, so the field still shows exactly what to pass:
+
+```python
+from typing import Annotated
+
+from anvil.api.blocks.components import BlockCustomComponent
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
+from anvil.lib.jsonmodel import Hex, InRange, MinMax, json_field
+
+class GravityWell(BlockCustomComponent):
+    identifier = "gravity_well"
+
+    pull: Annotated[float, InRange(0, 10)] = json_field()
+    delay: Annotated[float | tuple[float, float], MinMax] = json_field(default=1)
+    color: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] | None = json_field(
+        default=None
+    )
+
+block.server.components.add(GravityWell(pull=4, delay=(1, 3), color=(255, 0, 0)))
+# {"<namespace>:gravity_well": {"pull": 4, "delay": {"min": 1, "max": 3}, "color": "#ff0000"}}
+```
+
+A field set to `None` is left out of the JSON. The metadata Anvil provides is in `anvil.lib.jsonmodel`: bounds (`InRange`, `NonNegative`, `Chance`, `Length`), JSON shapes (`MinMax`, `Wrapped`, `Keyed`, `Hex`, `Trigger`...) and more. `GravityWell.__schema__()` returns the JSON Schema of the component, and `GravityWell.__from_json__(data)` builds one back from its parsed JSON.
 
 ## 2. Implementing Logic in TypeScript
 
@@ -99,53 +116,27 @@ system.beforeEvents.startup.subscribe((startup) => {
 });
 ```
 
-## 3. Passing Custom Parameters
+## 3. Reading Parameters in TypeScript
 
-You can pass parameters from Python to your TypeScript component.
-
-### Python Definition
-
-Create a class that inherits from `BlockCustomComponents` (or `ItemCustomComponents`) and add your parameters using `_add_field`.
-
-```python
-from anvil import CONFIG
-from anvil.api.blocks.components import BlockCustomComponents
-
-class MyBlockLogic(BlockCustomComponents):
-    _identifier = f"{CONFIG.NAMESPACE}:my_block_logic"
-
-    def __init__(self, speed: float, active: bool) -> None:
-        super().__init__(self._identifier)
-        self._add_field("speed", speed)
-        self._add_field("active", active)
-
-# Usage
-block.server.components.add(
-    MyBlockLogic(speed=5.0, active=True)
-)
-```
-
-### TypeScript Usage
-
-Define an interface for your parameters and cast `customComponentParameters.params` to it.
+The fields of the Python component arrive as `customComponentParameters.params`. Define an interface for them and cast.
 
 ```typescript
 import { BlockComponentStepOnEvent, CustomComponentParameters } from "@minecraft/server";
 
-interface MyBlockParams {
-	speed: number;
-	active: boolean;
+interface GravityWellParams {
+	pull: number;
+	delay: { min: number; max: number };
+	color?: string;
 }
 
-const myBlockLogic: BlockCustomComponent = {
+const gravityWell: BlockCustomComponent = {
 	onStepOn(e: BlockComponentStepOnEvent, params: CustomComponentParameters) {
-		const myParams = params.params as MyBlockParams;
-
-		if (myParams.active) {
-			console.log(`Speed is: ${myParams.speed}`);
-		}
+		const { pull, delay } = params.params as GravityWellParams;
+		console.log(`Pull ${pull} after ${delay.min}-${delay.max}s`);
 	},
 };
 ```
 
 Ensure your `scriptapi` flag is enabled when creating your project or added to your `anvilconfig.json`.
+
+A worked block example with a parameter and states is in [Block states, permutations and traits](block_states.md).
