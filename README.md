@@ -2,7 +2,6 @@
 
 ![](https://img.shields.io/github/v/release/starktma/anvil)
 ![](https://img.shields.io/github/license/starktma/anvil)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/StarkTMA/Anvil)
 
 ![Python](https://img.shields.io/badge/Python_3.15-3776AB?style=flat&logo=python&logoColor=white)
 
