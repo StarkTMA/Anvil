@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Literal, overload
 from warnings import deprecated
 
 import orjson
-
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_VERSION
 from anvil.lib.jsonmodel.enums import InputModes, Slots
@@ -77,7 +76,7 @@ class Molang(str):
     @staticmethod
     def arrow(left: "Molang", right: "Molang") -> "Molang":
         """Returns a Molang object representing the arrow operator for Molang."""
-        return Molang(f"({left}) -> ({right})")
+        return Molang(f"(({left}) -> ({right}))")
 
     @staticmethod
     def condition(

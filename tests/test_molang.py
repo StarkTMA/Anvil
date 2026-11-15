@@ -216,13 +216,13 @@ class TestMolang:
 
     def test_molang_arrow(self):
         result = Molang.arrow(Molang("context.owning_entity"), Molang("q.health"))
-        assert str(result) == "(context.owning_entity) -> (q.health)"
+        assert str(result) == "((context.owning_entity) -> (q.health))"
         assert isinstance(result, Molang)
 
     def test_molang_arrow_string_args(self):
         assert (
             str(Molang.arrow("context.other", "q.is_alive"))
-            == "(context.other) -> (q.is_alive)"
+            == "((context.other) -> (q.is_alive))"
         )
 
     def test_molang_condition_ternary(self):
@@ -1078,7 +1078,7 @@ class TestContext:
     def test_OwningEntity_arrow(self):
         assert (
             str(Context.OwningEntity(Molang("q.health")))
-            == "(context.owning_entity) -> (q.health)"
+            == "((context.owning_entity) -> (q.health))"
         )
 
     def test_Other(self):
@@ -1087,7 +1087,7 @@ class TestContext:
     def test_Other_arrow(self):
         assert (
             str(Context.Other(Molang("q.is_alive")))
-            == "(context.other) -> (q.is_alive)"
+            == "((context.other) -> (q.is_alive))"
         )
 
 
@@ -1385,12 +1385,12 @@ def test_molang_conditions_string_args():
 def test_arrow_operator():
     assert (
         Molang.arrow("context.owning_entity", "q.health")
-        == "(context.owning_entity) -> (q.health)"
+        == "((context.owning_entity) -> (q.health))"
     )
 
 
 def test_arrow_operator_with_molang():
     assert (
         Molang.arrow(Molang("context.other"), Molang("q.is_alive"))
-        == "(context.other) -> (q.is_alive)"
+        == "((context.other) -> (q.is_alive))"
     )
