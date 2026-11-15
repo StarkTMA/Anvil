@@ -40,6 +40,11 @@ class _ManifestHeader(JsonObject):
     version: str = json_field()
     min_engine_version: str = json_field()
     pack_scope: Literal["world", "global", "any"] | None = None
+    pack_optimization_version: str | None = None
+
+    def set_pack_optimization_version(self, version: str) -> None:
+        """Marks the pack as optimized, with its files baked into `__brarchive/`."""
+        self.pack_optimization_version = version
 
     def set_pack_scope(self, pack_scope: Literal["world", "global", "any"]) -> None:
         """Sets where the pack can be applied."""
@@ -472,6 +477,14 @@ class _PackManifest(JsonFile[_Manifest]):
                 return [option.name for option in setting.options]
         return None
 
+    def _brarchive(self) -> None:
+        if CONFIG._BRARCHIVE:
+            from anvil.lib.brarchive import BrArchivePacker
+
+            self._document.header.set_pack_optimization_version(
+                BrArchivePacker.PACK_OPTIMIZATION_VERSION
+            )
+
     def _addon_target(self) -> None:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
             self._document.header.set_pack_scope("world")
@@ -505,6 +518,7 @@ class ManifestRP(_PackManifest):
         if CONFIG.PBR:
             self._document.add_capability("pbr")
         self._addon_target()
+        self._brarchive()
         return super().queue()
 
 
@@ -556,6 +570,7 @@ class ManifestBP(_PackManifest):
                     ),
                 )
         self._addon_target()
+        self._brarchive()
         return super().queue()
 
 

@@ -10,6 +10,7 @@ from anvil.lib.brarchive import (
     MAGIC,
     BadArchiveError,
     BrArchive,
+    BrArchivePacker,
     InvalidEntryError,
     SecurityError,
     UnsupportedVersionError,
@@ -265,3 +266,146 @@ def test_cli_integration(tmp_path):
     assert res_unpack.exit_code == 0, res_unpack.output
     assert (unpack_target / "data1.json").read_bytes() == b'{"val": 1}'
     assert (unpack_target / "data2.json").read_bytes() == b'{"val": 1}'
+
+
+# ---------------------------------------------------------------------------
+# Baking packs into the __brarchive layout
+# ---------------------------------------------------------------------------
+
+
+def _descriptors(path: Path) -> list[tuple[str, int, int]]:
+    raw = path.read_bytes()
+    _, count, _ = struct.unpack_from("<QII", raw, 0)
+    out = []
+    for i in range(count):
+        d = 16 + i * 256
+        name = raw[d + 1 : d + 1 + raw[d]].decode()
+        offset, size = struct.unpack_from("<II", raw, d + 248)
+        out.append((name, offset, size))
+    return out
+
+
+def test_empty_entries_point_at_offset_zero(tmp_path):
+    arc = BrArchive(deduplicate=False)
+    arc.writestr("a.json", b"{}")
+    arc.writestr("b.ogg", b"")
+    arc.writestr("c.json", b"[]")
+    path = arc.save(tmp_path / "x.brarchive")
+    assert _descriptors(path) == [("a.json", 0, 2), ("b.ogg", 0, 0), ("c.json", 2, 2)]
+
+
+def _make_pack(root: Path) -> Path:
+    files = {
+        "manifest.json": b"{}",
+        "pack_icon.png": b"png",
+        "textures/terrain_texture.json": b'{"t":1}',
+        "textures/item_texture.json": b'{"i":1}',
+        "textures/starktma/blocks/ruby_ore.png": b"ruby",
+        "sounds/mob/hit.ogg": b"ogg",
+        "materials/entity.material": b"mat",
+        "structures/house.mcstructure": b"nbt",
+        "texts/en_US.lang": b"lang",
+        "entity/thing.entity.json": b'{"e":1}',
+        "scripts/main.js": b"js",
+    }
+    for rel, data in files.items():
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+    return root
+
+
+def test_bake_pack_layout(tmp_path):
+    pack = _make_pack(tmp_path / "RP")
+    BrArchivePacker.bake(pack)
+    arc = pack / "__brarchive"
+
+    archives = sorted(p.relative_to(arc).as_posix() for p in arc.rglob("*.brarchive"))
+    assert archives == [
+        "entity.brarchive",
+        "materials.brarchive",
+        "sounds.brarchive",
+        "sounds/mob.brarchive",
+        "structures.brarchive",
+        "texts.brarchive",
+        "textures.brarchive",
+        "textures/starktma.brarchive",
+        "textures/starktma/blocks.brarchive",
+    ]
+    # One archive per folder, bare names, sorted; folders with only subfolders are empty
+    assert _descriptors(arc / "textures.brarchive") == [
+        ("item_texture.json", 0, 7),
+        ("terrain_texture.json", 7, 7),
+    ]
+    assert _descriptors(arc / "textures/starktma.brarchive") == []
+    assert _descriptors(arc / "textures/starktma/blocks.brarchive") == [("ruby_ore.png", 0, 4)]
+    # Files that stay loose are listed as empty entries
+    assert _descriptors(arc / "texts.brarchive") == [("en_US.lang", 0, 0)]
+    # Sounds, materials and structures are stored with their data
+    assert _descriptors(arc / "structures.brarchive") == [("house.mcstructure", 0, 3)]
+    assert _descriptors(arc / "sounds/mob.brarchive") == [("hit.ogg", 0, 3)]
+    assert _descriptors(arc / "materials.brarchive") == [("entity.material", 0, 3)]
+
+    # Stored files are removed, except the ones the game also reads loose
+    assert not (pack / "textures/item_texture.json").exists()
+    assert (pack / "textures/terrain_texture.json").exists()
+    assert not (pack / "textures/starktma").exists()
+    assert not (pack / "entity").exists()
+    assert not (pack / "sounds").exists()
+    assert not (pack / "materials").exists()
+    assert not (pack / "structures").exists()
+    assert (pack / "texts/en_US.lang").exists()
+    # The pack root and scripts are left alone
+    assert (pack / "manifest.json").exists() and (pack / "pack_icon.png").exists()
+    assert (pack / "scripts/main.js").exists()
+    assert not (arc / "scripts.brarchive").exists()
+
+
+
+def test_bake_packs_loot_tables(tmp_path):
+    pack = tmp_path / "BP"
+    (pack / "loot_tables/entities").mkdir(parents=True)
+    (pack / "loot_tables/entities/ruby_golem.json").write_bytes(b'{"pools":[]}')
+    BrArchivePacker.bake(pack)
+    assert not (pack / "loot_tables").exists()
+    arc = BrArchive(pack / "__brarchive/loot_tables/entities.brarchive")
+    assert arc.read("ruby_golem.json") == b'{"pools":[]}'
+
+
+def test_brarchive_build_archives_from_memory(tmp_path, monkeypatch):
+    from anvil.lib import config
+    from anvil.lib.lib import AnvilIO, Directory
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "assets/hit.ogg").write_bytes(b"ogg")
+    with config.override(
+        NAMESPACE="testns",
+        PROJECT_NAME="proj",
+        _LOCAL_EXPORT=True,
+        _BRARCHIVE=True,
+        _MINIFY=True,
+        _ADD_STAMP=False,
+    ) as cfg:
+        rp = cfg.RP_PATH
+        AnvilIO.file("thing.entity.json", {"e": 1}, rp / "entity", "w")
+        AnvilIO.file("terrain_texture.json", {"t": 1}, rp / "textures", "w")
+        AnvilIO.file("en_US.lang", "a=b", rp / "texts", "w")
+        AnvilIO.file("manifest.json", {"m": 1}, rp, "w")
+        Directory.copy_files(tmp_path / "assets", rp / "sounds/mob", "hit.ogg")
+
+        # Stored files never reach the disk; loose ones do
+        assert not (rp / "entity").exists()
+        assert not (rp / "sounds").exists()
+        assert (rp / "textures/terrain_texture.json").exists()
+        assert (rp / "texts/en_US.lang").exists()
+        assert (rp / "manifest.json").exists()
+
+        BrArchivePacker.bake(rp)
+
+    arc = rp / "__brarchive"
+    assert BrArchive(arc / "entity.brarchive").read("thing.entity.json") == b'{"e":1}'
+    assert _descriptors(arc / "sounds.brarchive") == []
+    assert BrArchive(arc / "sounds/mob.brarchive").read("hit.ogg") == b"ogg"
+    assert _descriptors(arc / "texts.brarchive") == [("en_US.lang", 0, 0)]
+    assert BrArchive(arc / "textures.brarchive").read("terrain_texture.json") == b'{"t":1}'

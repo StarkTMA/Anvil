@@ -32,6 +32,7 @@ from anvil.api.textures import (
 from anvil.api.world.particles import Particle
 from anvil.lib import scaffold
 from anvil.lib.blockbench import _Blockbench
+from anvil.lib.brarchive import BrArchivePacker
 from anvil.lib.config import (
     CONFIG,
     AnvilConfig,
@@ -496,7 +497,7 @@ def compile_objects(
             CONFIG._SCRIPT_BUNDLE_SCRIPT,
             f'--outdir="{(CONFIG.BP_PATH / "scripts").as_posix()}"',
         ]
-        if "--minify" in sys.argv:
+        if CONFIG._MINIFY or "--minify" in sys.argv:
             args.append("--minify")
 
         process_subcommand(
@@ -577,6 +578,12 @@ def compile_objects(
             raise ValueError(
                 "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
             )
+
+    if CONFIG._BRARCHIVE:
+        click.echo(click.style("\r[INFO]: Baking packs into brarchives...", fg="cyan"))
+        for pack_path in (CONFIG.RP_PATH, CONFIG.BP_PATH):
+            if pack_path.exists():
+                BrArchivePacker.bake(pack_path)
 
 
 def translate(languages: list[str] | None = None) -> None:

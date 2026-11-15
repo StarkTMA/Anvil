@@ -61,6 +61,7 @@ How the project is built and exported. Debug output is turned on with the `--deb
 | `entry_point`      | `str`  | The main entry point script for the project.                               | `main.py`         | None        | Yes            |
 | `js_bundle_script` | `str`  | The JavaScript bundle script for the project.                              | `node esbuild.js` | None        | Yes            |
 | `minify`           | `bool` | Whether to minify the JavaScript code and JSONs during the build process.  | `false`           | None        | Yes            |
+| `brarchive`        | `bool` | Whether to bake the built packs into `__brarchive/` archives, the way Minecraft's own packs are stored. Turns on `minify` and turns off `add_stamp`. Needs Minecraft 1.26.40 or newer. | `false` | None | Yes |
 | `add_stamp`        | `bool` | Whether to add the Anvil header to generated files.                        | `true`            | None        | Yes            |
 | `local_export`     | `bool` | Whether to export compiled behavior and resource packs to the local `output/com.mojang` folder. Defaults to `false` on Windows and `true` on non-Windows. | `false` (Windows) / `true` (non-Windows) | None | Yes |
 
@@ -108,6 +109,7 @@ What Anvil records on its own. You don't need to edit it.
 		"entry_point": "main.py",
 		"js_bundle_script": "node esbuild.js",
 		"minify": false,
+		"brarchive": false,
 		"add_stamp": true,
 		"local_export": false
 	},

@@ -46,11 +46,13 @@ from __future__ import annotations
 import fnmatch
 import hashlib
 import io
+import os
+import shutil
 import struct
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from pathlib import Path
-from typing import BinaryIO
+from pathlib import Path, PurePosixPath
+from typing import BinaryIO, ClassVar
 
 # ---------------------------------------------------------------------------
 # Format Constants
@@ -559,6 +561,9 @@ class BrArchive:
             seen_hashes: dict[str, int] = {}
             for name in sorted_names:
                 data = self.entries[name]
+                if not data:
+                    descriptors.append((name.encode("utf-8"), 0, 0))
+                    continue
                 digest = hashlib.sha256(data).hexdigest()
 
                 if digest in seen_hashes:
@@ -574,6 +579,9 @@ class BrArchive:
         else:
             for name in sorted_names:
                 data = self.entries[name]
+                if not data:
+                    descriptors.append((name.encode("utf-8"), 0, 0))
+                    continue
                 offset = current_offset
                 unique_chunks.append(data)
                 current_offset += len(data)
@@ -729,3 +737,213 @@ class BrArchive:
             BrArchive: Populated archive instance.
         """
         return cls(bytes(data))
+
+
+# ---------------------------------------------------------------------------
+# Pack Archiver
+# ---------------------------------------------------------------------------
+
+
+class BrArchivePacker:
+    """Builds packs in the `__brarchive/` layout Minecraft's own packs use.
+
+    While a brarchive build runs, the files that end up inside an archive are kept in
+    memory instead of being written to the pack (see `capture`). At the end of the
+    build, `bake` writes each pack's archives from those files and from what is on disk.
+
+    The rules copy what Mojang's built-in packs do (checked against the vanilla resource
+    and behavior packs of Minecraft 1.26.63):
+
+    - `__brarchive/` sits at the pack root and mirrors the pack's folders. Each folder
+      gets its own archive, `textures/blocks/` becoming
+      `__brarchive/textures/blocks.brarchive`. A folder that only holds other folders
+      gets an archive with no entries.
+    - An archive only lists the files that sit directly in its folder, by file name.
+    - Files at the pack root, such as `manifest.json` and `pack_icon.png`, stay loose.
+    - Stored files (`STORED_EXTENSIONS`) go into the archive with their content. A few
+      JSON files the game also reads loose are stored and kept on disk too.
+    - Every other file stays loose and is listed in the archive as an empty entry.
+    - Contents are not deduplicated.
+    """
+
+    ARCHIVE_DIR: ClassVar[str] = "__brarchive"
+    """The folder, at the pack root, that holds the archives."""
+
+    PACK_OPTIMIZATION_VERSION: ClassVar[str] = "0.1.0"
+    """The `pack_optimization_version` Minecraft's own archived packs have in their
+    manifest."""
+
+    STORED_EXTENSIONS: ClassVar[frozenset[str]] = frozenset(
+        {
+            ".json",
+            ".png",
+            ".tga",
+            ".ogg",
+            ".fsb",
+            ".wav",
+            ".material",
+            ".mcstructure",
+            ".nbt",
+        }
+    )
+    """The files stored in the archives. Other files stay loose and get an empty entry."""
+
+    KEEP_LOOSE: ClassVar[tuple[str, ...]] = (
+        "texts/languages.json",
+        "textures/terrain_texture.json",
+        "textures/flipbook_textures.json",
+    )
+    """Stored files that Mojang's packs also keep loose, as paths relative to the pack
+    root."""
+
+    SKIPPED_FOLDERS: ClassVar[frozenset[str]] = frozenset(
+        {"__brarchive", "scripts", "subpacks"}
+    )
+    """Top-level folders left as they are, with no archive."""
+
+    _memory: ClassVar[dict[Path, bytes]] = {}
+    """Stored files captured during the build, by absolute path, waiting for `bake`."""
+
+    @staticmethod
+    def _is_hidden(name: str) -> bool:
+        return name.startswith(".")
+
+    @staticmethod
+    def _absolute(path: Path | str) -> Path:
+        return Path(os.path.abspath(path))
+
+    @classmethod
+    def _archived(cls, rel: PurePosixPath) -> bool:
+        """Whether a file, by its path relative to the pack root, goes into an archive."""
+        parts = rel.parts
+        return (
+            len(parts) >= 2
+            and parts[0] not in cls.SKIPPED_FOLDERS
+            and not any(cls._is_hidden(part) for part in parts)
+        )
+
+    @classmethod
+    def _stored(cls, rel: PurePosixPath) -> bool:
+        """Whether an archived file is stored with its content."""
+        return cls._archived(rel) and rel.suffix.lower() in cls.STORED_EXTENSIONS
+
+    @classmethod
+    def _kept_loose(cls, rel: PurePosixPath) -> bool:
+        return any(fnmatch.fnmatch(rel.as_posix(), p) for p in cls.KEEP_LOOSE)
+
+    @classmethod
+    def captures(cls, path: Path | str) -> bool:
+        """Whether a file written to `path` is kept in memory by `capture`: brarchive is
+        on and the file is stored in an archive rather than written to disk."""
+        from anvil.lib.config import CONFIG
+
+        if not CONFIG._BRARCHIVE:
+            return False
+
+        path = cls._absolute(path)
+        for pack in (CONFIG.RP_PATH, CONFIG.BP_PATH):
+            pack = cls._absolute(pack)
+            if path.is_relative_to(pack):
+                rel = PurePosixPath(path.relative_to(pack).as_posix())
+                return cls._stored(rel) and not cls._kept_loose(rel)
+        return False
+
+    @classmethod
+    def capture(cls, path: Path | str, data: bytes, append: bool = False) -> bool:
+        """Keeps a file that a brarchive build stores in an archive in memory.
+
+        Args:
+            path: Where the file would be written.
+            data: Its content.
+            append: Add to the content captured so far instead of replacing it.
+
+        Returns:
+            bool: True when the file was captured, so it must not be written to disk.
+                False when brarchive is off or the file stays loose, so it is written as
+                usual.
+        """
+        if not cls.captures(path):
+            return False
+        path = cls._absolute(path)
+        cls._memory[path] = (
+            (cls._memory.get(path, b"") + data) if append else bytes(data)
+        )
+        return True
+
+    @classmethod
+    def write_bytes(cls, path: Path | str, data: bytes) -> None:
+        """Writes a file into a pack, or captures it when a brarchive build stores it."""
+        if cls.capture(path, data):
+            return
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+
+    @classmethod
+    def bake(cls, pack: Path | str) -> int:
+        """Writes a pack's `__brarchive/` archives.
+
+        Each archive holds the captured files of its folder, plus the files on disk
+        there: stored files that reached the disk another way are moved into the
+        archive, and the rest are listed as empty entries.
+
+        Args:
+            pack: The pack's root folder, which holds its `manifest.json`.
+
+        Returns:
+            int: The number of archives written.
+        """
+        pack = cls._absolute(pack)
+        archive_root = pack / cls.ARCHIVE_DIR
+        if archive_root.exists():
+            shutil.rmtree(archive_root)
+
+        # Captured files of this pack, by folder.
+        captured: dict[Path, dict[str, bytes]] = {}
+        for path in [p for p in cls._memory if p.is_relative_to(pack)]:
+            captured.setdefault(path.parent, {})[path.name] = cls._memory.pop(path)
+
+        # Every folder that gets an archive: folders on disk, and the folders of
+        # captured files with all their parents.
+        folders: set[Path] = set()
+        if pack.is_dir():
+            for sub in pack.rglob("*"):
+                rel = PurePosixPath(sub.relative_to(pack).as_posix(), "x")
+                if sub.is_dir() and cls._archived(rel):
+                    folders.add(sub)
+        for folder in captured:
+            while folder != pack:
+                folders.add(folder)
+                folder = folder.parent
+
+        to_remove: list[Path] = []
+        for folder in sorted(folders):
+            entries = dict(captured.get(folder, {}))
+            if folder.is_dir():
+                for file in sorted(folder.iterdir()):
+                    if not file.is_file() or cls._is_hidden(file.name):
+                        continue
+                    rel = PurePosixPath(file.relative_to(pack).as_posix())
+                    if cls._stored(rel):
+                        entries.setdefault(file.name, file.read_bytes())
+                        if not cls._kept_loose(rel):
+                            to_remove.append(file)
+                    else:
+                        entries.setdefault(file.name, b"")
+
+            archive = BrArchive(deduplicate=False)
+            for name, data in entries.items():
+                archive.writestr(name, data)
+            rel_folder = folder.relative_to(pack)
+            archive.save(
+                archive_root / rel_folder.parent / f"{rel_folder.name}.brarchive"
+            )
+
+        for file in to_remove:
+            file.unlink()
+        # Remove the folders left empty, deepest first.
+        for folder in sorted(folders, key=lambda f: len(f.parts), reverse=True):
+            if folder.is_dir() and not any(folder.iterdir()):
+                folder.rmdir()
+
+        return len(folders)

@@ -365,6 +365,15 @@ def test_manifests():
     assert "settings" not in rp_json
 
 
+def test_manifest_pack_optimization_version():
+    assert "pack_optimization_version" not in _check(ManifestRP())["header"]
+
+    with config.override(_BRARCHIVE=True):
+        rp, bp = ManifestRP().queue(), ManifestBP().queue()
+        assert _check(rp)["header"]["pack_optimization_version"] == "0.1.0"
+        assert _check(bp)["header"]["pack_optimization_version"] == "0.1.0"
+
+
 def test_manifest_settings():
     settings = ManifestRP().settings
     settings.label("Options").toggle("wind", "Wind", False)
