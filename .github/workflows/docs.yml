@@ -15,14 +15,16 @@ jobs:
               with:
                   python-version: 3.x
             - name: Install package
-              run: pip install -e .
+              run: pip install -e ".[docs]"
             - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
             - uses: actions/cache@v4
               with:
-                  key: mkdocs-material-${{ env.cache_id }}
+                  key: zensical-${{ env.cache_id }}
                   path: .cache
                   restore-keys: |
-                      mkdocs-material-
-            - run: pip install "mkdocs<2" mkdocs-material "mkdocstrings[python]"
-            - run: echo "anvil.starktma.net" > docs/CNAME
-            - run: mkdocs gh-deploy --force
+                      zensical-
+            - run: pip install ghp-import
+            - run: zensical build --clean
+            - run: echo "anvil.starktma.net" > site/CNAME
+            # Zensical has no gh-deploy, so push site/ to the same branch MkDocs used.
+            - run: ghp-import --no-jekyll --push --force --branch generated --message "Deploy docs" site

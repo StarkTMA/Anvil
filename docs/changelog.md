@@ -51,7 +51,7 @@
 - [0.9.3](#093)
 - [0.9.2](#092)
 - [0.9.1](#091)
-- [**0.9.0** - _Modular Architecture_](#090)
+- [**0.9.0** - _Modular Architecture_](#090-modular-architecture)
 
 ## 0.8.x Series
 
@@ -59,18 +59,18 @@
 - [0.8.3](#083)
 - [0.8.2](#082)
 - [0.8.1](#081)
-- [**0.8.0** - _The Blockbench Update_](#080---the-blockbench-update)
+- [**0.8.0** - _The Blockbench Update_](#080-the-blockbench-update)
 
 ## 0.7.x Series
 
 - [0.7.3](#073)
 - [0.7.2](#072)
 - [0.7.1](#071)
-- [**0.7.0** - _Guidelines & Addon Support_](#070)
+- [**0.7.0** - _Guidelines & Addon Support_](#070-guidelines-addon-support)
 
 ## 0.6.x Series
 
-- [**0.6.0** - _Configuration Overhaul_](#060)
+- [**0.6.0** - _Configuration Overhaul_](#060-configuration-overhaul)
 
 ## 0.5.x Series
 
@@ -78,13 +78,13 @@
 - [0.5.3](#053)
 - [0.5.2](#052)
 - [0.5.1](#051)
-- [**0.5.0** - _Documentation & Tools_](#050)
+- [**0.5.0** - _Documentation & Tools_](#050-documentation-tools)
 
 ## 0.4.x Series
 
-- [0.4.2 - 0.4.2.6](#042---04226)
+- [0.4.2 - 0.4.2.6](#042-0426)
 - [0.4.1](#041)
-- [**0.4.0** - _ScriptAPI & PBR Support_](#040)
+- [**0.4.0** - _ScriptAPI & PBR Support_](#040-scriptapi-pbr-support)
 
 ## 0.3.x Series
 
@@ -93,7 +93,7 @@
 - [0.3.3](#033)
 - [0.3.2](#032)
 - [0.3.1](#031)
-- [**0.3.0** - _Materials System_](#030)
+- [**0.3.0** - _Materials System_](#030-materials-system)
 
 ## 0.2.x Series
 
@@ -103,12 +103,12 @@
 - [0.2.3](#023)
 - [0.2.2](#022)
 - [0.2.1](#021)
-- [**0.2.0** - _Major Architecture Rewrite_](#020)
+- [**0.2.0** - _Major Architecture Rewrite_](#020-major-architecture-rewrite)
 
 ## Early Development
 
-- [**0.1.0** - _Core Foundation_](#010)
-- [0.0.0 → 0.1.0](#000--010)
+- [**0.1.0** - _Core Foundation_](#010-core-foundation)
+- [0.0.0 → 0.1.0](#000-010)
 
 ---
 

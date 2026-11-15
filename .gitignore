@@ -23,7 +23,7 @@ coverage.xml
 *.py,cover
 .pytest_cache/
 
-# MkDocs output
+# Zensical build output
 site/
 
 # Environments
