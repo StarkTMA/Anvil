@@ -5,6 +5,7 @@ __all__ = ["MinecraftItemTypes", "vanilla_items_ids"]
 
 def vanilla_items_ids() -> list[str]:
     return [
+        "minecraft:brittle_ice",
         "minecraft:frostbite_spawn_egg",
         "minecraft:ice_ball",
         "minecraft:ice_crystal",
