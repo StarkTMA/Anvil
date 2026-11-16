@@ -47,3 +47,21 @@ def test_brittle_ice_lives_in_beta():
     assert BetaItemTypes.BrittleIce() == "minecraft:brittle_ice"
     with pytest.raises(AttributeError):
         MinecraftBlockTypes.BrittleIce
+
+
+def test_packed_ice_bricks_live_in_beta():
+    assert BetaBlockTypes.PackedIceBricks() == "minecraft:packed_ice_bricks"
+    assert BetaBlockTypes.PackedIceBricksSlab(minecraft_vertical_half="top").states == {
+        "minecraft:vertical_half": "top"
+    }
+    assert BetaBlockTypes.PackedIceBricksStairs(
+        minecraft_corner="inner_left", weirdo_direction=2
+    ).states == {"minecraft:corner": "inner_left", "weirdo_direction": 2}
+    assert BetaBlockTypes.PackedIceBricksWall(wall_post_bit=True).states == {
+        "wall_post_bit": True
+    }
+    assert BetaItemTypes.PackedIceBricksWall() == "minecraft:packed_ice_bricks_wall"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.PackedIceBricks
+    with pytest.raises(AttributeError):
+        BetaBlockTypes.DiscPress

@@ -975,3 +975,46 @@ def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
             )
         with pytest.raises(ValueError, match="needs both min and max"):
             _export(BlockCollisionBoxMinMax(min=(0, 0, 0)))
+
+
+def test_beta_destructible_by_mining_base_time_to_destroy():
+    from anvil.beta.blocks.components import BlockDestructibleByMining
+
+    mining = BlockDestructibleByMining(base_time_to_destroy=40)
+    mining.add_item_specific_speed(item="minecraft:iron_axe", destroy_speed=1)
+    mining.add_item_specific_speed(
+        item=ItemTagFilter(tags="q.any_tag('minecraft:is_axe')"), destroy_speed=2
+    )
+    assert _export(mining) == {
+        "minecraft:destructible_by_mining": {
+            "base_time_to_destroy": 40,
+            "item_specific_speeds": [
+                {"item": "minecraft:iron_axe", "destroy_speed": 1},
+                {"item": {"tags": "q.any_tag('minecraft:is_axe')"}, "destroy_speed": 2},
+            ],
+        }
+    }
+    assert _export(BlockDestructibleByMining(enabled=False)) == {
+        "minecraft:destructible_by_mining": False
+    }
+
+
+def test_beta_block_entity_extends_the_public_one():
+    from anvil.api.blocks.components import BlockEntity as PublicBlockEntity
+    from anvil.beta.blocks.components import BlockEntity
+    from anvil.lib import config
+
+    assert issubclass(BlockEntity, PublicBlockEntity)
+    entity = BlockEntity(dynamic_properties=True, entity_storage=True).set_container(
+        slot_count=9
+    )
+    with pytest.raises(ValueError, match="BlockEntity is experimental"):
+        _export(entity)
+    with config.override(_EXPERIMENTAL=True):
+        assert _export(entity) == {
+            "minecraft:block_entity": {
+                "dynamic_properties": True,
+                "container": {"slot_count": 9},
+                "entity_storage": True,
+            }
+        }

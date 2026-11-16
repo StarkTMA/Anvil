@@ -1,5 +1,25 @@
 from typing import Annotated
 
+from anvil.api.actors.components.combat import EntityProjectile as _EntityProjectile
+from anvil.api.actors.components.combat import (
+    ProjectileArrowEffect,
+    ProjectileCatchFire,
+    ProjectileDefinitionEvent,
+    ProjectileFreezeOnHit,
+    ProjectileHurtOwner,
+)
+from anvil.api.actors.components.combat import (
+    ProjectileImpactDamage as _ProjectileImpactDamage,
+)
+from anvil.api.actors.components.combat import (
+    ProjectileMobEffect,
+    ProjectileOnHit,
+    ProjectileParticleOnHit,
+    ProjectileSpawnAoeCloud,
+    ProjectileSpawnChance,
+    ProjectileStickInGround,
+    ProjectileThrownPotionEffect,
+)
 from anvil.api.actors.entity import Entity
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.filters import Filter
@@ -21,6 +41,122 @@ class TimeMarkerSensorTrigger(JsonObject):
     clock: str = json_field()
     time_marker: str = json_field()
     on_time_marker: EventTrigger = json_field()
+
+
+class ProjectileImpactDamage(_ProjectileImpactDamage):
+    """[EXPERIMENTAL] Damages the entity hit, with the 1.26.70 options.
+    Needs the experimental flag in anvilconfig.json.
+
+    Args:
+        apply_knockback_to_blocking_targets (bool, optional): Knocks back targets that blocked. Game default false.
+        catch_fire (bool, optional): Sets the entity hit on fire for the projectile's `on_fire_time`. Game default false.
+        ceil_pre_critical_damage (bool, optional): Rounds the damage up before the critical multiplier. Game default false.
+        channeling (bool, optional): Calls down lightning on the entity hit during a thunderstorm. Game default false.
+        damage (float | tuple[float, float], optional): Damage dealt, or a `(min, max)` range rolled per hit. Written as `{"min", "max"}`. Game default 0.
+        destroy_on_hit (bool, optional): Removes the projectile when it deals damage. Game default false.
+        destroy_on_hit_requires_damage (bool, optional): `destroy_on_hit` needs at least one point of damage dealt. Game default true.
+        difficulty_randomization (Literal["none", "additive", "multiplicative"], optional): How the world difficulty changes the damage. Game default none.
+        filter (str, optional): The entity family or type the projectile can damage.
+        knockback (bool, optional): Knocks the entity hit back. Game default false.
+        max_critical_damage (int, optional): Maximum damage of a critical hit. Game default 2147483647.
+        min_critical_damage (int, optional): Minimum damage of a critical hit. Game default 0.
+        power_multiplier (float, optional): Multiplied by the projectile's speed and added to the damage. Game default 0.
+        scale_damage_with_difficulty (bool, optional): Whether impact damage dealt to players by mob-fired projectiles scales with the world difficulty. Entity format 1.26.70 and later; earlier formats never scale it. Game default true.
+        set_last_hurt_requires_damage (bool, optional): The projectile counts as the last attacker only when it deals damage. Game default true.
+    """
+
+    scale_damage_with_difficulty: bool | None = json_field(default=None)
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "ProjectileImpactDamage is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class EntityProjectile(_EntityProjectile):
+    """[EXPERIMENTAL] Turns the entity into a projectile, with the 1.26.70 `on_hit` options.
+    Needs the experimental flag in anvilconfig.json. Takes the same arguments as the public
+    `EntityProjectile`; `set_on_hit` takes this module's `ProjectileImpactDamage`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_projectile)
+    """
+
+    def __validate__(self) -> None:
+        super().__validate__()
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityProjectile is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+    def set_on_hit(
+        self,
+        *,
+        arrow_effect: ProjectileArrowEffect | None = None,
+        catch_fire: ProjectileCatchFire | None = None,
+        definition_event: ProjectileDefinitionEvent | None = None,
+        douse_fire: bool | None = None,
+        freeze_on_hit: ProjectileFreezeOnHit | None = None,
+        grant_xp: int | tuple[float, float] | None = None,
+        hurt_owner: ProjectileHurtOwner | None = None,
+        ignite: bool | None = None,
+        impact_damage: ProjectileImpactDamage | None = None,
+        mob_effect: list[ProjectileMobEffect] | None = None,
+        particle_on_hit: ProjectileParticleOnHit | None = None,
+        remove_on_hit: bool | None = None,
+        spawn_aoe_cloud: ProjectileSpawnAoeCloud | None = None,
+        spawn_chance: ProjectileSpawnChance | None = None,
+        stick_in_ground: ProjectileStickInGround | None = None,
+        teleport_owner: bool | None = None,
+        thrown_potion_effect: ProjectileThrownPotionEffect | None = None,
+        wind_burst_on_hit: bool | None = None,
+    ) -> "EntityProjectile":
+        """Sets what happens when the projectile hits a block, a fluid or an entity.
+
+        A part set to an object with no options, or a switch set to True, is written as `{}`,
+        which turns that behavior on with the game's defaults.
+
+        Args:
+            arrow_effect (ProjectileArrowEffect, optional): Applies the arrow's tipped-potion effects.
+            catch_fire (ProjectileCatchFire, optional): Sets the entity or block hit on fire.
+            definition_event (ProjectileDefinitionEvent, optional): Runs an event.
+            douse_fire (bool, optional): A water potion puts out fires around the hit block.
+            freeze_on_hit (ProjectileFreezeOnHit, optional): Freezes nearby water.
+            grant_xp (int | tuple[float, float], optional): Experience dropped, or a `(min, max)` range. Written as `{"minXP", "maxXP"}`.
+            hurt_owner (ProjectileHurtOwner, optional): Damages the owner.
+            ignite (bool, optional): Runs the entity's `on_ignite` trigger.
+            impact_damage (ProjectileImpactDamage, optional): Damages the entity hit, with the 1.26.70 options.
+            mob_effect (list[ProjectileMobEffect], optional): Effects applied to the entity hit. Written as `{"effects": [...]}`.
+            particle_on_hit (ProjectileParticleOnHit, optional): A particle effect at the impact.
+            remove_on_hit (bool, optional): Removes the projectile.
+            spawn_aoe_cloud (ProjectileSpawnAoeCloud, optional): Spawns an area effect cloud.
+            spawn_chance (ProjectileSpawnChance, optional): Spawns entities.
+            stick_in_ground (ProjectileStickInGround, optional): The projectile sticks in the block it hits.
+            teleport_owner (bool, optional): Teleports the owner to the impact.
+            thrown_potion_effect (ProjectileThrownPotionEffect, optional): Applies a thrown potion's effects.
+            wind_burst_on_hit (bool, optional): Releases a wind burst that pushes entities away.
+        """
+        self.on_hit = ProjectileOnHit(
+            arrow_effect=arrow_effect,
+            catch_fire=catch_fire,
+            definition_event=definition_event,
+            douse_fire=douse_fire,
+            freeze_on_hit=freeze_on_hit,
+            grant_xp=grant_xp,
+            hurt_owner=hurt_owner,
+            ignite=ignite,
+            impact_damage=impact_damage,
+            mob_effect=mob_effect,
+            particle_on_hit=particle_on_hit,
+            remove_on_hit=remove_on_hit,
+            spawn_aoe_cloud=spawn_aoe_cloud,
+            spawn_chance=spawn_chance,
+            stick_in_ground=stick_in_ground,
+            teleport_owner=teleport_owner,
+            thrown_potion_effect=thrown_potion_effect,
+            wind_burst_on_hit=wind_burst_on_hit,
+        )
+        return self
 
 
 class EntityReflectProjectiles(JsonComponent):

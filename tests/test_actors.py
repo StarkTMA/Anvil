@@ -786,6 +786,25 @@ def test_can_stand_on_brittle_ice_needs_experimental(monkeypatch):
     }
 
 
+def test_beta_impact_damage_scales_with_difficulty(monkeypatch):
+    from anvil.beta.actors.components import EntityProjectile, ProjectileImpactDamage
+    from anvil.lib.config import CONFIG
+
+    projectile = EntityProjectile().set_on_hit(
+        impact_damage=ProjectileImpactDamage(
+            damage=4, scale_damage_with_difficulty=False
+        )
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(projectile)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    impact = AnvilIO._normalize_json_like(projectile)["minecraft:projectile"]["on_hit"][
+        "impact_damage"
+    ]
+    assert impact["scale_damage_with_difficulty"] is False
+
+
 def test_filter_has_component_takes_component_classes():
     from anvil.api.actors.components import EntityHealth
     from anvil.api.core.filters import Filter
@@ -933,3 +952,20 @@ def test_entity_trail_radius_range():
         payload(EntityTrail(radius=17))
     with pytest.raises(ValueError):
         payload(EntityTrail(radius=-2))
+
+
+@pytest.mark.parametrize("test", ["speed", "horizontal_speed", "vertical_speed"])
+def test_beta_speed_filters_need_experimental(monkeypatch, test):
+    from anvil.beta.core.filters import Filter
+    from anvil.lib.config import CONFIG
+    from anvil.lib.jsonmodel.enums import FilterOperation
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        getattr(Filter, test)(1.5)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    filt = getattr(Filter, test)(-1.5, operator=FilterOperation.Less)
+    assert isinstance(filt, Filter)
+    assert filt.test == test
+    assert filt.value == -1.5
+    assert filt.operator == FilterOperation.Less
