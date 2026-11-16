@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from anvil.api.blocks.components import BlockCollisionBox
+from anvil.api.blocks.components import (
+    BlockCollisionBox,
+)
+from anvil.api.blocks.components import BlockEntity as _BlockEntity
+from anvil.api.blocks.components import ItemSpecificSpeed, ItemTagFilter, _Switchable
+from anvil.api.items.items import Item
 from anvil.api.models.voxel_shape import VoxelShape
 from anvil.lib.blockbench import _Blockbench, _BlockBenchSource
 from anvil.lib.config import CONFIG
@@ -193,7 +198,7 @@ class BlockEnchantmentPowerTransmitter(JsonValueComponent):
         _require_experimental("BlockEnchantmentPowerTransmitter")
 
 
-class BlockEntity(JsonComponent):
+class BlockEntity(_BlockEntity):
     """[EXPERIMENTAL] Gives each placed block its own data, with an inventory and entity storage.
     It writes `minecraft:block_entity` like the public `BlockEntity`, which only has
     `dynamic_properties`. Experimental: needs `features.experimental` in anvilconfig.json.
@@ -206,10 +211,7 @@ class BlockEntity(JsonComponent):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_block_entity)
     """
 
-    identifier = "minecraft:block_entity"
-
     container: BlockEntityContainer | None = json_field(default=None)
-    dynamic_properties: bool | None = json_field(default=None)
     entity_storage: bool | None = json_field(default=None)
 
     def set_container(
@@ -320,3 +322,40 @@ class BlockJukeBoxPlaylistSource(JsonComponent):
 
     def __validate__(self) -> None:
         _require_experimental("BlockJukeBoxPlaylistSource")
+
+
+class BlockDestructibleByMining(_Switchable):
+    """Describes how long the block takes to mine.
+
+    Args:
+        base_time_to_destroy (int, optional): Sets the number of server simulation ticks it takes to mine the block with base equipment. Greater numbers result in greater mining times. A negative number means the block can't be mined.
+        item_specific_speeds (list[ItemSpecificSpeed], optional): The seconds to mine it with specific items. Set them directly or add them with `add_item_specific_speed`.
+        enabled (bool, optional): False makes the block indestructible by mining, written as `false`. Defaults to True.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_destructible_by_mining)
+    """
+
+    identifier = "minecraft:destructible_by_mining"
+
+    base_time_to_destroy: int | None = json_field(default=None)
+    item_specific_speeds: list[ItemSpecificSpeed] = json_field(
+        default_factory=list, omit_default=True
+    )
+
+    def add_item_specific_speed(
+        self,
+        *,
+        item: str | Item | ItemTagFilter,
+        destroy_speed: float,
+    ) -> "BlockDestructibleByMining":
+        """Adds the seconds to mine the block with an item, or items with tags.
+
+        Example:
+            >>> mining.add_item_specific_speed(
+            ...     item=ItemTagFilter(tags=Query.AllTags(["minecraft:is_axe"])), destroy_speed=1.5
+            ... )
+        """
+        self.item_specific_speeds.append(
+            ItemSpecificSpeed(item=item, destroy_speed=destroy_speed)
+        )
+        return self
