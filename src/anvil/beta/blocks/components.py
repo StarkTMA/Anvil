@@ -1,22 +1,29 @@
 """Experimental block components. They need `features.experimental` in anvilconfig.json."""
 
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from anvil.api.blocks.components import BlockCollisionBox
 from anvil.api.models.voxel_shape import VoxelShape
 from anvil.lib.blockbench import _Blockbench, _BlockBenchSource
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (
+    InRange,
     JsonComponent,
     JsonObject,
     JsonValueComponent,
     Length,
     json_field,
 )
+from anvil.lib.translator import AnvilTranslator
+
+if TYPE_CHECKING:
+    from anvil.api.blocks.server import BlockServer
 
 __all__ = [
     "BlockCollisionBoxMinMax",
     "BlockEnchantmentPowerTransmitter",
+    "BlockEntity",
+    "BlockEntityContainer",
     "BlockMinMaxBox",
     "BlockNeighborChange",
     "BlockVibrationProperties",
@@ -41,6 +48,20 @@ class BlockMinMaxBox(JsonObject):
 
     min: tuple[float, float, float] = json_field()
     max: tuple[float, float, float] = json_field()
+
+
+class BlockEntityContainer(JsonObject):
+    """The inventory of a block entity.
+
+    Args:
+        slot_count (int): The number of slots, from 1 to 54.
+        show_ui_on_interaction (bool, optional): Determines whether interacting with this block opens its container UI. Defaults to true. When false, normal block interaction events can run instead.
+        title (str, optional): The title shown on the container, 1 to 256 characters. Anvil adds it to the language file under a key made from the block identifier. Leaving it out leaves the heading blank.
+    """
+
+    slot_count: Annotated[int, InRange(1, 54)] = json_field()
+    show_ui_on_interaction: bool | None = json_field(default=None)
+    title: Annotated[str, Length(1, 256)] | None = json_field(default=None)
 
 
 class BlockCollisionBoxMinMax(JsonComponent):
@@ -172,6 +193,73 @@ class BlockEnchantmentPowerTransmitter(JsonValueComponent):
         _require_experimental("BlockEnchantmentPowerTransmitter")
 
 
+class BlockEntity(JsonComponent):
+    """[EXPERIMENTAL] Gives each placed block its own data, with an inventory and entity storage.
+    It writes `minecraft:block_entity` like the public `BlockEntity`, which only has
+    `dynamic_properties`. Experimental: needs `features.experimental` in anvilconfig.json.
+
+    Args:
+        container (BlockEntityContainer, optional): An inventory. Set it with `set_container`.
+        dynamic_properties (bool, optional): Whether scripts can store dynamic properties on the block. Game default false.
+        entity_storage (bool, optional): Whether scripts can store serialized entities in the block. Game default false.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_block_entity)
+    """
+
+    identifier = "minecraft:block_entity"
+
+    container: BlockEntityContainer | None = json_field(default=None)
+    dynamic_properties: bool | None = json_field(default=None)
+    entity_storage: bool | None = json_field(default=None)
+
+    def set_container(
+        self,
+        *,
+        slot_count: int,
+        title: str | None = None,
+        show_ui_on_interaction: bool | None = None,
+    ) -> "BlockEntity":
+        """Gives the block an inventory.
+
+        Args:
+            slot_count (int): The number of slots, from 1 to 54.
+            title (str, optional): The title shown on the container, 1 to 256 characters. Anvil adds it to the language file under a key made from the block identifier. Leaving it out leaves the heading blank.
+            show_ui_on_interaction (bool, optional): Whether interacting with the block opens its container UI. When false, normal block interaction events run instead. Game default true.
+        """
+        self.container = BlockEntityContainer(
+            slot_count=slot_count,
+            title=title,
+            show_ui_on_interaction=show_ui_on_interaction,
+        )
+        return self
+
+    def __validate__(self) -> None:
+        _require_experimental("BlockEntity")
+
+    def __prepare_export__(self, owner: "BlockServer", *, root: bool = True) -> None:
+        """Adds the container title to the language file under
+        `tile.<identifier>.container_title` for the root, and
+        `tile.<identifier>.<name>.container_title` for a permutation, then writes the key.
+        """
+        if self.container is None or self.container.title is None:
+            return
+        prefix = f"tile.{owner.identifier}"
+        if self.container.title.startswith(f"{prefix}."):
+            return
+        if root:
+            key = f"{prefix}.container_title"
+            AnvilTranslator().add_localization_entry(key, self.container.title)
+        else:
+            key = AnvilTranslator().localize(
+                self.container.title, prefix=prefix, suffix="container_title"
+            )
+        self.container = BlockEntityContainer(
+            slot_count=self.container.slot_count,
+            title=key,
+            show_ui_on_interaction=self.container.show_ui_on_interaction,
+        )
+
+
 class BlockVibrationProperties(JsonComponent):
     """[EXPERIMENTAL] How the block affects vibrations.
     Experimental: needs `features.experimental` in anvilconfig.json.
@@ -217,3 +305,18 @@ class BlockNeighborChange(JsonComponent):
             raise ValueError(
                 "BlockNeighborChange: 'all' must be used alone in neighbor_directions."
             )
+
+
+class BlockJukeBoxPlaylistSource(JsonComponent):
+    """[EXPERIMENTAL] Allows a jukebox directly below this block to use its existing container
+    as a playlist source. This component is an empty object. It does not create a container
+    and has no effect without one.
+
+    Experimental: needs `features.experimental` in anvilconfig.json.
+
+    """
+
+    identifier = "minecraft:jukebox_playlist_source"
+
+    def __validate__(self) -> None:
+        _require_experimental("BlockJukeBoxPlaylistSource")

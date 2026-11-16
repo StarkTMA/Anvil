@@ -523,13 +523,13 @@ def test_block_descriptor_multi_block_part():
 def test_part_builders_for_blocks_and_biomes():
     from anvil.api.biomes.components import BiomeMapTints, GrassTint
     from anvil.api.blocks.components import (
-        BlockEntity,
-        BlockEntityContainer,
         BlockGeometry,
         BlockRandomOffset,
         NWayVisualRotation,
         OffsetRange,
     )
+    from anvil.beta.blocks.components import BlockEntity, BlockEntityContainer
+    from anvil.lib import config
 
     pairs = [
         (
@@ -560,8 +560,9 @@ def test_part_builders_for_blocks_and_biomes():
             ),
         ),
     ]
-    for built, constructed in pairs:
-        assert built.__json__() == constructed.__json__()
+    with config.override(_EXPERIMENTAL=True):
+        for built, constructed in pairs:
+            assert built.__json__() == constructed.__json__()
 
 
 def _check_file(file):
@@ -769,8 +770,8 @@ def test_vanilla_block_factories_and_descriptors():
 
 
 def test_block_entity_container_title_is_localized():
-    from anvil.api.blocks.components import BlockEntity
     from anvil.api.blocks.server import BlockServer
+    from anvil.beta.blocks.components import BlockEntity
     from anvil.lib import config
     from anvil.lib.translator import AnvilTranslator
 
@@ -789,32 +790,36 @@ def test_block_entity_container_title_is_localized():
     assert AnvilTranslator().get_localization_value(key) == "Crate"
 
 
-def test_block_entity_storage_is_experimental():
+def test_block_entity_dynamic_properties():
     from anvil.api.blocks.components import BlockEntity
-    from anvil.lib import config
 
-    with pytest.raises(ValueError, match="experimental"):
-        _export(BlockEntity(entity_storage=True))
-    with config.override(_EXPERIMENTAL=True):
-        assert _export(BlockEntity(entity_storage=True)) == {
-            "minecraft:block_entity": {"entity_storage": True}
-        }
-
-
-def test_block_entity_container_title_is_experimental():
-    from anvil.api.blocks.components import BlockEntity
-    from anvil.lib import config
-
-    entity = BlockEntity().set_container(slot_count=9, title="Crate")
-    with pytest.raises(ValueError, match="container title is experimental"):
-        _export(entity)
-    with config.override(_EXPERIMENTAL=True):
-        assert _export(entity) == {
-            "minecraft:block_entity": {"container": {"slot_count": 9, "title": "Crate"}}
-        }
-    assert _export(BlockEntity().set_container(slot_count=9)) == {
-        "minecraft:block_entity": {"container": {"slot_count": 9}}
+    assert _export(BlockEntity(dynamic_properties=True)) == {
+        "minecraft:block_entity": {"dynamic_properties": True}
     }
+
+
+def test_beta_block_entity_is_experimental():
+    from anvil.beta.blocks.components import BlockEntity
+    from anvil.lib import config
+
+    entities = [
+        BlockEntity(entity_storage=True),
+        BlockEntity().set_container(slot_count=9),
+        BlockEntity().set_container(slot_count=9, title="Crate"),
+    ]
+    for entity in entities:
+        with pytest.raises(ValueError, match="BlockEntity is experimental"):
+            _export(entity)
+    with config.override(_EXPERIMENTAL=True):
+        assert [_export(entity) for entity in entities] == [
+            {"minecraft:block_entity": {"entity_storage": True}},
+            {"minecraft:block_entity": {"container": {"slot_count": 9}}},
+            {
+                "minecraft:block_entity": {
+                    "container": {"slot_count": 9, "title": "Crate"}
+                }
+            },
+        ]
 
 
 def test_beta_block_components():
@@ -855,6 +860,18 @@ def test_beta_block_components():
             _export(BlockNeighborChange(neighbor_directions=[]))
         with pytest.raises(ValueError):
             _export(BlockNeighborChange(neighbor_directions=["side"]))
+
+
+def test_jukebox_playlist_source_is_experimental():
+    from anvil.beta.blocks.components import BlockJukeBoxPlaylistSource
+    from anvil.lib import config
+
+    with pytest.raises(ValueError, match="experimental"):
+        _export(BlockJukeBoxPlaylistSource())
+    with config.override(_EXPERIMENTAL=True):
+        assert _export(BlockJukeBoxPlaylistSource()) == {
+            "minecraft:jukebox_playlist_source": {}
+        }
 
 
 def test_collision_box_min_max_is_experimental():
