@@ -952,3 +952,20 @@ def test_entity_trail_radius_range():
         payload(EntityTrail(radius=17))
     with pytest.raises(ValueError):
         payload(EntityTrail(radius=-2))
+
+
+@pytest.mark.parametrize("test", ["speed", "horizontal_speed", "vertical_speed"])
+def test_beta_speed_filters_need_experimental(monkeypatch, test):
+    from anvil.beta.core.filters import Filter
+    from anvil.lib.config import CONFIG
+    from anvil.lib.jsonmodel.enums import FilterOperation
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        getattr(Filter, test)(1.5)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    filt = getattr(Filter, test)(-1.5, operator=FilterOperation.Less)
+    assert isinstance(filt, Filter)
+    assert filt.test == test
+    assert filt.value == -1.5
+    assert filt.operator == FilterOperation.Less

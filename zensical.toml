@@ -132,6 +132,9 @@ nav = [
     { "Overview" = "kit/index.md" },
   ] },
   { "Beta API Reference" = [
+    { "Core" = [
+      { "Filters" = "beta/core/filters.md" },
+    ] },
     { "Actors" = [
       { "Components" = "beta/actors/components.md" },
     ] },
