@@ -7,6 +7,8 @@ from anvil.lib.jsonmodel import Identifier
 _STATE_KEYS: dict[str, str] = {
     "minecraft_cardinal_direction": "minecraft:cardinal_direction",
     "minecraft_block_face": "minecraft:block_face",
+    "minecraft_corner": "minecraft:corner",
+    "minecraft_vertical_half": "minecraft:vertical_half",
 }
 
 
