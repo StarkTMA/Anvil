@@ -16,11 +16,11 @@ import requests
 
 from anvil.lib.format_versions import (
     MANIFEST_BUILD,
-    MANIFEST_BUILD_PREVIEW,
     MODULE_MINECRAFT_SERVER,
     MODULE_MINECRAFT_SERVER_PREVIEW,
     MODULE_MINECRAFT_SERVER_UI,
     MODULE_MINECRAFT_SERVER_UI_PREVIEW,
+    MODULE_MINECRAFT_VANILLA_DATA_PREVIEW,
 )
 
 from ..__version__ import __version__
@@ -735,7 +735,7 @@ class AnvilValidator:
                 else MODULE_MINECRAFT_SERVER_UI
             ),
             "@minecraft/vanilla-data": (
-                f"{MANIFEST_BUILD_PREVIEW}-preview" if preview else MANIFEST_BUILD
+                MODULE_MINECRAFT_VANILLA_DATA_PREVIEW if preview else MANIFEST_BUILD
             ),
         }
 

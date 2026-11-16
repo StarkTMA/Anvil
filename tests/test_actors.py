@@ -747,6 +747,45 @@ def test_reflect_projectiles_needs_experimental(monkeypatch):
     }
 
 
+def test_time_marker_sensor_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntityTimeMarkerSensor
+    from anvil.lib.config import CONFIG
+
+    component = EntityTimeMarkerSensor().add_trigger(
+        clock="day", time_marker="noon", event="test:on_noon"
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(component)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert AnvilIO._normalize_json_like(component) == {
+        "minecraft:time_marker_sensor": {
+            "triggers": [
+                {
+                    "clock": "day",
+                    "time_marker": "noon",
+                    "on_time_marker": {"event": "test:on_noon"},
+                }
+            ]
+        }
+    }
+    with pytest.raises(ValueError, match="at least one trigger"):
+        AnvilIO._normalize_json_like(EntityTimeMarkerSensor())
+
+
+def test_can_stand_on_brittle_ice_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntityCanStandOnBrittleIce
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(EntityCanStandOnBrittleIce())
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert AnvilIO._normalize_json_like(EntityCanStandOnBrittleIce()) == {
+        "minecraft:can_stand_on_brittle_ice": {}
+    }
+
+
 def test_filter_has_component_takes_component_classes():
     from anvil.api.actors.components import EntityHealth
     from anvil.api.core.filters import Filter

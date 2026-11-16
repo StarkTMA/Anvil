@@ -40,3 +40,10 @@ def test_experimental_ids_in_fields_need_the_flag():
     with config.override(_EXPERIMENTAL=True):
         ItemId.validate("item", BetaItemTypes.IceBall())
     assert BetaEntityTypes.Frostbite() == "minecraft:frostbite"
+
+
+def test_brittle_ice_lives_in_beta():
+    assert BetaBlockTypes.BrittleIce(age=3).states == {"age": 3}
+    assert BetaItemTypes.BrittleIce() == "minecraft:brittle_ice"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.BrittleIce

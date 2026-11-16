@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Literal, overload
 from warnings import deprecated
 
 import orjson
+
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_VERSION
 from anvil.lib.jsonmodel.enums import InputModes, Slots

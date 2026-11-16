@@ -138,6 +138,9 @@ nav = [
     { "Blocks" = [
       { "Components" = "beta/blocks/components.md" },
     ] },
+    { "Features" = [
+      { "Features" = "beta/features/features.md" },
+    ] },
   ] },
 ]
 

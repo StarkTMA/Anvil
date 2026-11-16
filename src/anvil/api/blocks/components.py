@@ -348,18 +348,6 @@ class VisualGeometry(JsonObject):
     n_way_visual_rotation: NWayVisualRotation | None = json_field(default=None)
 
 
-class BlockEntityContainer(JsonObject):
-    """The inventory of a block entity.
-
-    Args:
-        slot_count (int): The number of slots, from 1 to 54.
-        title (str, optional): [EXPERIMENTAL] The title shown on the container, 1 to 256 characters. Anvil adds it to the language file under a key made from the block identifier. Leaving it out leaves the heading blank. Needs `features.experimental` in anvilconfig.json.
-    """
-
-    slot_count: Annotated[int, InRange(1, 54)] = json_field()
-    title: Annotated[str, Length(1, 256)] | None = json_field(default=None)
-
-
 class OffsetRange(JsonObject):
     """The random offset along one axis, for `BlockRandomOffset`.
 
@@ -798,68 +786,16 @@ class BlockEntity(JsonComponent):
     """Gives each placed block its own data.
 
     Args:
-        container (BlockEntityContainer, optional): An inventory. Set it with `set_container`.
         dynamic_properties (bool, optional): Whether scripts can store dynamic properties on the block. Game default false.
-        entity_storage (bool, optional): Whether scripts can store serialized entities in the block. Experimental: needs `features.experimental` in anvilconfig.json. Game default false.
+
+    For an inventory or entity storage, use the experimental `anvil.beta.blocks.components.BlockEntity`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_block_entity)
     """
 
     identifier = "minecraft:block_entity"
 
-    container: BlockEntityContainer | None = json_field(default=None)
     dynamic_properties: bool | None = json_field(default=None)
-    entity_storage: bool | None = json_field(default=None)
-
-    def set_container(
-        self,
-        *,
-        slot_count: int,
-        title: str | None = None,
-    ) -> "BlockEntity":
-        """Gives the block an inventory. See `BlockEntityContainer` for the parameters."""
-        self.container = BlockEntityContainer(
-            slot_count=slot_count,
-            title=title,
-        )
-        return self
-
-    def __validate__(self) -> None:
-        if self.entity_storage is not None and not CONFIG._EXPERIMENTAL:
-            raise ValueError(
-                "BlockEntity entity_storage is experimental: turn on features.experimental "
-                "in anvilconfig.json."
-            )
-        if (
-            self.container is not None
-            and self.container.title is not None
-            and not CONFIG._EXPERIMENTAL
-        ):
-            raise ValueError(
-                "BlockEntity container title is experimental: turn on features.experimental "
-                "in anvilconfig.json."
-            )
-
-    def __prepare_export__(self, owner: "BlockServer", *, root: bool = True) -> None:
-        """Adds the container title to the language file under
-        `tile.<identifier>.container_title` for the root, and
-        `tile.<identifier>.<name>.container_title` for a permutation, then writes the key.
-        """
-        if self.container is None or self.container.title is None:
-            return
-        prefix = f"tile.{owner.identifier}"
-        if self.container.title.startswith(f"{prefix}."):
-            return
-        if root:
-            key = f"{prefix}.container_title"
-            AnvilTranslator().add_localization_entry(key, self.container.title)
-        else:
-            key = AnvilTranslator().localize(
-                self.container.title, prefix=prefix, suffix="container_title"
-            )
-        self.container = BlockEntityContainer(
-            slot_count=self.container.slot_count, title=key
-        )
 
 
 class BlockEntityFallOn(JsonComponent):
