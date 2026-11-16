@@ -786,6 +786,25 @@ def test_can_stand_on_brittle_ice_needs_experimental(monkeypatch):
     }
 
 
+def test_beta_impact_damage_scales_with_difficulty(monkeypatch):
+    from anvil.beta.actors.components import EntityProjectile, ProjectileImpactDamage
+    from anvil.lib.config import CONFIG
+
+    projectile = EntityProjectile().set_on_hit(
+        impact_damage=ProjectileImpactDamage(
+            damage=4, scale_damage_with_difficulty=False
+        )
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(projectile)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    impact = AnvilIO._normalize_json_like(projectile)["minecraft:projectile"]["on_hit"][
+        "impact_damage"
+    ]
+    assert impact["scale_damage_with_difficulty"] is False
+
+
 def test_filter_has_component_takes_component_classes():
     from anvil.api.actors.components import EntityHealth
     from anvil.api.core.filters import Filter
