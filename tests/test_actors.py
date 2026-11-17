@@ -57,6 +57,28 @@ def test_clear_behaviors_on_component_changes_is_experimental(monkeypatch):
     )
 
 
+def test_beta_timer_flag_trigger_on_end_when_interrupted(monkeypatch):
+    from anvil.beta.actors.components import (
+        EntityAITimerFlag1,
+        EntityAITimerFlag2,
+        EntityAITimerFlag3,
+    )
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(EntityAITimerFlag1(trigger_on_end_when_interrupted=False))
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    for goal in (EntityAITimerFlag1, EntityAITimerFlag2, EntityAITimerFlag3):
+        assert (
+            payload(goal(on_end="test:on_end", trigger_on_end_when_interrupted=False))[
+                "trigger_on_end_when_interrupted"
+            ]
+            is False
+        )
+        assert "trigger_on_end_when_interrupted" not in payload(goal())
+
+
 def test_entity_ai_pickup_items():
     from anvil.api.actors.components import EntityAIPickupItems
 

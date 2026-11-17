@@ -1,5 +1,14 @@
 from typing import Annotated, Literal
 
+from anvil.api.actors.components.ai_goals import (
+    EntityAITimerFlag1 as _EntityAITimerFlag1,
+)
+from anvil.api.actors.components.ai_goals import (
+    EntityAITimerFlag2 as _EntityAITimerFlag2,
+)
+from anvil.api.actors.components.ai_goals import (
+    EntityAITimerFlag3 as _EntityAITimerFlag3,
+)
 from anvil.api.actors.components.combat import EntityProjectile as _EntityProjectile
 from anvil.api.actors.components.combat import EntityTeleport as _EntityTeleport
 from anvil.api.actors.components.combat import EntityTrail as _EntityTrail
@@ -444,4 +453,85 @@ class EntitySphericalLookControl(JsonComponent):
         if not CONFIG._EXPERIMENTAL:
             raise ValueError(
                 "EntitySphericalLookControl is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class EntityAITimerFlag1(_EntityAITimerFlag1):
+    """[EXPERIMENTAL] Fires an event when this behavior starts, then waits for a duration before stopping, with the 1.26.70 options.
+    When stopping due to that timeout or due to being interrupted by another behavior, fires another event.
+    query.timer_flag_1 will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise.
+    Needs the experimental flag in anvilconfig.json.
+
+    Args:
+        priority (int, optional): Lower values run first. Game default 0.
+        control_flags (list[ControlFlags], optional): The controls this goal takes over.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds. Can be a range object or a single number.
+        duration_range (float | tuple[float, float], optional): Goal duration range in seconds. Can be a range object or a single number.
+        on_end (EventTrigger | str, optional): Event(s) to run when the goal ends.
+        on_start (EventTrigger | str, optional): Event(s) to run when the goal starts.
+        trigger_on_end_when_interrupted (bool, optional): Whether the `on_end` events run when another goal interrupts this goal before its duration elapses. Game default true.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_1)
+    """
+
+    trigger_on_end_when_interrupted: bool | None = json_field(default=None)
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityAITimerFlag1 is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class EntityAITimerFlag2(_EntityAITimerFlag2):
+    """[EXPERIMENTAL] Fires an event when this behavior starts, then waits for a duration before stopping, with the 1.26.70 options.
+    When stopping due to that timeout or due to being interrupted by another behavior, fires another event.
+    query.timer_flag_2 will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise.
+    Needs the experimental flag in anvilconfig.json.
+
+    Args:
+        priority (int, optional): Lower values run first. Game default 0.
+        control_flags (list[ControlFlags], optional): The controls this goal takes over.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds. Can be a range object or a single number.
+        duration_range (float | tuple[float, float], optional): Goal duration range in seconds. Can be a range object or a single number.
+        on_end (EventTrigger | str, optional): Event(s) to run when the goal ends.
+        on_start (EventTrigger | str, optional): Event(s) to run when the goal starts.
+        trigger_on_end_when_interrupted (bool, optional): Whether the `on_end` events run when another goal interrupts this goal before its duration elapses. Game default true.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_2)
+    """
+
+    trigger_on_end_when_interrupted: bool | None = json_field(default=None)
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityAITimerFlag2 is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class EntityAITimerFlag3(_EntityAITimerFlag3):
+    """[EXPERIMENTAL] Fires an event when this behavior starts, then waits for a duration before stopping, with the 1.26.70 options.
+    When stopping due to that timeout or due to being interrupted by another behavior, fires another event.
+    query.timer_flag_3 will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise.
+    Needs the experimental flag in anvilconfig.json.
+
+    Args:
+        priority (int, optional): Lower values run first. Game default 0.
+        control_flags (list[ControlFlags], optional): The controls this goal takes over.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds. Can be a range object or a single number.
+        duration_range (float | tuple[float, float], optional): Goal duration range in seconds. Can be a range object or a single number.
+        on_end (EventTrigger | str, optional): Event(s) to run when the goal ends.
+        on_start (EventTrigger | str, optional): Event(s) to run when the goal starts.
+        trigger_on_end_when_interrupted (bool, optional): Whether the `on_end` events run when another goal interrupts this goal before its duration elapses. Game default true.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_3)
+    """
+
+    trigger_on_end_when_interrupted: bool | None = json_field(default=None)
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityAITimerFlag3 is experimental: turn on features.experimental in anvilconfig.json."
             )
