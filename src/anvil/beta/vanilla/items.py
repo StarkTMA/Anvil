@@ -13,6 +13,7 @@ def vanilla_items_ids() -> list[str]:
         "minecraft:calcite_stairs",
         "minecraft:calcite_wall",
         "minecraft:chiseled_packed_ice",
+        "minecraft:chiseled_soulshale",
         "minecraft:frostbite_spawn_egg",
         "minecraft:ice_ball",
         "minecraft:ice_crystal",

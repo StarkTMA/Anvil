@@ -84,6 +84,7 @@ def test_snow_bricks_live_in_beta():
 def test_calcite_blocks_live_in_beta():
     assert BetaBlockTypes.PolishedCalcite() == "minecraft:polished_calcite"
     assert BetaBlockTypes.ChiseledSoulshale() == "minecraft:chiseled_soulshale"
+    assert BetaItemTypes.ChiseledSoulshale() == "minecraft:chiseled_soulshale"
     assert BetaBlockTypes.CalcitePillar(pillar_axis="x").states == {"pillar_axis": "x"}
     assert BetaBlockTypes.CalciteSlab(minecraft_vertical_half="top").states == {
         "minecraft:vertical_half": "top"
@@ -98,6 +99,8 @@ def test_calcite_blocks_live_in_beta():
     assert BetaItemTypes.PolishedCalciteBricks() == "minecraft:polished_calcite_bricks"
     with pytest.raises(AttributeError):
         MinecraftBlockTypes.PolishedCalcite
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.ChiseledSoulshale
 
 
 def test_music_disc_flurry_lives_in_beta():
