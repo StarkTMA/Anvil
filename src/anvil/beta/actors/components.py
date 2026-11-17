@@ -37,9 +37,13 @@ from anvil.lib.jsonmodel import (
     JsonComponent,
     JsonObject,
     Length,
+    MinMax,
+    Ordered,
+    Positive,
     json_field,
 )
 from anvil.lib.jsonmodel.enums import FilterSubject
+from anvil.lib.translator import AnvilTranslator
 
 
 class TimeMarkerSensorTrigger(JsonObject):
@@ -66,6 +70,7 @@ class ProjectileImpactDamage(_ProjectileImpactDamage):
         ceil_pre_critical_damage (bool, optional): Rounds the damage up before the critical multiplier. Game default false.
         channeling (bool, optional): Calls down lightning on the entity hit during a thunderstorm. Game default false.
         damage (float | tuple[float, float], optional): Damage dealt, or a `(min, max)` range rolled per hit. Written as `{"min", "max"}`. Game default 0.
+        death_message_override (str, optional): The death message shown when the impact damage kills an entity, as plain text. It is added to the language file under `death.attack.<namespace>:<project>.<text>`, and that key is written. In the text, `%1$s` is the name of the killed entity and `%2$s` is the name of the projectile's owner, or of the projectile itself if it has no owner. Entity format 1.26.70 and later. Without it, the default projectile death message.
         destroy_on_hit (bool, optional): Removes the projectile when it deals damage. Game default false.
         destroy_on_hit_requires_damage (bool, optional): `destroy_on_hit` needs at least one point of damage dealt. Game default true.
         difficulty_randomization (Literal["none", "additive", "multiplicative"], optional): How the world difficulty changes the damage. Game default none.
@@ -79,6 +84,14 @@ class ProjectileImpactDamage(_ProjectileImpactDamage):
     """
 
     scale_damage_with_difficulty: bool | None = json_field(default=None)
+    death_message_override: str | None = json_field(default=None)
+
+    def __post_init__(self) -> None:
+        if self.death_message_override is not None:
+            self.death_message_override = AnvilTranslator().localize(
+                self.death_message_override,
+                prefix=f"death.attack.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}",
+            )
 
     def __validate__(self) -> None:
         if not CONFIG._EXPERIMENTAL:
@@ -138,7 +151,7 @@ class EntityProjectile(_EntityProjectile):
             grant_xp (int | tuple[float, float], optional): Experience dropped, or a `(min, max)` range. Written as `{"minXP", "maxXP"}`.
             hurt_owner (ProjectileHurtOwner, optional): Damages the owner.
             ignite (bool, optional): Runs the entity's `on_ignite` trigger.
-            impact_damage (ProjectileImpactDamage, optional): Damages the entity hit, with the 1.26.70 options.
+            impact_damage (ProjectileImpactDamage, optional): Damages the entity hit, with the 1.26.70 options: `scale_damage_with_difficulty`, and `death_message_override`, a plain-text death message that Anvil adds to the language file.
             mob_effect (list[ProjectileMobEffect], optional): Effects applied to the entity hit. Written as `{"effects": [...]}`.
             particle_on_hit (ProjectileParticleOnHit, optional): A particle effect at the impact.
             remove_on_hit (bool, optional): Removes the projectile.
@@ -381,4 +394,54 @@ class EntityTrail(JsonComponent):
         if not CONFIG._EXPERIMENTAL:
             raise ValueError(
                 "EntityTrail is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class EntityRotationAlwaysFollowsHead(JsonComponent):
+    """[EXPERIMENTAL] Keeps the entity's rotation aligned with its head after look behaviors run. This overrides the yaw set by movement components, so it is intended for entities that turn in place.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_rotation_always_follows_head)
+    """
+
+    identifier = "minecraft:entity_rotation_always_follows_head"
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityRotationAlwaysFollowsHead is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class EntitySphericalLookControl(JsonComponent):
+    """[EXPERIMENTAL] Turns the entity's head toward targets set by look behaviors along the shortest arc in 3D,
+    combining upward or downward rotation (pitch) with side-to-side rotation (yaw) in a single turn.
+    Needs the experimental flag in anvilconfig.json.
+
+    Look requests turn at the average of the pitch and yaw speeds supplied by the look behavior,
+    optionally scaled by distance. With no look request, the head keeps its current direction unless
+    its pitch is outside `pitch_limits`, in which case it returns toward the nearest limit at
+    `pitch_recovery_speed`.
+
+    Args:
+        pitch_recovery_speed (float, optional): The speed in degrees per second used to return the head's pitch within `pitch_limits` when no look request is present, from 0 to 3600. 0 disables pitch recovery. It does not limit turning toward requested targets. Game default 60.
+        reference_distance (float, optional): The distance in blocks, above 0, at or below which the look behavior's average pitch and yaw speed applies unchanged. Beyond it, the turn speed is multiplied by `reference_distance` divided by the target distance, so doubling the distance halves the speed. The distance is measured from the entity's breathing point to the requested look position, and applies only to position targets. Without it, the turn speed is not scaled by distance.
+        pitch_limits (tuple[float, float], optional): The `(min, max)` pitch in degrees, each from -90 (straight up) to 90 (straight down), min not above max. Set both to the same value for a fixed pitch. Written as `{"min", "max"}`. Game default (-90, 90).
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spherical_look_control)
+    """
+
+    identifier = "minecraft:spherical_look_control"
+
+    pitch_recovery_speed: Annotated[float, InRange(0, 3600)] | None = json_field(
+        default=None
+    )
+    reference_distance: Annotated[float, Positive] | None = json_field(default=None)
+    pitch_limits: (
+        Annotated[tuple[float, float], InRange(-90, 90), Ordered, MinMax] | None
+    ) = json_field(default=None)
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntitySphericalLookControl is experimental: turn on features.experimental in anvilconfig.json."
             )

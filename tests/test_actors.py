@@ -830,6 +830,77 @@ def test_beta_impact_damage_scales_with_difficulty(monkeypatch):
     assert impact["scale_damage_with_difficulty"] is False
 
 
+def test_beta_impact_damage_death_message_override(monkeypatch):
+    from anvil.beta.actors.components import EntityProjectile, ProjectileImpactDamage
+    from anvil.lib.config import CONFIG
+    from anvil.lib.translator import AnvilTranslator
+
+    projectile = EntityProjectile().set_on_hit(
+        impact_damage=ProjectileImpactDamage(
+            damage=4, death_message_override="%1$s was hit by a dart from %2$s"
+        )
+    )
+    key = (
+        f"death.attack.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}"
+        "._1_s_was_hit_by_a_dart_from_2_s"
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(projectile)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    impact = AnvilIO._normalize_json_like(projectile)["minecraft:projectile"]["on_hit"][
+        "impact_damage"
+    ]
+    assert impact["death_message_override"] == key
+    assert (
+        AnvilTranslator().get_localization_value(key)
+        == "%1$s was hit by a dart from %2$s"
+    )
+
+
+def test_entity_rotation_always_follows_head_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntityRotationAlwaysFollowsHead
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(EntityRotationAlwaysFollowsHead())
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert AnvilIO._normalize_json_like(EntityRotationAlwaysFollowsHead()) == {
+        "minecraft:entity_rotation_always_follows_head": {}
+    }
+
+
+def test_spherical_look_control_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntitySphericalLookControl
+    from anvil.lib.config import CONFIG
+
+    look = EntitySphericalLookControl(
+        pitch_recovery_speed=0, reference_distance=8, pitch_limits=(-30, 45)
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(look)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert payload(look) == {
+        "pitch_recovery_speed": 0,
+        "reference_distance": 8,
+        "pitch_limits": {"min": -30, "max": 45},
+    }
+    assert payload(EntitySphericalLookControl()) == {}
+    assert payload(EntitySphericalLookControl(pitch_limits=(20, 20))) == {
+        "pitch_limits": {"min": 20, "max": 20}
+    }
+    with pytest.raises(ValueError, match="from 0 to 3600"):
+        payload(EntitySphericalLookControl(pitch_recovery_speed=3601))
+    with pytest.raises(ValueError, match="above 0"):
+        payload(EntitySphericalLookControl(reference_distance=0))
+    with pytest.raises(ValueError, match="from -90 to 90"):
+        payload(EntitySphericalLookControl(pitch_limits=(-91, 0)))
+    with pytest.raises(ValueError, match="greater than its maximum"):
+        payload(EntitySphericalLookControl(pitch_limits=(45, -30)))
+
+
 def test_filter_has_component_takes_component_classes():
     from anvil.api.actors.components import EntityHealth
     from anvil.api.core.filters import Filter
