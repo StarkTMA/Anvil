@@ -1034,3 +1034,42 @@ def test_beta_block_entity_extends_the_public_one():
                 "entity_storage": True,
             }
         }
+
+
+def test_collision_box_origin_size_becomes_min_max_in_beta(monkeypatch, capsys):
+    from anvil.lib import config
+
+    monkeypatch.setattr(BlockCollisionBox, "_warned_deprecated", False)
+    box = BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16)).add_box(
+        origin=(-4, 8, -4), size=(8, 16, 8)
+    )
+    with config.override(_EXPERIMENTAL=False):
+        assert _export(box) == {
+            "minecraft:collision_box": [
+                {"origin": [-8, 0, -8], "size": [16, 8, 16]},
+                {"origin": [-4, 8, -4], "size": [8, 16, 8]},
+            ]
+        }
+    assert "deprecated" not in capsys.readouterr().out
+    with config.override(_EXPERIMENTAL=True):
+        expected = {
+            "minecraft:collision_box": [
+                {"min": [0, 0, 0], "max": [16, 8, 16]},
+                {"min": [4, 8, 4], "max": [12, 24, 12]},
+            ]
+        }
+        assert _export(box) == expected
+        assert _export(box) == expected
+        assert _export(BlockCollisionBox(origin=(-8, 0, -8), size=(12, 24, 8))) == {
+            "minecraft:collision_box": [{"min": [4, 0, 0], "max": [16, 24, 8]}]
+        }
+        assert _export(BlockCollisionBox(origin=(4, 16, 8), size=(-12, -8, -8))) == {
+            "minecraft:collision_box": [{"min": [4, 8, 8], "max": [16, 16, 16]}]
+        }
+        assert _export(BlockCollisionBox(enabled=False)) == {
+            "minecraft:collision_box": False
+        }
+        assert _export(BlockCollisionBox()) == {"minecraft:collision_box": True}
+    out = capsys.readouterr().out
+    assert out.count("[WARN]: BlockCollisionBox origin and size are deprecated") == 1
+    assert "anvil.beta.blocks.components.BlockCollisionBox instead" in out
