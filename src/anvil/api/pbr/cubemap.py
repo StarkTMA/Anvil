@@ -1,7 +1,7 @@
 from typing import Annotated, ClassVar, overload
 
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.format_versions import MANIFEST_BUILD
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     Identifier,
     InRange,
@@ -84,7 +84,7 @@ class _CubeMapSettingsFile(JsonObject):
         "minecraft:cubemap_settings",
     )
 
-    format_version: str = json_field(default=MANIFEST_BUILD, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     settings: _CubeMapSettings = json_field(
         key="minecraft:cubemap_settings", default_factory=_CubeMapSettings
     )

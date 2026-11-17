@@ -6,7 +6,7 @@ from typing import ClassVar
 from anvil.api.core.filters import Filter
 from anvil.api.features.feature import DistributionMixin, Feature, _ScatterParams
 from anvil.lib.config import Pack
-from anvil.lib.format_versions import FEATURE_RULE_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
 from anvil.lib.jsonmodel.enums import FeatureRulePlacementPass
 
@@ -78,7 +78,7 @@ class _FeatureRuleFile(JsonObject):
         "minecraft:feature_rules",
     )
 
-    format_version: str = json_field(default=FEATURE_RULE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature_rules: _FeatureRule = json_field(
         key="minecraft:feature_rules", default_factory=_FeatureRule
     )

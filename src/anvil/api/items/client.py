@@ -5,7 +5,7 @@ from typing import ClassVar
 
 from anvil.api.actors.client import _ActorClientDescription
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.format_versions import ENTITY_CLIENT_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
 from anvil.lib.reports import ReportType
 
@@ -31,7 +31,7 @@ class _AttachableFile(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:attachable")
 
-    format_version: str = json_field(default=ENTITY_CLIENT_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     attachable: _Attachable = json_field(
         default_factory=_Attachable, key="minecraft:attachable"
     )

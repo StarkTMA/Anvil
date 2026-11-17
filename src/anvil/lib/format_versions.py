@@ -17,16 +17,7 @@ MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"
 MODULE_MINECRAFT_SERVER_GRAPHICS: str = "1.0.0"
 
 
-BLOCK_SERVER_VERSION: str = MANIFEST_BUILD
-ENTITY_SERVER_VERSION: str = MANIFEST_BUILD
-ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD
-ITEM_SERVER_VERSION: str = MANIFEST_BUILD
-RECIPE_JSON_FORMAT_VERSION: str = MANIFEST_BUILD
-SOUND_DEFINITIONS_VERSION: str = MANIFEST_BUILD
 SERVER_SOUND_DEFINITIONS_VERSION: str = "1.26.60"
-JIGSAW_VERSION: str = MANIFEST_BUILD
-BIOME_SERVER_VERSION: str = MANIFEST_BUILD
-BIOME_CLIENT_VERSION: str = MANIFEST_BUILD
 FOG_VERSION: str = "1.21.0"
 SPAWN_RULES_VERSION: str = "1.8.0"
 PBR_SETTINGS_VERSION: str = "1.21.80"
@@ -57,5 +48,15 @@ CRAFTING_ITEMS_CATALOG: str = "1.21.60"
 DIALOGUE_VERSION: str = "1.18.0"
 DIMENSION_VERSION: str = "1.26.50"
 LOOT_TABLE_VERSION: str = "1.26.60"
-FEATURE_VERSION: str = MANIFEST_BUILD
-FEATURE_RULE_VERSION: str = MANIFEST_BUILD
+
+
+def build_version() -> str:
+    """The format version of the files that follow the Minecraft build: entities, blocks,
+    items, recipes, sound definitions, jigsaw structures, biomes, features, feature rules and
+    cubemaps. `MANIFEST_BUILD_PREVIEW` when `build.preview` and `features.experimental` are
+    both on, `MANIFEST_BUILD` otherwise."""
+    from anvil.lib.config import CONFIG
+
+    if CONFIG._PREVIEW and CONFIG._EXPERIMENTAL:
+        return MANIFEST_BUILD_PREVIEW
+    return MANIFEST_BUILD

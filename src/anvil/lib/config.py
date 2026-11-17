@@ -14,7 +14,7 @@ import click
 import orjson
 
 from anvil.__version__ import __version__
-from anvil.lib.format_versions import MANIFEST_BUILD
+from anvil.lib.format_versions import MANIFEST_BUILD, MANIFEST_BUILD_PREVIEW
 from anvil.lib.lib import (
     PREVIEW_COM_MOJANG,
     RELEASE_COM_MOJANG,
@@ -372,6 +372,11 @@ class AnvilConfig:
         if self._TARGET not in ConfigPackageTarget:
             raise ValueError(
                 f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}."
+            )
+        if self._EXPERIMENTAL and not self._PREVIEW:
+            raise ValueError(
+                "features.experimental needs build.preview: experimental components use format "
+                f"{MANIFEST_BUILD_PREVIEW}, which only preview Minecraft loads."
             )
         self._LOCAL_EXPORT = bool(self._LOCAL_EXPORT) or sys.platform != "win32"
         validate_namespace_project_name(

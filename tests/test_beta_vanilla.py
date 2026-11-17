@@ -29,7 +29,7 @@ def test_experimental_vanilla_objects_need_the_flag(create):
     with config.override(_TARGET="world", _EXPERIMENTAL=False):
         with pytest.raises(ValueError, match="experimental"):
             create()
-    with config.override(_TARGET="world", _EXPERIMENTAL=True):
+    with config.override(_TARGET="world", _PREVIEW=True, _EXPERIMENTAL=True):
         create()
 
 
@@ -37,7 +37,7 @@ def test_experimental_ids_in_fields_need_the_flag():
     with config.override(_EXPERIMENTAL=False):
         with pytest.raises(ValueError, match="not a vanilla item"):
             ItemId.validate("item", BetaItemTypes.IceBall())
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         ItemId.validate("item", BetaItemTypes.IceBall())
     assert BetaEntityTypes.Frostbite() == "minecraft:frostbite"
 

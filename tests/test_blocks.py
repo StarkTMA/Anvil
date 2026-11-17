@@ -560,7 +560,7 @@ def test_part_builders_for_blocks_and_biomes():
             ),
         ),
     ]
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         for built, constructed in pairs:
             assert built.__json__() == constructed.__json__()
 
@@ -779,7 +779,7 @@ def test_block_entity_container_title_is_localized():
     server.components.add(
         BlockEntity(dynamic_properties=True).set_container(slot_count=27, title="Crate")
     )
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         server._before_export()
         server._before_export()
         key = f"tile.{server.identifier}.container_title"
@@ -810,7 +810,7 @@ def test_beta_block_entity_is_experimental():
     for entity in entities:
         with pytest.raises(ValueError, match="BlockEntity is experimental"):
             _export(entity)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert [_export(entity) for entity in entities] == [
             {"minecraft:block_entity": {"entity_storage": True}},
             {"minecraft:block_entity": {"container": {"slot_count": 9}}},
@@ -838,7 +838,7 @@ def test_beta_block_components():
     for component in components:
         with pytest.raises(ValueError, match="experimental"):
             _export(component)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert [_export(component) for component in components] == [
             {"minecraft:enchantment_power_transmitter": True},
             {"minecraft:vibration_properties": {"dampen_vibrations": True}},
@@ -868,7 +868,7 @@ def test_jukebox_playlist_source_is_experimental():
 
     with pytest.raises(ValueError, match="experimental"):
         _export(BlockJukeBoxPlaylistSource())
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert _export(BlockJukeBoxPlaylistSource()) == {
             "minecraft:jukebox_playlist_source": {}
         }
@@ -884,7 +884,7 @@ def test_collision_box_min_max_is_experimental():
     box = BetaBlockCollisionBox(min=(4, 0, 0), max=(16, 24, 8))
     with pytest.raises(ValueError, match="experimental"):
         _export(box)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert _export(box.add_box(min=(0, 0, 0), max=(4, 8, 4))) == {
             "minecraft:collision_box": [
                 {"min": [4, 0, 0], "max": [16, 24, 8]},
@@ -966,7 +966,7 @@ def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
     }
     (folder / "lantern.bbmodel").write_bytes(orjson.dumps(model))
 
-    with config.override(_EXPERIMENTAL=True, _LOCAL_EXPORT=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True, _LOCAL_EXPORT=True):
         shape = VoxelShape("slab")
         assert _export(BetaBlockCollisionBox().set_voxel_shape(shape)) == {
             "minecraft:collision_box": shape.shape_identifier
@@ -1026,7 +1026,7 @@ def test_beta_block_entity_extends_the_public_one():
     )
     with pytest.raises(ValueError, match="BlockEntity is experimental"):
         _export(entity)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert _export(entity) == {
             "minecraft:block_entity": {
                 "dynamic_properties": True,
@@ -1051,7 +1051,7 @@ def test_collision_box_origin_size_becomes_min_max_in_beta(monkeypatch, capsys):
             ]
         }
     assert "deprecated" not in capsys.readouterr().out
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         expected = {
             "minecraft:collision_box": [
                 {"min": [0, 0, 0], "max": [16, 8, 16]},
