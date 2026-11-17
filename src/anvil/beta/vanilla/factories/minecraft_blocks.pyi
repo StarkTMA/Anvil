@@ -24,20 +24,20 @@ class IcicleStates(TypedDict, total=False):
     dripstone_thickness: Literal["tip", "frustum", "middle", "base", "merge"] | None
     hanging: bool | None
 
-class PackedIceBricksDoubleSlabStates(TypedDict, total=False):
+class PackedIceBrickDoubleSlabStates(TypedDict, total=False):
     minecraft_vertical_half: Literal["bottom", "top"] | None
 
-class PackedIceBricksSlabStates(TypedDict, total=False):
+class PackedIceBrickSlabStates(TypedDict, total=False):
     minecraft_vertical_half: Literal["bottom", "top"] | None
 
-class PackedIceBricksStairsStates(TypedDict, total=False):
+class PackedIceBrickStairsStates(TypedDict, total=False):
     minecraft_corner: (
         Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
     )
     upside_down_bit: bool | None
     weirdo_direction: Literal[0, 1, 2, 3] | None
 
-class PackedIceBricksWallStates(TypedDict, total=False):
+class PackedIceBrickWallStates(TypedDict, total=False):
     wall_connection_type_east: Literal["none", "short", "tall"] | None
     wall_connection_type_north: Literal["none", "short", "tall"] | None
     wall_connection_type_south: Literal["none", "short", "tall"] | None
@@ -58,6 +58,26 @@ class ScaffoldingStates(TypedDict, total=False):
     stability: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None
     stability_check: bool | None
 
+class SnowBrickDoubleSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SnowBrickSlabStates(TypedDict, total=False):
+    minecraft_vertical_half: Literal["bottom", "top"] | None
+
+class SnowBrickStairsStates(TypedDict, total=False):
+    minecraft_corner: (
+        Literal["none", "inner_left", "inner_right", "outer_left", "outer_right"] | None
+    )
+    upside_down_bit: bool | None
+    weirdo_direction: Literal[0, 1, 2, 3] | None
+
+class SnowBrickWallStates(TypedDict, total=False):
+    wall_connection_type_east: Literal["none", "short", "tall"] | None
+    wall_connection_type_north: Literal["none", "short", "tall"] | None
+    wall_connection_type_south: Literal["none", "short", "tall"] | None
+    wall_connection_type_west: Literal["none", "short", "tall"] | None
+    wall_post_bit: bool | None
+
 class UnpoweredRepeaterStates(TypedDict, total=False):
     """Beta introduced the locked state key for unpowered repeaters."""
 
@@ -66,28 +86,41 @@ class UnpoweredRepeaterStates(TypedDict, total=False):
     repeater_delay: Literal[0, 1, 2, 3] | None
 
 def BrittleIce(**states: Unpack[BrittleIceStates]) -> Identifier | BlockDescriptor: ...
+def ChiseledPackedIce() -> Identifier: ...
 def IceCrystal(**states: Unpack[IceCrystalStates]) -> Identifier | BlockDescriptor: ...
 def Icicle(**states: Unpack[IcicleStates]) -> Identifier | BlockDescriptor: ...
+def PackedIceBrickDoubleSlab(
+    **states: Unpack[PackedIceBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PackedIceBrickSlab(
+    **states: Unpack[PackedIceBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def PackedIceBrickStairs(
+    **states: Unpack[PackedIceBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def PackedIceBrickWall(
+    **states: Unpack[PackedIceBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
 def PackedIceBricks() -> Identifier: ...
-def PackedIceBricksChiseled() -> Identifier: ...
-def PackedIceBricksDoubleSlab(
-    **states: Unpack[PackedIceBricksDoubleSlabStates],
-) -> Identifier | BlockDescriptor: ...
-def PackedIceBricksSlab(
-    **states: Unpack[PackedIceBricksSlabStates],
-) -> Identifier | BlockDescriptor: ...
-def PackedIceBricksStairs(
-    **states: Unpack[PackedIceBricksStairsStates],
-) -> Identifier | BlockDescriptor: ...
-def PackedIceBricksWall(
-    **states: Unpack[PackedIceBricksWallStates],
-) -> Identifier | BlockDescriptor: ...
 def PoweredRepeater(
     **states: Unpack[PoweredRepeaterStates],
 ) -> Identifier | BlockDescriptor: ...
 def Scaffolding(
     **states: Unpack[ScaffoldingStates],
 ) -> Identifier | BlockDescriptor: ...
+def SnowBrickDoubleSlab(
+    **states: Unpack[SnowBrickDoubleSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SnowBrickSlab(
+    **states: Unpack[SnowBrickSlabStates],
+) -> Identifier | BlockDescriptor: ...
+def SnowBrickStairs(
+    **states: Unpack[SnowBrickStairsStates],
+) -> Identifier | BlockDescriptor: ...
+def SnowBrickWall(
+    **states: Unpack[SnowBrickWallStates],
+) -> Identifier | BlockDescriptor: ...
+def SnowBricks() -> Identifier: ...
 def UnpoweredRepeater(
     **states: Unpack[UnpoweredRepeaterStates],
 ) -> Identifier | BlockDescriptor: ...
