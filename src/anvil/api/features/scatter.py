@@ -8,7 +8,7 @@ from anvil.api.features.feature import (
     _Feature,
     _ScatterParams,
 )
-from anvil.lib.format_versions import FEATURE_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import JsonObject, json_field
 
 
@@ -46,7 +46,7 @@ class _ScatterFeatureFile(JsonObject):
         "minecraft:scatter_feature",
     )
 
-    format_version: str = json_field(default=FEATURE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature: _ScatterFeature = json_field(
         key="minecraft:scatter_feature", default_factory=_ScatterFeature
     )

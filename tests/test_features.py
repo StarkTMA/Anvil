@@ -347,7 +347,7 @@ def test_crevasse_feature_is_unavailable():
     from anvil.lib import config
 
     for experimental in (False, True):
-        with config.override(_EXPERIMENTAL=experimental):
+        with config.override(_PREVIEW=experimental, _EXPERIMENTAL=experimental):
             with pytest.raises(ValueError, match="unavailable"):
                 feature = CrevasseFeature(
                     "ice_crevasse",

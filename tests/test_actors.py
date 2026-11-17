@@ -969,3 +969,114 @@ def test_beta_speed_filters_need_experimental(monkeypatch, test):
     assert filt.test == test
     assert filt.value == -1.5
     assert filt.operator == FilterOperation.Less
+
+
+def test_beta_teleport_has_the_1_26_70_fields(monkeypatch):
+    from anvil.beta.actors.components import EntityTeleport
+    from anvil.lib.config import CONFIG
+
+    teleport = EntityTeleport(
+        can_teleport_into_liquid=True,
+        on_teleport_sound="undefined",
+        target_distance=10,
+        target_teleport_distance=(-8, 12),
+        target_teleport_offset=(4, 8, 4),
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(teleport)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert payload(teleport) == {
+        "target_distance": 10,
+        "can_teleport_into_liquid": True,
+        "on_teleport_sound": "undefined",
+        "target_teleport_distance": {"min": -8, "max": 12},
+        "target_teleport_offset": [4, 8, 4],
+    }
+    assert payload(EntityTeleport(target_teleport_distance=16)) == {
+        "target_teleport_distance": {"min": 16, "max": 16}
+    }
+    with pytest.raises(ValueError, match="from -32 to 32"):
+        payload(EntityTeleport(target_teleport_distance=(-33, 0)))
+    with pytest.raises(ValueError, match="from 0 to 32"):
+        payload(EntityTeleport(target_teleport_offset=(4, 33, 4)))
+
+
+def test_beta_trail_writes_the_1_26_70_form(monkeypatch):
+    from anvil.api.actors.components import EntityTrail as PublicEntityTrail
+    from anvil.api.core.filters import Filter
+    from anvil.beta.actors.components import EntityTrail, TrailPlacementCondition
+    from anvil.lib.config import CONFIG
+    from anvil.lib.jsonmodel import JsonContainer
+
+    trail = (
+        EntityTrail(
+            block_type="minecraft:snow_layer",
+            extent=2,
+            offset=(0, -1, 0),
+            place_only_on_block_position_change=True,
+            placement_checks="standard",
+            placement_filter=Filter.is_daytime(False),
+            shape="circle",
+        )
+        .add_placement_condition(block_types=["minecraft:air"])
+        .add_placement_condition(
+            block_types=["minecraft:grass_block", "minecraft:dirt"], y_offset=-1
+        )
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(trail)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    exported = AnvilIO._normalize_json_like(trail)["minecraft:trail"]
+    assert exported["block_type"] == "minecraft:snow_layer"
+    assert exported["extent"] == 2
+    assert exported["offset"] == [0, -1, 0]
+    assert exported["place_only_on_block_position_change"] is True
+    assert exported["placement_checks"] == "standard"
+    assert exported["shape"] == "circle"
+    assert "placement_filter" in exported
+    assert exported["placement_conditions"] == [
+        {"block_types": ["minecraft:air"]},
+        {"block_types": ["minecraft:grass_block", "minecraft:dirt"], "y_offset": -1},
+    ]
+    with pytest.raises(ValueError, match="from 0 to 16"):
+        payload(EntityTrail(extent=17))
+    with pytest.raises(ValueError):
+        payload(EntityTrail(shape="ring"))
+    with pytest.raises(ValueError):
+        payload(EntityTrail(placement_checks="all"))
+    with pytest.raises(ValueError, match="from -16 to 16"):
+        payload(TrailPlacementCondition(block_types=["minecraft:air"], y_offset=17))
+    with pytest.raises(ValueError, match="at least 1 items"):
+        payload(TrailPlacementCondition(block_types=[]))
+    with pytest.raises(ValueError, match="at least 1 items"):
+        payload(EntityTrail(placement_conditions=[]))
+
+    components = JsonContainer(name="components").add(PublicEntityTrail(radius=1))
+    with pytest.raises(ValueError, match="clashes"):
+        components.add(EntityTrail(shape="square"))
+
+
+@pytest.mark.parametrize("experimental", [False, True])
+def test_place_feature_event_response_is_unavailable(monkeypatch, experimental):
+    from anvil.api.actors.entity import Entity
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", experimental, raising=False)
+    entity = Entity("place_feature_events")
+    spawned = entity.server.event("minecraft:entity_spawned")
+    sequence = spawned.add_sequence()
+    randomize = sequence.add_randomize()
+    for node in (spawned, sequence, randomize):
+        with pytest.raises(ValueError, match="place_feature is unavailable"):
+            node.set_place_feature(feature="testns:spike", target=FilterSubject.Self)
+        assert node.place_feature is None
+    spawned.add_component_groups(["adult"])
+    events = AnvilIO._normalize_json_like(entity.server._document)["minecraft:entity"][
+        "events"
+    ]
+    assert events["minecraft:entity_spawned"] == {
+        "add": {"component_groups": ["adult"]},
+        "sequence": [{"randomize": [{"weight": 1}]}],
+    }

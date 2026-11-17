@@ -7,7 +7,7 @@ from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _Recipe
 from anvil.api.items.items import Item
-from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import ItemObject, JsonObject, json_field
 from anvil.lib.jsonmodel.enums import SmeltingTags
 
@@ -35,7 +35,7 @@ class _FurnaceRecipeFile(JsonObject):
         "minecraft:recipe_furnace",
     )
 
-    format_version: str = json_field(default=RECIPE_JSON_FORMAT_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     recipe: _FurnaceRecipe = json_field(
         key="minecraft:recipe_furnace", default_factory=_FurnaceRecipe
     )

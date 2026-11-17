@@ -6,7 +6,7 @@ from typing import Annotated, Any, ClassVar
 
 from anvil.api.sounds.server_sound_definitions import MusicInfo, ServerSoundDefinition
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.format_versions import SOUND_DEFINITIONS_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     JsonFile,
     JsonObject,
@@ -119,7 +119,7 @@ class _SoundDefinitionsFile(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("format_version", "sound_definitions")
 
-    format_version: str = json_field(default=SOUND_DEFINITIONS_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     sound_definitions: Annotated[list[_SoundDescription], Keyed("identifier")] = (
         json_field(default_factory=list)
     )

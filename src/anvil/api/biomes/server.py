@@ -7,7 +7,7 @@ from anvil.api.biomes.components import BiomeClientComponent
 from anvil.api.biomes.description import _BiomeDescription
 from anvil.api.core.components import ComponentGroup
 from anvil.lib.config import Pack
-from anvil.lib.format_versions import BIOME_SERVER_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     Encoded,
     JsonFile,
@@ -40,7 +40,7 @@ class _BiomeServerFile(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:biome")
 
-    format_version: str = json_field(default=BIOME_SERVER_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     biome: _BiomeServer = json_field(
         default_factory=_BiomeServer, key="minecraft:biome"
     )

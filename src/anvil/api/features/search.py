@@ -3,7 +3,7 @@
 from typing import Annotated, ClassVar, Literal
 
 from anvil.api.features.feature import Feature, _Feature
-from anvil.lib.format_versions import FEATURE_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import AtLeastOne, JsonObject, json_field
 
 
@@ -43,7 +43,7 @@ class _SearchFeatureFile(JsonObject):
         "minecraft:search_feature",
     )
 
-    format_version: str = json_field(default=FEATURE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature: _SearchFeature | None = json_field(
         key="minecraft:search_feature", default=None
     )

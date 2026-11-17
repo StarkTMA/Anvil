@@ -2,6 +2,8 @@ import dataclasses
 from dataclasses import InitVar
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, get_args
 
+import click
+
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.items import Item
@@ -556,11 +558,19 @@ class BlockCollisionBox(_BlockBoxComponent):
 
     Add more boxes with `add_box`. Boxes are always written as a list, even when there is only one.
 
+    The beta deprecates `origin` and `size`. With `features.experimental` on, Anvil warns once
+    and writes every box as `min` and `max` instead, the form
+    `anvil.beta.blocks.components.BlockCollisionBox` uses.
+    The corners are the origin shifted by (8, 0, 8) and that point plus the size, sorted per axis,
+    with x mirrored the way the game does it: `min` is (16 - high x, low y, low z) and `max` is
+    (16 - low x, high y, high z).
+
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_collision_box)
     """
 
     identifier = "minecraft:collision_box"
     _max_height = 24
+    _warned_deprecated: ClassVar[bool] = False
 
     _boxes: list[BlockBox] = json_field(default_factory=list, init=False, exclude=True)
 
@@ -583,12 +593,42 @@ class BlockCollisionBox(_BlockBoxComponent):
         for box in self._boxes:
             self._check_box(box.origin, box.size)
 
+    @staticmethod
+    def _to_min_max(box: dict[str, Any]) -> Any:
+        from anvil.beta.blocks.components import BlockMinMaxBox
+
+        adjusted = [o + shift for o, shift in zip(box["origin"], (8, 0, 8))]
+        end = [a + s for a, s in zip(adjusted, box["size"])]
+        low = [min(a, e) for a, e in zip(adjusted, end)]
+        high = [max(a, e) for a, e in zip(adjusted, end)]
+        return BlockMinMaxBox(
+            min=(16 - high[0], low[1], low[2]), max=(16 - low[0], high[1], high[2])
+        ).__json__()
+
+    @classmethod
+    def _warn_deprecated(cls) -> None:
+        if cls._warned_deprecated:
+            return
+        BlockCollisionBox._warned_deprecated = True
+        click.echo(
+            click.style(
+                "[WARN]: BlockCollisionBox origin and size are deprecated in the beta. Anvil "
+                "writes them as min and max; use anvil.beta.blocks.components."
+                "BlockCollisionBox instead.",
+                fg="yellow",
+            )
+        )
+
     def __json__(self) -> Any:
         payload = _Switchable.__json__(self)
         box = payload[self.identifier]
         if not isinstance(box, dict):
             return payload
-        return {self.identifier: [box, *(extra.__json__() for extra in self._boxes)]}
+        boxes = [box, *(extra.__json__() for extra in self._boxes)]
+        if CONFIG._EXPERIMENTAL:
+            self._warn_deprecated()
+            boxes = [self._to_min_max(b) for b in boxes]
+        return {self.identifier: boxes}
 
 
 class BlockConnectionRule(JsonComponent):

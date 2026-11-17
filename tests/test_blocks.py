@@ -560,7 +560,7 @@ def test_part_builders_for_blocks_and_biomes():
             ),
         ),
     ]
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         for built, constructed in pairs:
             assert built.__json__() == constructed.__json__()
 
@@ -779,7 +779,7 @@ def test_block_entity_container_title_is_localized():
     server.components.add(
         BlockEntity(dynamic_properties=True).set_container(slot_count=27, title="Crate")
     )
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         server._before_export()
         server._before_export()
         key = f"tile.{server.identifier}.container_title"
@@ -810,7 +810,7 @@ def test_beta_block_entity_is_experimental():
     for entity in entities:
         with pytest.raises(ValueError, match="BlockEntity is experimental"):
             _export(entity)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert [_export(entity) for entity in entities] == [
             {"minecraft:block_entity": {"entity_storage": True}},
             {"minecraft:block_entity": {"container": {"slot_count": 9}}},
@@ -838,7 +838,7 @@ def test_beta_block_components():
     for component in components:
         with pytest.raises(ValueError, match="experimental"):
             _export(component)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert [_export(component) for component in components] == [
             {"minecraft:enchantment_power_transmitter": True},
             {"minecraft:vibration_properties": {"dampen_vibrations": True}},
@@ -868,7 +868,7 @@ def test_jukebox_playlist_source_is_experimental():
 
     with pytest.raises(ValueError, match="experimental"):
         _export(BlockJukeBoxPlaylistSource())
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert _export(BlockJukeBoxPlaylistSource()) == {
             "minecraft:jukebox_playlist_source": {}
         }
@@ -877,41 +877,57 @@ def test_jukebox_playlist_source_is_experimental():
 def test_collision_box_min_max_is_experimental():
     from anvil.api.blocks.components import BlockCollisionBox
     from anvil.api.blocks.server import BlockServer
-    from anvil.beta.blocks.components import BlockCollisionBoxMinMax
+    from anvil.beta.blocks.components import BlockCollisionBox as BetaBlockCollisionBox
     from anvil.lib import config
     from anvil.lib.jsonmodel import validate_components
 
-    box = BlockCollisionBoxMinMax(min=(4, 0, 0), max=(16, 24, 8))
+    box = BetaBlockCollisionBox(min=(4, 0, 0), max=(16, 24, 8))
     with pytest.raises(ValueError, match="experimental"):
         _export(box)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert _export(box.add_box(min=(0, 0, 0), max=(4, 8, 4))) == {
             "minecraft:collision_box": [
                 {"min": [4, 0, 0], "max": [16, 24, 8]},
                 {"min": [0, 0, 0], "max": [4, 8, 4]},
             ]
         }
-        with pytest.raises(ValueError, match="must stay within"):
-            _export(BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 25, 16)))
+        with pytest.raises(ValueError, match=r"max\[1\]' must be from 0 to 24"):
+            _export(BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 25, 16)))
         with pytest.raises(ValueError, match="must not be above"):
-            _export(BlockCollisionBoxMinMax(min=(8, 0, 0), max=(4, 8, 8)))
-        crowded = BlockCollisionBoxMinMax(min=(0, 0, 0), max=(1, 1, 1))
+            _export(BetaBlockCollisionBox(min=(8, 0, 0), max=(4, 8, 8)))
+        crowded = BetaBlockCollisionBox(min=(0, 0, 0), max=(1, 1, 1))
         for _ in range(32):
             crowded.add_box(min=(0, 0, 0), max=(1, 1, 1))
         with pytest.raises(ValueError, match="at most 32"):
             _export(crowded)
+        crowded._boxes.pop()
+        assert len(_export(crowded)["minecraft:collision_box"]) == 32
+        with pytest.raises(ValueError, match=r"min\[0\]' must be from 0 to 16"):
+            _export(
+                BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)).add_box(
+                    min=(-1, 0, 0), max=(4, 4, 4)
+                )
+            )
+        with pytest.raises(
+            ValueError, match="BlockMinMaxBox: min .* must not be above"
+        ):
+            _export(
+                BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)).add_box(
+                    min=(8, 0, 0), max=(4, 4, 4)
+                )
+            )
 
     server = BlockServer(name="clash")
     server.components.add(BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16)))
-    with pytest.raises(ValueError, match="BlockCollisionBoxMinMax"):
-        server.components.add(BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)))
+    with pytest.raises(ValueError, match="clashes"):
+        server.components.add(BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)))
     with pytest.raises(ValueError, match="clashes"):
         BlockServer(name="clash_back").components.add(
-            BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)),
+            BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)),
             BlockCollisionBox(enabled=False),
         )
     server.permutation("q.block_state('test:open')").add(
-        BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16))
+        BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16))
     )
     with pytest.raises(ValueError, match="clashes"):
         validate_components(
@@ -923,7 +939,7 @@ def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
     import orjson
 
     from anvil.api.models.voxel_shape import VoxelShape
-    from anvil.beta.blocks.components import BlockCollisionBoxMinMax
+    from anvil.beta.blocks.components import BlockCollisionBox as BetaBlockCollisionBox
     from anvil.lib import config
     from anvil.lib.blockbench import _Blockbench
 
@@ -950,31 +966,31 @@ def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
     }
     (folder / "lantern.bbmodel").write_bytes(orjson.dumps(model))
 
-    with config.override(_EXPERIMENTAL=True, _LOCAL_EXPORT=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True, _LOCAL_EXPORT=True):
         shape = VoxelShape("slab")
-        assert _export(BlockCollisionBoxMinMax().set_voxel_shape(shape)) == {
+        assert _export(BetaBlockCollisionBox().set_voxel_shape(shape)) == {
             "minecraft:collision_box": shape.shape_identifier
         }
-        component = BlockCollisionBoxMinMax().set_voxel_shape(blockbench="lantern")
+        component = BetaBlockCollisionBox().set_voxel_shape(blockbench="lantern")
         assert _export(component) == {
             "minecraft:collision_box": f"{config.CONFIG.NAMESPACE}:lantern_culling_shape"
         }
         model = _Blockbench("lantern", "blocks").model
         assert "lantern" in model._queued_voxel_shapes
         with pytest.raises(ValueError, match="either voxel_shape or blockbench"):
-            BlockCollisionBoxMinMax().set_voxel_shape()
+            BetaBlockCollisionBox().set_voxel_shape()
         with pytest.raises(ValueError, match="either voxel_shape or blockbench"):
-            BlockCollisionBoxMinMax().set_voxel_shape(shape, blockbench="lantern")
+            BetaBlockCollisionBox().set_voxel_shape(shape, blockbench="lantern")
         with pytest.raises(ValueError, match="collection only applies"):
-            BlockCollisionBoxMinMax().set_voxel_shape(shape, collection="top")
+            BetaBlockCollisionBox().set_voxel_shape(shape, collection="top")
         with pytest.raises(ValueError, match="not both"):
             _export(
-                BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)).set_voxel_shape(
+                BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)).set_voxel_shape(
                     shape
                 )
             )
         with pytest.raises(ValueError, match="needs both min and max"):
-            _export(BlockCollisionBoxMinMax(min=(0, 0, 0)))
+            _export(BetaBlockCollisionBox(min=(0, 0, 0)))
 
 
 def test_beta_destructible_by_mining_base_time_to_destroy():
@@ -1010,7 +1026,7 @@ def test_beta_block_entity_extends_the_public_one():
     )
     with pytest.raises(ValueError, match="BlockEntity is experimental"):
         _export(entity)
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         assert _export(entity) == {
             "minecraft:block_entity": {
                 "dynamic_properties": True,
@@ -1018,3 +1034,42 @@ def test_beta_block_entity_extends_the_public_one():
                 "entity_storage": True,
             }
         }
+
+
+def test_collision_box_origin_size_becomes_min_max_in_beta(monkeypatch, capsys):
+    from anvil.lib import config
+
+    monkeypatch.setattr(BlockCollisionBox, "_warned_deprecated", False)
+    box = BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16)).add_box(
+        origin=(-4, 8, -4), size=(8, 16, 8)
+    )
+    with config.override(_EXPERIMENTAL=False):
+        assert _export(box) == {
+            "minecraft:collision_box": [
+                {"origin": [-8, 0, -8], "size": [16, 8, 16]},
+                {"origin": [-4, 8, -4], "size": [8, 16, 8]},
+            ]
+        }
+    assert "deprecated" not in capsys.readouterr().out
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
+        expected = {
+            "minecraft:collision_box": [
+                {"min": [0, 0, 0], "max": [16, 8, 16]},
+                {"min": [4, 8, 4], "max": [12, 24, 12]},
+            ]
+        }
+        assert _export(box) == expected
+        assert _export(box) == expected
+        assert _export(BlockCollisionBox(origin=(-8, 0, -8), size=(12, 24, 8))) == {
+            "minecraft:collision_box": [{"min": [4, 0, 0], "max": [16, 24, 8]}]
+        }
+        assert _export(BlockCollisionBox(origin=(4, 16, 8), size=(-12, -8, -8))) == {
+            "minecraft:collision_box": [{"min": [4, 8, 8], "max": [16, 16, 16]}]
+        }
+        assert _export(BlockCollisionBox(enabled=False)) == {
+            "minecraft:collision_box": False
+        }
+        assert _export(BlockCollisionBox()) == {"minecraft:collision_box": True}
+    out = capsys.readouterr().out
+    assert out.count("[WARN]: BlockCollisionBox origin and size are deprecated") == 1
+    assert "anvil.beta.blocks.components.BlockCollisionBox instead" in out

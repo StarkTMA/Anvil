@@ -1,6 +1,8 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from anvil.api.actors.components.combat import EntityProjectile as _EntityProjectile
+from anvil.api.actors.components.combat import EntityTeleport as _EntityTeleport
+from anvil.api.actors.components.combat import EntityTrail as _EntityTrail
 from anvil.api.actors.components.combat import (
     ProjectileArrowEffect,
     ProjectileCatchFire,
@@ -21,11 +23,22 @@ from anvil.api.actors.components.combat import (
     ProjectileThrownPotionEffect,
 )
 from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
-from anvil.lib.jsonmodel import EntityId, JsonComponent, JsonObject, json_field
+from anvil.lib.jsonmodel import (
+    BlockId,
+    EntityId,
+    ExactMinMax,
+    InRange,
+    JsonComponent,
+    JsonObject,
+    Length,
+    json_field,
+)
 from anvil.lib.jsonmodel.enums import FilterSubject
 
 
@@ -251,3 +264,121 @@ class EntityTimeMarkerSensor(JsonComponent):
             )
         if not self.triggers:
             raise ValueError("EntityTimeMarkerSensor needs at least one trigger.")
+
+
+class EntityTeleport(_EntityTeleport):
+    """[EXPERIMENTAL] Defines an entity's teleporting behavior, with the 1.26.70 options.
+    Needs the experimental flag in anvilconfig.json.
+
+    Args:
+        can_teleport_into_liquid (bool, optional): Whether the entity can teleport into blocks that hold a liquid, such as water. Game default false.
+        dark_teleport_chance (float, optional): Chance to teleport in darkness. Game default 0.01.
+        light_teleport_chance (float, optional): Chance to teleport in daylight. Game default 0.01.
+        max_random_teleport_time (float, optional): Maximum seconds between random teleports. Game default 20.
+        min_random_teleport_time (float, optional): Minimum seconds between random teleports. Game default 0.
+        on_teleport_sound (str, optional): Level sound event played after a successful teleport. An entity with no sound bound to it plays the default teleport sound; "undefined" teleports silently. Game default teleport.
+        projectile_filter (Filter, optional): Projectiles that make the entity try to teleport. Without it, every projectile.
+        random_teleport_cube (tuple[float, float, float], optional): The area of random teleports. Game default (32, 16, 32).
+        random_teleports (bool, optional): Whether the entity teleports randomly. Game default true.
+        target_distance (float, optional): Minimum distance from the target before the entity starts teleporting towards it. Game default 16.
+        target_teleport_chance (float, optional): Chance to teleport, from 0 to 1. Game default 1.
+        target_teleport_distance (float | tuple[float, float], optional): Distance teleported towards the target, or a `(min, max)` range, from -32 to 32. Negative values teleport away from the target. Written as `{"min", "max"}`. Game default (16, 16).
+        target_teleport_offset (tuple[float, float, float], optional): Maximum random offset on each axis, in either direction, added to the teleport direction, from 0 to 32. The y offset is rounded down to whole blocks. Game default (4, 8, 4).
+        teleports_on_projectile_hit (bool, optional): Whether the entity teleports away from projectiles about to hit it. Game default false.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_teleport)
+    """
+
+    can_teleport_into_liquid: bool | None = json_field(default=None)
+    on_teleport_sound: str | None = json_field(default=None)
+    target_teleport_distance: (
+        Annotated[float | tuple[float, float], InRange(-32, 32), ExactMinMax] | None
+    ) = json_field(default=None)
+    target_teleport_offset: (
+        Annotated[tuple[float, float, float], InRange(0, 32)] | None
+    ) = json_field(default=None)
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityTeleport is experimental: turn on features.experimental in anvilconfig.json."
+            )
+
+
+class TrailPlacementCondition(JsonObject):
+    """A block requirement of `minecraft:trail`, checked at a vertical offset from each
+    placement position. All conditions must pass; the block types of one condition are
+    alternatives.
+
+    Args:
+        block_types (list[str | Block | BlockDescriptor]): Blocks that satisfy the condition, at least one.
+        y_offset (int, optional): Vertical offset from the placement position, from -16 to 16. Game default 0.
+    """
+
+    block_types: Annotated[
+        list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(1)
+    ] = json_field()
+    y_offset: Annotated[int, InRange(-16, 16)] | None = json_field(default=None)
+
+
+class EntityTrail(JsonComponent):
+    """[EXPERIMENTAL] Makes the entity leave a trail of blocks as it moves, in the 1.26.70 form.
+    Obeys Mob Griefing rules. Needs the experimental flag in anvilconfig.json.
+    It writes `minecraft:trail` like the public `EntityTrail`, which keeps the older options,
+    and clashes with it: an entity cannot use both.
+
+    Args:
+        block_type (str | Block | BlockDescriptor, optional): The block placed. A solid block cannot be placed at the entity's position when `offset` is (0, 0, 0). Game default air.
+        extent (int, optional): Maximum horizontal distance from the center at which blocks are placed, from 0 to 16. Game default 0.
+        offset (tuple[float, float, float], optional): Offset from the entity where blocks are placed and checked, capped at 16 blocks. X and Z follow the entity's nearest cardinal facing; Y is vertical. Game default (0, 0, 0).
+        place_only_on_block_position_change (bool, optional): Places blocks only on ticks where the bottom of the entity moves into another block position, or where it lands. Game default false.
+        placement_checks (Literal["none", "block", "standard"], optional): The checks at each placement position: "none" skips them, "block" applies the block placement conditions, "standard" applies the standard block placement rules, including clearance from entities in the way. Game default "block".
+        placement_conditions (list[TrailPlacementCondition], optional): Block requirements around each placement position, at least one. Add them with `add_placement_condition`. Game default one condition, air at y offset 0.
+        placement_filter (Filter, optional): Conditions on the entity for blocks to be placed.
+        shape (Literal["corners", "square", "circle"], optional): The horizontal placement pattern: four corner blocks, a filled square or a filled disk. Game default "corners".
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trail)
+    """
+
+    identifier = "minecraft:trail"
+    _clashes = (_EntityTrail,)
+
+    block_type: Annotated[str | Block | BlockDescriptor, BlockId] | None = json_field(
+        default=None
+    )
+    extent: Annotated[int, InRange(0, 16)] | None = json_field(default=None)
+    offset: tuple[float, float, float] | None = json_field(default=None)
+    place_only_on_block_position_change: bool | None = json_field(default=None)
+    placement_checks: Literal["none", "block", "standard"] | None = json_field(
+        default=None
+    )
+    placement_conditions: Annotated[list[TrailPlacementCondition], Length(1)] | None = (
+        json_field(default=None)
+    )
+    placement_filter: Filter | None = json_field(default=None)
+    shape: Literal["corners", "square", "circle"] | None = json_field(default=None)
+
+    def add_placement_condition(
+        self,
+        *,
+        block_types: list[str | Block | BlockDescriptor],
+        y_offset: int | None = None,
+    ) -> "EntityTrail":
+        """Adds a block requirement checked at a vertical offset from each placement position.
+
+        Args:
+            block_types (list[str | Block | BlockDescriptor]): Blocks that satisfy the condition, at least one. Any of them passes.
+            y_offset (int, optional): Vertical offset from the placement position, from -16 to 16. Game default 0.
+        """
+        if self.placement_conditions is None:
+            self.placement_conditions = []
+        self.placement_conditions.append(
+            TrailPlacementCondition(block_types=block_types, y_offset=y_offset)
+        )
+        return self
+
+    def __validate__(self) -> None:
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "EntityTrail is experimental: turn on features.experimental in anvilconfig.json."
+            )

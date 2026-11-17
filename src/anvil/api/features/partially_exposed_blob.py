@@ -5,7 +5,7 @@ from typing import Annotated, ClassVar, Literal
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _Feature
-from anvil.lib.format_versions import FEATURE_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import BlockId, Chance, InRange, JsonObject, json_field
 from anvil.lib.jsonmodel.enums import BlockFaceValues
 
@@ -27,7 +27,7 @@ class _PartiallyExposedBlobFeatureFile(JsonObject):
         "minecraft:partially_exposed_blob_feature",
     )
 
-    format_version: str = json_field(default=FEATURE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature: _PartiallyExposedBlobFeature | None = json_field(
         key="minecraft:partially_exposed_blob_feature", default=None
     )

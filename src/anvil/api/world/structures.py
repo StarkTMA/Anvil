@@ -9,7 +9,7 @@ from anvil.api.core.core import ANVIL
 from anvil.api.core.filters import Filter
 from anvil.api.features.feature import Feature
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.format_versions import JIGSAW_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     AtLeastOne,
     BlockId,
@@ -474,7 +474,7 @@ class _ProcessorListFile(JsonObject):
         "minecraft:processor_list",
     )
 
-    format_version: str = json_field(default=JIGSAW_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     processor_list: _ProcessorList = json_field(
         key="minecraft:processor_list", default_factory=_ProcessorList
     )
@@ -805,7 +805,7 @@ class _JigsawFile(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:jigsaw")
 
-    format_version: str = json_field(default=JIGSAW_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     jigsaw: _Jigsaw = json_field(key="minecraft:jigsaw", default_factory=_Jigsaw)
 
 
@@ -921,7 +921,7 @@ class _TemplatePoolFile(JsonObject):
         "minecraft:template_pool",
     )
 
-    format_version: str = json_field(default=JIGSAW_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     template_pool: _TemplatePool = json_field(
         key="minecraft:template_pool", default_factory=_TemplatePool
     )
@@ -1014,7 +1014,7 @@ class _StructureSetFile(JsonObject):
         "minecraft:structure_set",
     )
 
-    format_version: str = json_field(default=JIGSAW_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     structure_set: _StructureSet = json_field(
         key="minecraft:structure_set", default_factory=_StructureSet
     )

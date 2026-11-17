@@ -20,7 +20,7 @@ from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.core.components import ComponentGroup
 from anvil.api.logic.molang import Molang, Variable
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
-from anvil.lib.format_versions import ENTITY_SERVER_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     Encoded,
     Identifier,
@@ -377,7 +377,7 @@ class _EntityServerFile(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:entity")
 
-    format_version: str = json_field(default=ENTITY_SERVER_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     entity: _EntityServer = json_field(
         default_factory=_EntityServer, key="minecraft:entity"
     )
