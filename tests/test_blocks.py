@@ -877,11 +877,11 @@ def test_jukebox_playlist_source_is_experimental():
 def test_collision_box_min_max_is_experimental():
     from anvil.api.blocks.components import BlockCollisionBox
     from anvil.api.blocks.server import BlockServer
-    from anvil.beta.blocks.components import BlockCollisionBoxMinMax
+    from anvil.beta.blocks.components import BlockCollisionBox as BetaBlockCollisionBox
     from anvil.lib import config
     from anvil.lib.jsonmodel import validate_components
 
-    box = BlockCollisionBoxMinMax(min=(4, 0, 0), max=(16, 24, 8))
+    box = BetaBlockCollisionBox(min=(4, 0, 0), max=(16, 24, 8))
     with pytest.raises(ValueError, match="experimental"):
         _export(box)
     with config.override(_EXPERIMENTAL=True):
@@ -891,27 +891,43 @@ def test_collision_box_min_max_is_experimental():
                 {"min": [0, 0, 0], "max": [4, 8, 4]},
             ]
         }
-        with pytest.raises(ValueError, match="must stay within"):
-            _export(BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 25, 16)))
+        with pytest.raises(ValueError, match=r"max\[1\]' must be from 0 to 24"):
+            _export(BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 25, 16)))
         with pytest.raises(ValueError, match="must not be above"):
-            _export(BlockCollisionBoxMinMax(min=(8, 0, 0), max=(4, 8, 8)))
-        crowded = BlockCollisionBoxMinMax(min=(0, 0, 0), max=(1, 1, 1))
+            _export(BetaBlockCollisionBox(min=(8, 0, 0), max=(4, 8, 8)))
+        crowded = BetaBlockCollisionBox(min=(0, 0, 0), max=(1, 1, 1))
         for _ in range(32):
             crowded.add_box(min=(0, 0, 0), max=(1, 1, 1))
         with pytest.raises(ValueError, match="at most 32"):
             _export(crowded)
+        crowded._boxes.pop()
+        assert len(_export(crowded)["minecraft:collision_box"]) == 32
+        with pytest.raises(ValueError, match=r"min\[0\]' must be from 0 to 16"):
+            _export(
+                BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)).add_box(
+                    min=(-1, 0, 0), max=(4, 4, 4)
+                )
+            )
+        with pytest.raises(
+            ValueError, match="BlockMinMaxBox: min .* must not be above"
+        ):
+            _export(
+                BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)).add_box(
+                    min=(8, 0, 0), max=(4, 4, 4)
+                )
+            )
 
     server = BlockServer(name="clash")
     server.components.add(BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16)))
-    with pytest.raises(ValueError, match="BlockCollisionBoxMinMax"):
-        server.components.add(BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)))
+    with pytest.raises(ValueError, match="clashes"):
+        server.components.add(BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)))
     with pytest.raises(ValueError, match="clashes"):
         BlockServer(name="clash_back").components.add(
-            BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)),
+            BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)),
             BlockCollisionBox(enabled=False),
         )
     server.permutation("q.block_state('test:open')").add(
-        BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16))
+        BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16))
     )
     with pytest.raises(ValueError, match="clashes"):
         validate_components(
@@ -923,7 +939,7 @@ def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
     import orjson
 
     from anvil.api.models.voxel_shape import VoxelShape
-    from anvil.beta.blocks.components import BlockCollisionBoxMinMax
+    from anvil.beta.blocks.components import BlockCollisionBox as BetaBlockCollisionBox
     from anvil.lib import config
     from anvil.lib.blockbench import _Blockbench
 
@@ -952,29 +968,29 @@ def test_collision_box_min_max_voxel_shape(tmp_path, monkeypatch):
 
     with config.override(_EXPERIMENTAL=True, _LOCAL_EXPORT=True):
         shape = VoxelShape("slab")
-        assert _export(BlockCollisionBoxMinMax().set_voxel_shape(shape)) == {
+        assert _export(BetaBlockCollisionBox().set_voxel_shape(shape)) == {
             "minecraft:collision_box": shape.shape_identifier
         }
-        component = BlockCollisionBoxMinMax().set_voxel_shape(blockbench="lantern")
+        component = BetaBlockCollisionBox().set_voxel_shape(blockbench="lantern")
         assert _export(component) == {
             "minecraft:collision_box": f"{config.CONFIG.NAMESPACE}:lantern_culling_shape"
         }
         model = _Blockbench("lantern", "blocks").model
         assert "lantern" in model._queued_voxel_shapes
         with pytest.raises(ValueError, match="either voxel_shape or blockbench"):
-            BlockCollisionBoxMinMax().set_voxel_shape()
+            BetaBlockCollisionBox().set_voxel_shape()
         with pytest.raises(ValueError, match="either voxel_shape or blockbench"):
-            BlockCollisionBoxMinMax().set_voxel_shape(shape, blockbench="lantern")
+            BetaBlockCollisionBox().set_voxel_shape(shape, blockbench="lantern")
         with pytest.raises(ValueError, match="collection only applies"):
-            BlockCollisionBoxMinMax().set_voxel_shape(shape, collection="top")
+            BetaBlockCollisionBox().set_voxel_shape(shape, collection="top")
         with pytest.raises(ValueError, match="not both"):
             _export(
-                BlockCollisionBoxMinMax(min=(0, 0, 0), max=(16, 8, 16)).set_voxel_shape(
+                BetaBlockCollisionBox(min=(0, 0, 0), max=(16, 8, 16)).set_voxel_shape(
                     shape
                 )
             )
         with pytest.raises(ValueError, match="needs both min and max"):
-            _export(BlockCollisionBoxMinMax(min=(0, 0, 0)))
+            _export(BetaBlockCollisionBox(min=(0, 0, 0)))
 
 
 def test_beta_destructible_by_mining_base_time_to_destroy():

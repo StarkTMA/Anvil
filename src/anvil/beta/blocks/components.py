@@ -2,9 +2,7 @@
 
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-from anvil.api.blocks.components import (
-    BlockCollisionBox,
-)
+from anvil.api.blocks.components import BlockCollisionBox as _BlockCollisionBox
 from anvil.api.blocks.components import BlockEntity as _BlockEntity
 from anvil.api.blocks.components import ItemSpecificSpeed, ItemTagFilter, _Switchable
 from anvil.api.items.items import Item
@@ -25,7 +23,7 @@ if TYPE_CHECKING:
     from anvil.api.blocks.server import BlockServer
 
 __all__ = [
-    "BlockCollisionBoxMinMax",
+    "BlockCollisionBox",
     "BlockEnchantmentPowerTransmitter",
     "BlockEntity",
     "BlockEntityContainer",
@@ -42,17 +40,37 @@ def _require_experimental(component: str) -> None:
         )
 
 
+def _check_corners(
+    owner: str, low: tuple[float, float, float], high: tuple[float, float, float]
+) -> None:
+    if any(lo > hi for lo, hi in zip(low, high)):
+        raise ValueError(
+            f"{owner}: min {tuple(low)} must not be above max {tuple(high)}."
+        )
+
+
 class BlockMinMaxBox(JsonObject):
     """A box inside the block, in pixels, by its two corners. (0, 0, 0) is the bottom-left
     corner of the block and (16, 16, 16) the top-right.
 
     Args:
-        min (tuple[float, float, float]): The minimal corner.
-        max (tuple[float, float, float]): The maximal corner.
+        min (tuple[float, float, float]): The minimal corner, within (0, 0, 0) and (16, 24, 16).
+        max (tuple[float, float, float]): The maximal corner, within (0, 0, 0) and (16, 24, 16), not below `min` on any axis.
     """
 
-    min: tuple[float, float, float] = json_field()
-    max: tuple[float, float, float] = json_field()
+    min: tuple[
+        Annotated[float, InRange(0, 16)],
+        Annotated[float, InRange(0, 24)],
+        Annotated[float, InRange(0, 16)],
+    ] = json_field()
+    max: tuple[
+        Annotated[float, InRange(0, 16)],
+        Annotated[float, InRange(0, 24)],
+        Annotated[float, InRange(0, 16)],
+    ] = json_field()
+
+    def __validate__(self) -> None:
+        _check_corners(type(self).__name__, self.min, self.max)
 
 
 class BlockEntityContainer(JsonObject):
@@ -69,10 +87,11 @@ class BlockEntityContainer(JsonObject):
     title: Annotated[str, Length(1, 256)] | None = json_field(default=None)
 
 
-class BlockCollisionBoxMinMax(JsonComponent):
+class BlockCollisionBox(JsonComponent):
     """[EXPERIMENTAL] The area of the block that collides with entities, as boxes given by their two corners.
-    It writes `minecraft:collision_box` like `BlockCollisionBox`, and clashes with it: a block
-    cannot use both, in its components or in a permutation.
+    It writes `minecraft:collision_box` like the deprecated origin and size form,
+    `anvil.api.blocks.components.BlockCollisionBox`, and clashes with it: a block cannot use both,
+    in its components or in a permutation.
     Experimental: needs `features.experimental` in anvilconfig.json.
 
     Args:
@@ -84,10 +103,24 @@ class BlockCollisionBoxMinMax(JsonComponent):
     """
 
     identifier = "minecraft:collision_box"
-    _clashes = (BlockCollisionBox,)
+    _clashes = (_BlockCollisionBox,)
 
-    min: tuple[float, float, float] | None = json_field(default=None)
-    max: tuple[float, float, float] | None = json_field(default=None)
+    min: (
+        tuple[
+            Annotated[float, InRange(0, 16)],
+            Annotated[float, InRange(0, 24)],
+            Annotated[float, InRange(0, 16)],
+        ]
+        | None
+    ) = json_field(default=None)
+    max: (
+        tuple[
+            Annotated[float, InRange(0, 16)],
+            Annotated[float, InRange(0, 24)],
+            Annotated[float, InRange(0, 16)],
+        ]
+        | None
+    ) = json_field(default=None)
     _voxel_shape: str | None = json_field(default=None, init=False, exclude=True)
     _boxes: list[BlockMinMaxBox] = json_field(
         default_factory=list, init=False, exclude=True
@@ -95,7 +128,7 @@ class BlockCollisionBoxMinMax(JsonComponent):
 
     def add_box(
         self, *, min: tuple[float, float, float], max: tuple[float, float, float]
-    ) -> "BlockCollisionBoxMinMax":
+    ) -> "BlockCollisionBox":
         """Adds another collision box, for more complex shapes.
 
         Args:
@@ -111,11 +144,11 @@ class BlockCollisionBoxMinMax(JsonComponent):
         *,
         blockbench: str | None = None,
         collection: str | None = None,
-    ) -> "BlockCollisionBoxMinMax":
+    ) -> "BlockCollisionBox":
         """Uses a voxel shape as the collision shape instead of boxes.
 
         Example:
-            >>> BlockCollisionBoxMinMax().set_voxel_shape(blockbench="lantern")
+            >>> BlockCollisionBox().set_voxel_shape(blockbench="lantern")
 
         Args:
             voxel_shape (VoxelShape, optional): A voxel shape built in code, queued for export.
@@ -126,14 +159,14 @@ class BlockCollisionBoxMinMax(JsonComponent):
         """
         if (voxel_shape is None) == (blockbench is None):
             raise ValueError(
-                "BlockCollisionBoxMinMax.set_voxel_shape takes either voxel_shape or blockbench."
+                "BlockCollisionBox.set_voxel_shape takes either voxel_shape or blockbench."
             )
         if blockbench is not None:
             model = _Blockbench(blockbench, _BlockBenchSource.BLOCK)
             voxel_shape = model.model.queue_voxel_shape(collection)
         elif collection is not None:
             raise ValueError(
-                "BlockCollisionBoxMinMax.set_voxel_shape: collection only applies to Blockbench models."
+                "BlockCollisionBox.set_voxel_shape: collection only applies to Blockbench models."
             )
         else:
             voxel_shape.queue()
@@ -141,37 +174,23 @@ class BlockCollisionBoxMinMax(JsonComponent):
         return self
 
     def __validate__(self) -> None:
-        _require_experimental("BlockCollisionBoxMinMax")
+        _require_experimental("BlockCollisionBox")
         has_box = self.min is not None or self.max is not None
         if self._voxel_shape is not None:
             if has_box or self._boxes:
                 raise ValueError(
-                    "BlockCollisionBoxMinMax takes either boxes or a voxel shape, not both."
+                    "BlockCollisionBox takes either boxes or a voxel shape, not both."
                 )
             return
         if self.min is None or self.max is None:
             raise ValueError(
-                "BlockCollisionBoxMinMax needs both min and max, or a voxel shape."
+                "BlockCollisionBox needs both min and max, or a voxel shape."
             )
-        boxes = [(self.min, self.max), *((box.min, box.max) for box in self._boxes)]
-        if len(boxes) > 32:
+        if len(self._boxes) > 31:
             raise ValueError(
-                f"BlockCollisionBoxMinMax takes at most 32 boxes, got {len(boxes)}."
+                f"BlockCollisionBox takes at most 32 boxes, got {len(self._boxes) + 1}."
             )
-        high = (16, 24, 16)
-        for low_corner, high_corner in boxes:
-            if any(lo > hi for lo, hi in zip(low_corner, high_corner)):
-                raise ValueError(
-                    f"BlockCollisionBoxMinMax: min {tuple(low_corner)} must not be above "
-                    f"max {tuple(high_corner)}."
-                )
-            if any(v < 0 for v in low_corner) or any(
-                v > limit for v, limit in zip(high_corner, high)
-            ):
-                raise ValueError(
-                    f"BlockCollisionBoxMinMax: the box from {tuple(low_corner)} to "
-                    f"{tuple(high_corner)} must stay within (0, 0, 0) and {high}."
-                )
+        _check_corners("BlockCollisionBox", self.min, self.max)
 
     def __json__(self) -> Any:
         box = JsonObject.__json__(self)
