@@ -281,53 +281,6 @@ class BlockEntity(_BlockEntity):
         )
 
 
-class BlockVibrationProperties(JsonComponent):
-    """[EXPERIMENTAL] How the block affects vibrations.
-    Experimental: needs `features.experimental` in anvilconfig.json.
-
-    Args:
-        dampen_vibrations (bool, optional): Whether the block dampens vibrations. The game defaults to False.
-        occlude_vibrations (bool, optional): Whether the block occludes vibrations. The game defaults to False.
-    """
-
-    identifier = "minecraft:vibration_properties"
-
-    dampen_vibrations: bool | None = json_field(default=None)
-    occlude_vibrations: bool | None = json_field(default=None)
-
-    def __validate__(self) -> None:
-        _require_experimental("BlockVibrationProperties")
-
-
-class BlockNeighborChange(JsonComponent):
-    """[EXPERIMENTAL] Which neighbouring block changes trigger the neighbor change after event of
-    the block's custom components.
-    Experimental: needs `features.experimental` in anvilconfig.json.
-
-    Args:
-        neighbor_directions (list["all" | "up" | "down" | "north" | "south" | "west" | "east"]): The directions to observe, 1 to 6 of them, no repeats. "all" must be used alone.
-    """
-
-    identifier = "minecraft:neighbor_change"
-
-    neighbor_directions: Annotated[
-        list[Literal["all", "up", "down", "north", "south", "west", "east"]],
-        Length(1, 6),
-    ] = json_field()
-
-    def __validate__(self) -> None:
-        _require_experimental("BlockNeighborChange")
-        directions = self.neighbor_directions
-        if len(set(directions)) != len(directions):
-            raise ValueError(
-                f"BlockNeighborChange: neighbor_directions {directions} repeats a direction."
-            )
-        if "all" in directions and len(directions) > 1:
-            raise ValueError(
-                "BlockNeighborChange: 'all' must be used alone in neighbor_directions."
-            )
-
-
 class BlockJukeBoxPlaylistSource(JsonComponent):
     """[EXPERIMENTAL] Allows a jukebox directly below this block to use its existing container
     as a playlist source. This component is an empty object. It does not create a container
@@ -378,3 +331,50 @@ class BlockDestructibleByMining(_Switchable):
             ItemSpecificSpeed(item=item, destroy_speed=destroy_speed)
         )
         return self
+
+
+class BlockVibrationProperties(JsonComponent):
+    """[EXPERIMENTAL] How the block affects vibrations.
+    Experimental: needs `features.experimental` in anvilconfig.json.
+
+    Args:
+        dampen_vibrations (bool, optional): Whether the block dampens vibrations. The game defaults to False.
+        occlude_vibrations (bool, optional): Whether the block occludes vibrations. The game defaults to False.
+    """
+
+    identifier = "minecraft:vibration_properties"
+
+    dampen_vibrations: bool | None = json_field(default=None)
+    occlude_vibrations: bool | None = json_field(default=None)
+
+    def __validate__(self) -> None:
+        _require_experimental("BlockVibrationProperties")
+
+
+class BlockNeighborChange(JsonComponent):
+    """[EXPERIMENTAL] Which neighbouring block changes trigger the neighbor change after event of
+    the block's custom components.
+    Experimental: needs `features.experimental` in anvilconfig.json.
+
+    Args:
+        neighbor_directions (list["all" | "up" | "down" | "north" | "south" | "west" | "east"]): The directions to observe, 1 to 6 of them, no repeats. "all" must be used alone.
+    """
+
+    identifier = "minecraft:neighbor_change"
+
+    neighbor_directions: Annotated[
+        list[Literal["all", "up", "down", "north", "south", "west", "east"]],
+        Length(1, 6),
+    ] = json_field()
+
+    def __validate__(self) -> None:
+        _require_experimental("BlockNeighborChange")
+        directions = self.neighbor_directions
+        if len(set(directions)) != len(directions):
+            raise ValueError(
+                f"BlockNeighborChange: neighbor_directions {directions} repeats a direction."
+            )
+        if "all" in directions and len(directions) > 1:
+            raise ValueError(
+                "BlockNeighborChange: 'all' must be used alone in neighbor_directions."
+            )
