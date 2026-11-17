@@ -1,6 +1,7 @@
 import click
 from click_aliases import ClickAliasedGroup
 
+from .cli_commands.brarchive_cmd import brarchive_cmd
 from .cli_commands.build_cmd import build
 from .cli_commands.clear_cmd import clear
 from .cli_commands.init_cmd import init
@@ -25,3 +26,4 @@ cli.add_command(clear, aliases=["clean"])
 cli.add_command(profile, aliases=["prof"])
 cli.add_command(process_sounds, aliases=["sounds"])
 cli.add_command(loopback, aliases=["lb"])
+cli.add_command(brarchive_cmd, name="brarchive", aliases=["archive", "bra", "brarch"])

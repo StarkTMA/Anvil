@@ -40,7 +40,7 @@ To try a change in a real project, run `anvil init` in an empty folder, then `an
 
 ## Branches
 
-`main` is the released code. A push to `main` that changes `src/anvil/__version__.py` publishes a release to PyPI, so nobody pushes to `main` directly: every change reaches it through a pull request.
+`main` is the released code. A push to `main` whose `src/anvil/__version__.py` version has no `v<version>` tag yet publishes a release to PyPI, so nobody pushes to `main` directly: every change reaches it through a pull request.
 
 Name your branch `<type>/<short-description>`, in lowercase kebab case, with the issue number first when there is one:
 

@@ -6,7 +6,7 @@ from typing import Annotated, Any, ClassVar
 from anvil.api.core.components import ComponentGroup
 from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import Pack
-from anvil.lib.format_versions import ITEM_SERVER_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     Encoded,
     Identifier,
@@ -95,7 +95,7 @@ class _ItemServerFile(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:item")
 
-    format_version: str = json_field(default=ITEM_SERVER_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     item: _ItemServer = json_field(default_factory=_ItemServer, key="minecraft:item")
 
 

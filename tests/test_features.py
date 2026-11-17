@@ -340,3 +340,24 @@ def test_tree_mega_trunk_width_range_must_be_at_least_one():
     tree = TreeFeature("tree").mega_trunk("test:log", trunk_width=(0, 2))
     with pytest.raises(ValueError):
         _json(tree._document)
+
+
+def test_crevasse_feature_is_unavailable():
+    from anvil.beta.features import CrevasseFeature
+    from anvil.lib import config
+
+    for experimental in (False, True):
+        with config.override(_PREVIEW=experimental, _EXPERIMENTAL=experimental):
+            with pytest.raises(ValueError, match="unavailable"):
+                feature = CrevasseFeature(
+                    "ice_crevasse",
+                    max_width=4,
+                    max_length=16,
+                    min_footprint=10,
+                    twistiness=4.0,
+                    carve_depth=(6, 10),
+                    fill_depth=(4, 6),
+                    surface_block="minecraft:ice",
+                    fill_block="minecraft:water",
+                )
+                _json(feature._document)

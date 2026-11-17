@@ -16,11 +16,11 @@ import requests
 
 from anvil.lib.format_versions import (
     MANIFEST_BUILD,
-    MANIFEST_BUILD_PREVIEW,
     MODULE_MINECRAFT_SERVER,
     MODULE_MINECRAFT_SERVER_PREVIEW,
     MODULE_MINECRAFT_SERVER_UI,
     MODULE_MINECRAFT_SERVER_UI_PREVIEW,
+    MODULE_MINECRAFT_VANILLA_DATA_PREVIEW,
 )
 
 from ..__version__ import __version__
@@ -74,10 +74,15 @@ class Directory:
             target_file (str): The name of the file to be copied.
             rename (str | None, optional): The new name for the copied file. Defaults to None.
         """
+        from anvil.lib.brarchive import BrArchivePacker
+
+        source = Path(old_dir) / target_file
+        target = Path(new_dir) / (rename or target_file)
+        if BrArchivePacker.captures(target):
+            BrArchivePacker.capture(target, source.read_bytes())
+            return
         cls.create(new_dir)
-        shutil.copyfile(
-            Path(old_dir) / target_file, Path(new_dir) / (rename or target_file)
-        )
+        shutil.copyfile(source, target)
 
     @classmethod
     def copy_folder(cls, old_dir: str | Path, new_dir: str | Path):
@@ -251,7 +256,6 @@ class AnvilIO:
             "tsconfig.json",
         ]
 
-        Directory.create(directory)
         path = Path(directory) / name
         type = name.split(".")[-1]
 
@@ -273,6 +277,13 @@ class AnvilIO:
             else:
                 content = file_stamp + str(content)
 
+        from anvil.lib.brarchive import BrArchivePacker
+
+        data = content if isinstance(content, bytes) else str(content).encode("utf-8")
+        if BrArchivePacker.capture(path, data, append="a" in mode):
+            return
+
+        Directory.create(directory)
         if isinstance(content, bytes):
             binary_mode = mode if "b" in mode else f"{mode}b"
             with path.open(binary_mode) as file:
@@ -735,7 +746,7 @@ class AnvilValidator:
                 else MODULE_MINECRAFT_SERVER_UI
             ),
             "@minecraft/vanilla-data": (
-                f"{MANIFEST_BUILD_PREVIEW}-preview" if preview else MANIFEST_BUILD
+                MODULE_MINECRAFT_VANILLA_DATA_PREVIEW if preview else MANIFEST_BUILD
             ),
         }
 

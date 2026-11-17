@@ -7,7 +7,7 @@ from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _item, _Recipe, _RecipeItem
 from anvil.api.items.items import Item
-from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import JsonObject, Keyed, Length, json_field
 
 
@@ -68,7 +68,7 @@ class _ShapedRecipeFile(JsonObject):
         "minecraft:recipe_shaped",
     )
 
-    format_version: str = json_field(default=RECIPE_JSON_FORMAT_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     recipe: _ShapedRecipe = json_field(
         key="minecraft:recipe_shaped", default_factory=_ShapedRecipe
     )

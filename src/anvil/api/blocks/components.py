@@ -2,6 +2,8 @@ import dataclasses
 from dataclasses import InitVar
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, get_args
 
+import click
+
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.items import Item
@@ -348,18 +350,6 @@ class VisualGeometry(JsonObject):
     n_way_visual_rotation: NWayVisualRotation | None = json_field(default=None)
 
 
-class BlockEntityContainer(JsonObject):
-    """The inventory of a block entity.
-
-    Args:
-        slot_count (int): The number of slots, from 1 to 54.
-        title (str, optional): [EXPERIMENTAL] The title shown on the container, 1 to 256 characters. Anvil adds it to the language file under a key made from the block identifier. Leaving it out leaves the heading blank. Needs `features.experimental` in anvilconfig.json.
-    """
-
-    slot_count: Annotated[int, InRange(1, 54)] = json_field()
-    title: Annotated[str, Length(1, 256)] | None = json_field(default=None)
-
-
 class OffsetRange(JsonObject):
     """The random offset along one axis, for `BlockRandomOffset`.
 
@@ -568,11 +558,19 @@ class BlockCollisionBox(_BlockBoxComponent):
 
     Add more boxes with `add_box`. Boxes are always written as a list, even when there is only one.
 
+    The beta deprecates `origin` and `size`. With `features.experimental` on, Anvil warns once
+    and writes every box as `min` and `max` instead, the form
+    `anvil.beta.blocks.components.BlockCollisionBox` uses.
+    The corners are the origin shifted by (8, 0, 8) and that point plus the size, sorted per axis,
+    with x mirrored the way the game does it: `min` is (16 - high x, low y, low z) and `max` is
+    (16 - low x, high y, high z).
+
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_collision_box)
     """
 
     identifier = "minecraft:collision_box"
     _max_height = 24
+    _warned_deprecated: ClassVar[bool] = False
 
     _boxes: list[BlockBox] = json_field(default_factory=list, init=False, exclude=True)
 
@@ -595,12 +593,42 @@ class BlockCollisionBox(_BlockBoxComponent):
         for box in self._boxes:
             self._check_box(box.origin, box.size)
 
+    @staticmethod
+    def _to_min_max(box: dict[str, Any]) -> Any:
+        from anvil.beta.blocks.components import BlockMinMaxBox
+
+        adjusted = [o + shift for o, shift in zip(box["origin"], (8, 0, 8))]
+        end = [a + s for a, s in zip(adjusted, box["size"])]
+        low = [min(a, e) for a, e in zip(adjusted, end)]
+        high = [max(a, e) for a, e in zip(adjusted, end)]
+        return BlockMinMaxBox(
+            min=(16 - high[0], low[1], low[2]), max=(16 - low[0], high[1], high[2])
+        ).__json__()
+
+    @classmethod
+    def _warn_deprecated(cls) -> None:
+        if cls._warned_deprecated:
+            return
+        BlockCollisionBox._warned_deprecated = True
+        click.echo(
+            click.style(
+                "[WARN]: BlockCollisionBox origin and size are deprecated in the beta. Anvil "
+                "writes them as min and max; use anvil.beta.blocks.components."
+                "BlockCollisionBox instead.",
+                fg="yellow",
+            )
+        )
+
     def __json__(self) -> Any:
         payload = _Switchable.__json__(self)
         box = payload[self.identifier]
         if not isinstance(box, dict):
             return payload
-        return {self.identifier: [box, *(extra.__json__() for extra in self._boxes)]}
+        boxes = [box, *(extra.__json__() for extra in self._boxes)]
+        if CONFIG._EXPERIMENTAL:
+            self._warn_deprecated()
+            boxes = [self._to_min_max(b) for b in boxes]
+        return {self.identifier: boxes}
 
 
 class BlockConnectionRule(JsonComponent):
@@ -798,68 +826,16 @@ class BlockEntity(JsonComponent):
     """Gives each placed block its own data.
 
     Args:
-        container (BlockEntityContainer, optional): An inventory. Set it with `set_container`.
         dynamic_properties (bool, optional): Whether scripts can store dynamic properties on the block. Game default false.
-        entity_storage (bool, optional): Whether scripts can store serialized entities in the block. Experimental: needs `features.experimental` in anvilconfig.json. Game default false.
+
+    For an inventory or entity storage, use the experimental `anvil.beta.blocks.components.BlockEntity`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_block_entity)
     """
 
     identifier = "minecraft:block_entity"
 
-    container: BlockEntityContainer | None = json_field(default=None)
     dynamic_properties: bool | None = json_field(default=None)
-    entity_storage: bool | None = json_field(default=None)
-
-    def set_container(
-        self,
-        *,
-        slot_count: int,
-        title: str | None = None,
-    ) -> "BlockEntity":
-        """Gives the block an inventory. See `BlockEntityContainer` for the parameters."""
-        self.container = BlockEntityContainer(
-            slot_count=slot_count,
-            title=title,
-        )
-        return self
-
-    def __validate__(self) -> None:
-        if self.entity_storage is not None and not CONFIG._EXPERIMENTAL:
-            raise ValueError(
-                "BlockEntity entity_storage is experimental: turn on features.experimental "
-                "in anvilconfig.json."
-            )
-        if (
-            self.container is not None
-            and self.container.title is not None
-            and not CONFIG._EXPERIMENTAL
-        ):
-            raise ValueError(
-                "BlockEntity container title is experimental: turn on features.experimental "
-                "in anvilconfig.json."
-            )
-
-    def __prepare_export__(self, owner: "BlockServer", *, root: bool = True) -> None:
-        """Adds the container title to the language file under
-        `tile.<identifier>.container_title` for the root, and
-        `tile.<identifier>.<name>.container_title` for a permutation, then writes the key.
-        """
-        if self.container is None or self.container.title is None:
-            return
-        prefix = f"tile.{owner.identifier}"
-        if self.container.title.startswith(f"{prefix}."):
-            return
-        if root:
-            key = f"{prefix}.container_title"
-            AnvilTranslator().add_localization_entry(key, self.container.title)
-        else:
-            key = AnvilTranslator().localize(
-                self.container.title, prefix=prefix, suffix="container_title"
-            )
-        self.container = BlockEntityContainer(
-            slot_count=self.container.slot_count, title=key
-        )
 
 
 class BlockEntityFallOn(JsonComponent):

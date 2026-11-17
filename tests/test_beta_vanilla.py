@@ -29,7 +29,7 @@ def test_experimental_vanilla_objects_need_the_flag(create):
     with config.override(_TARGET="world", _EXPERIMENTAL=False):
         with pytest.raises(ValueError, match="experimental"):
             create()
-    with config.override(_TARGET="world", _EXPERIMENTAL=True):
+    with config.override(_TARGET="world", _PREVIEW=True, _EXPERIMENTAL=True):
         create()
 
 
@@ -37,6 +37,100 @@ def test_experimental_ids_in_fields_need_the_flag():
     with config.override(_EXPERIMENTAL=False):
         with pytest.raises(ValueError, match="not a vanilla item"):
             ItemId.validate("item", BetaItemTypes.IceBall())
-    with config.override(_EXPERIMENTAL=True):
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
         ItemId.validate("item", BetaItemTypes.IceBall())
     assert BetaEntityTypes.Frostbite() == "minecraft:frostbite"
+
+
+def test_brittle_ice_lives_in_beta():
+    assert BetaBlockTypes.BrittleIce(age=3).states == {"age": 3}
+    assert BetaItemTypes.BrittleIce() == "minecraft:brittle_ice"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.BrittleIce
+
+
+def test_packed_ice_bricks_live_in_beta():
+    assert BetaBlockTypes.PackedIceBricks() == "minecraft:packed_ice_bricks"
+    assert BetaBlockTypes.ChiseledPackedIce() == "minecraft:chiseled_packed_ice"
+    assert BetaBlockTypes.PackedIceBrickSlab(minecraft_vertical_half="top").states == {
+        "minecraft:vertical_half": "top"
+    }
+    assert BetaBlockTypes.PackedIceBrickStairs(
+        minecraft_corner="inner_left", weirdo_direction=2
+    ).states == {"minecraft:corner": "inner_left", "weirdo_direction": 2}
+    assert BetaBlockTypes.PackedIceBrickWall(wall_post_bit=True).states == {
+        "wall_post_bit": True
+    }
+    assert BetaItemTypes.PackedIceBrickWall() == "minecraft:packed_ice_brick_wall"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.PackedIceBricks
+    with pytest.raises(AttributeError):
+        BetaBlockTypes.DiscPress
+
+
+def test_snow_bricks_live_in_beta():
+    assert BetaBlockTypes.SnowBricks() == "minecraft:snow_bricks"
+    assert BetaBlockTypes.SnowBrickSlab(minecraft_vertical_half="bottom").states == {
+        "minecraft:vertical_half": "bottom"
+    }
+    assert BetaBlockTypes.SnowBrickWall(wall_post_bit=False).states == {
+        "wall_post_bit": False
+    }
+    assert BetaItemTypes.SnowBrickStairs() == "minecraft:snow_brick_stairs"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.SnowBricks
+
+
+def test_calcite_blocks_live_in_beta():
+    assert BetaBlockTypes.PolishedCalcite() == "minecraft:polished_calcite"
+    assert BetaBlockTypes.ChiseledSoulshale() == "minecraft:chiseled_soulshale"
+    assert BetaItemTypes.ChiseledSoulshale() == "minecraft:chiseled_soulshale"
+    assert BetaBlockTypes.CalcitePillar(pillar_axis="x").states == {"pillar_axis": "x"}
+    assert BetaBlockTypes.CalciteSlab(minecraft_vertical_half="top").states == {
+        "minecraft:vertical_half": "top"
+    }
+    assert BetaBlockTypes.PolishedCalciteBrickStairs(
+        minecraft_corner="outer_right", weirdo_direction=1
+    ).states == {"minecraft:corner": "outer_right", "weirdo_direction": 1}
+    assert BetaBlockTypes.PolishedCalciteWall(wall_post_bit=True).states == {
+        "wall_post_bit": True
+    }
+    assert BetaItemTypes.CalciteWall() == "minecraft:calcite_wall"
+    assert BetaItemTypes.PolishedCalciteBricks() == "minecraft:polished_calcite_bricks"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.PolishedCalcite
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.ChiseledSoulshale
+
+
+def test_music_disc_flurry_lives_in_beta():
+    from anvil.api.vanilla.items import MinecraftItemTypes
+
+    assert BetaItemTypes.MusicDiscFlurry() == "minecraft:music_disc_flurry"
+    with pytest.raises(AttributeError):
+        MinecraftItemTypes.MusicDiscFlurry
+
+
+def test_beta_tag_enums_hold_only_the_new_tags():
+    from enum import StrEnum
+
+    from anvil.api.items.components import ItemTags
+    from anvil.api.vanilla.biomes import MinecraftBiomeTags
+    from anvil.api.vanilla.items import MinecraftItemTags
+    from anvil.beta.vanilla.biomes import MinecraftBiomeTypes as BetaBiomeTypes
+    from anvil.beta.vanilla.items import MinecraftItemTags as BetaItemTags
+
+    for enum in (BetaItemTags, BetaBiomeTypes):
+        assert issubclass(enum, StrEnum)
+    assert {tag.name: tag.value for tag in BetaItemTags} == {
+        "SulfurCubeArchetypeSlowBouncy": "minecraft:sulfur_cube_archetype_slow_bouncy",
+        "SulfurCubeArchetypeHot": "minecraft:sulfur_cube_archetype_hot",
+        "SulfurCubeArchetypeCold": "minecraft:sulfur_cube_archetype_cold",
+    }
+    assert not hasattr(MinecraftItemTags, "SulfurCubeArchetypeHot")
+    tags = ItemTags(tags=[MinecraftItemTags.Arrow, BetaItemTags.SulfurCubeArchetypeHot])
+    assert tags.__json__() == {
+        "minecraft:tags": {
+            "tags": ["minecraft:arrow", "minecraft:sulfur_cube_archetype_hot"]
+        }
+    }

@@ -77,7 +77,7 @@ class Molang(str):
     @staticmethod
     def arrow(left: "Molang", right: "Molang") -> "Molang":
         """Returns a Molang object representing the arrow operator for Molang."""
-        return Molang(f"({left}) -> ({right})")
+        return Molang(f"(({left}) -> ({right}))")
 
     @staticmethod
     def condition(

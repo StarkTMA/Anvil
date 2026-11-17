@@ -14,7 +14,7 @@ import click
 import orjson
 
 from anvil.__version__ import __version__
-from anvil.lib.format_versions import MANIFEST_BUILD
+from anvil.lib.format_versions import MANIFEST_BUILD, MANIFEST_BUILD_PREVIEW
 from anvil.lib.lib import (
     PREVIEW_COM_MOJANG,
     RELEASE_COM_MOJANG,
@@ -80,6 +80,7 @@ class ConfigOption(StrEnum):
     ENTRY_POINT = "entry_point"
     JS_BUNDLE_SCRIPT = "js_bundle_script"
     MINIFY = "minify"
+    BRARCHIVE = "brarchive"
     ADD_STAMP = "add_stamp"
     LOCAL_EXPORT = "local_export"
 
@@ -345,6 +346,7 @@ class AnvilConfig:
         script=True,
     )
     _MINIFY: bool = _option(ConfigSection.BUILD, ConfigOption.MINIFY, False)
+    _BRARCHIVE: bool = _option(ConfigSection.BUILD, ConfigOption.BRARCHIVE, False)
     _ADD_STAMP: bool = _option(ConfigSection.BUILD, ConfigOption.ADD_STAMP, True)
     _LOCAL_EXPORT: bool = _option(
         ConfigSection.BUILD,
@@ -372,6 +374,11 @@ class AnvilConfig:
         if self._TARGET not in ConfigPackageTarget:
             raise ValueError(
                 f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}."
+            )
+        if self._EXPERIMENTAL and not self._PREVIEW:
+            raise ValueError(
+                "features.experimental needs build.preview: experimental components use format "
+                f"{MANIFEST_BUILD_PREVIEW}, which only preview Minecraft loads."
             )
         self._LOCAL_EXPORT = bool(self._LOCAL_EXPORT) or sys.platform != "win32"
         validate_namespace_project_name(
@@ -488,6 +495,11 @@ def load_project() -> AnvilConfig:
             continue
         if name not in file._config.get(section, {}):
             file.add_option(section, name, getattr(config, option.name))
+
+    if config._BRARCHIVE or "--brarchive" in sys.argv:
+        config._BRARCHIVE = True
+        config._MINIFY = True
+        config._ADD_STAMP = False
 
     AnvilDisplay.copyright()
     AnvilDisplay.project_display(config.DISPLAY_NAME, config._TARGET, config._PREVIEW)

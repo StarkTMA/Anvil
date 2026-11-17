@@ -6,7 +6,7 @@ from typing import Annotated, Any, ClassVar
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _Feature
-from anvil.lib.format_versions import FEATURE_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     AtLeastOne,
     BlockId,
@@ -53,7 +53,7 @@ class _CaveCarverFeatureFile(JsonObject):
         "minecraft:cave_carver_feature",
     )
 
-    format_version: str = json_field(default=FEATURE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature: _CaveCarverFeature = json_field(
         key="minecraft:cave_carver_feature", default_factory=_CaveCarverFeature
     )
@@ -67,7 +67,7 @@ class _NetherCaveCarverFeatureFile(JsonObject):
         "minecraft:nether_cave_carver_feature",
     )
 
-    format_version: str = json_field(default=FEATURE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature: _CaveCarverFeature = json_field(
         key="minecraft:nether_cave_carver_feature", default_factory=_CaveCarverFeature
     )
@@ -81,7 +81,7 @@ class _UnderwaterCaveCarverFeatureFile(JsonObject):
         "minecraft:underwater_cave_carver_feature",
     )
 
-    format_version: str = json_field(default=FEATURE_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     feature: _UnderwaterCaveCarverFeature = json_field(
         key="minecraft:underwater_cave_carver_feature",
         default_factory=_UnderwaterCaveCarverFeature,

@@ -32,6 +32,53 @@ def test_entity_hide_held_items():
     assert scripts.hide_held_items == "q.is_sheared"
 
 
+def test_clear_behaviors_on_component_changes_is_experimental(monkeypatch):
+    from anvil.api.actors.entity import Entity
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    entity = Entity("clearing_entity")
+    assert "clear_behaviors_on_component_changes" not in (
+        entity.server.description.__json__()
+    )
+    entity.server.description.config(clear_behaviors_on_component_changes=True)
+    assert (
+        entity.server.description.__json__()["clear_behaviors_on_component_changes"]
+        is True
+    )
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    entity = Entity("stable_entity")
+    with pytest.raises(ValueError, match="experimental"):
+        entity.server.description.config(clear_behaviors_on_component_changes=True)
+    entity.server.description.config(clear_behaviors_on_component_changes=False)
+    assert "clear_behaviors_on_component_changes" not in (
+        entity.server.description.__json__()
+    )
+
+
+def test_beta_timer_flag_trigger_on_end_when_interrupted(monkeypatch):
+    from anvil.beta.actors.components import (
+        EntityAITimerFlag1,
+        EntityAITimerFlag2,
+        EntityAITimerFlag3,
+    )
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(EntityAITimerFlag1(trigger_on_end_when_interrupted=False))
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    for goal in (EntityAITimerFlag1, EntityAITimerFlag2, EntityAITimerFlag3):
+        assert (
+            payload(goal(on_end="test:on_end", trigger_on_end_when_interrupted=False))[
+                "trigger_on_end_when_interrupted"
+            ]
+            is False
+        )
+        assert "trigger_on_end_when_interrupted" not in payload(goal())
+
+
 def test_entity_ai_pickup_items():
     from anvil.api.actors.components import EntityAIPickupItems
 
@@ -747,6 +794,135 @@ def test_reflect_projectiles_needs_experimental(monkeypatch):
     }
 
 
+def test_time_marker_sensor_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntityTimeMarkerSensor
+    from anvil.lib.config import CONFIG
+
+    component = EntityTimeMarkerSensor().add_trigger(
+        clock="day", time_marker="noon", event="test:on_noon"
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(component)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert AnvilIO._normalize_json_like(component) == {
+        "minecraft:time_marker_sensor": {
+            "triggers": [
+                {
+                    "clock": "day",
+                    "time_marker": "noon",
+                    "on_time_marker": {"event": "test:on_noon"},
+                }
+            ]
+        }
+    }
+    with pytest.raises(ValueError, match="at least one trigger"):
+        AnvilIO._normalize_json_like(EntityTimeMarkerSensor())
+
+
+def test_can_stand_on_brittle_ice_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntityCanStandOnBrittleIce
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(EntityCanStandOnBrittleIce())
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert AnvilIO._normalize_json_like(EntityCanStandOnBrittleIce()) == {
+        "minecraft:can_stand_on_brittle_ice": {}
+    }
+
+
+def test_beta_impact_damage_scales_with_difficulty(monkeypatch):
+    from anvil.beta.actors.components import EntityProjectile, ProjectileImpactDamage
+    from anvil.lib.config import CONFIG
+
+    projectile = EntityProjectile().set_on_hit(
+        impact_damage=ProjectileImpactDamage(
+            damage=4, scale_damage_with_difficulty=False
+        )
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(projectile)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    impact = AnvilIO._normalize_json_like(projectile)["minecraft:projectile"]["on_hit"][
+        "impact_damage"
+    ]
+    assert impact["scale_damage_with_difficulty"] is False
+
+
+def test_beta_impact_damage_death_message_override(monkeypatch):
+    from anvil.beta.actors.components import EntityProjectile, ProjectileImpactDamage
+    from anvil.lib.config import CONFIG
+    from anvil.lib.translator import AnvilTranslator
+
+    projectile = EntityProjectile().set_on_hit(
+        impact_damage=ProjectileImpactDamage(
+            damage=4, death_message_override="%1$s was hit by a dart from %2$s"
+        )
+    )
+    key = (
+        f"death.attack.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}"
+        "._1_s_was_hit_by_a_dart_from_2_s"
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(projectile)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    impact = AnvilIO._normalize_json_like(projectile)["minecraft:projectile"]["on_hit"][
+        "impact_damage"
+    ]
+    assert impact["death_message_override"] == key
+    assert (
+        AnvilTranslator().get_localization_value(key)
+        == "%1$s was hit by a dart from %2$s"
+    )
+
+
+def test_entity_rotation_always_follows_head_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntityRotationAlwaysFollowsHead
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        AnvilIO._normalize_json_like(EntityRotationAlwaysFollowsHead())
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert AnvilIO._normalize_json_like(EntityRotationAlwaysFollowsHead()) == {
+        "minecraft:entity_rotation_always_follows_head": {}
+    }
+
+
+def test_spherical_look_control_needs_experimental(monkeypatch):
+    from anvil.beta.actors.components import EntitySphericalLookControl
+    from anvil.lib.config import CONFIG
+
+    look = EntitySphericalLookControl(
+        pitch_recovery_speed=0, reference_distance=8, pitch_limits=(-30, 45)
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(look)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert payload(look) == {
+        "pitch_recovery_speed": 0,
+        "reference_distance": 8,
+        "pitch_limits": {"min": -30, "max": 45},
+    }
+    assert payload(EntitySphericalLookControl()) == {}
+    assert payload(EntitySphericalLookControl(pitch_limits=(20, 20))) == {
+        "pitch_limits": {"min": 20, "max": 20}
+    }
+    with pytest.raises(ValueError, match="from 0 to 3600"):
+        payload(EntitySphericalLookControl(pitch_recovery_speed=3601))
+    with pytest.raises(ValueError, match="above 0"):
+        payload(EntitySphericalLookControl(reference_distance=0))
+    with pytest.raises(ValueError, match="from -90 to 90"):
+        payload(EntitySphericalLookControl(pitch_limits=(-91, 0)))
+    with pytest.raises(ValueError, match="greater than its maximum"):
+        payload(EntitySphericalLookControl(pitch_limits=(45, -30)))
+
+
 def test_filter_has_component_takes_component_classes():
     from anvil.api.actors.components import EntityHealth
     from anvil.api.core.filters import Filter
@@ -894,3 +1070,131 @@ def test_entity_trail_radius_range():
         payload(EntityTrail(radius=17))
     with pytest.raises(ValueError):
         payload(EntityTrail(radius=-2))
+
+
+@pytest.mark.parametrize("test", ["speed", "horizontal_speed", "vertical_speed"])
+def test_beta_speed_filters_need_experimental(monkeypatch, test):
+    from anvil.beta.core.filters import Filter
+    from anvil.lib.config import CONFIG
+    from anvil.lib.jsonmodel.enums import FilterOperation
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        getattr(Filter, test)(1.5)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    filt = getattr(Filter, test)(-1.5, operator=FilterOperation.Less)
+    assert isinstance(filt, Filter)
+    assert filt.test == test
+    assert filt.value == -1.5
+    assert filt.operator == FilterOperation.Less
+
+
+def test_beta_teleport_has_the_1_26_70_fields(monkeypatch):
+    from anvil.beta.actors.components import EntityTeleport
+    from anvil.lib.config import CONFIG
+
+    teleport = EntityTeleport(
+        can_teleport_into_liquid=True,
+        on_teleport_sound="undefined",
+        target_distance=10,
+        target_teleport_distance=(-8, 12),
+        target_teleport_offset=(4, 8, 4),
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(teleport)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    assert payload(teleport) == {
+        "target_distance": 10,
+        "can_teleport_into_liquid": True,
+        "on_teleport_sound": "undefined",
+        "target_teleport_distance": {"min": -8, "max": 12},
+        "target_teleport_offset": [4, 8, 4],
+    }
+    assert payload(EntityTeleport(target_teleport_distance=16)) == {
+        "target_teleport_distance": {"min": 16, "max": 16}
+    }
+    with pytest.raises(ValueError, match="from -32 to 32"):
+        payload(EntityTeleport(target_teleport_distance=(-33, 0)))
+    with pytest.raises(ValueError, match="from 0 to 32"):
+        payload(EntityTeleport(target_teleport_offset=(4, 33, 4)))
+
+
+def test_beta_trail_writes_the_1_26_70_form(monkeypatch):
+    from anvil.api.actors.components import EntityTrail as PublicEntityTrail
+    from anvil.api.core.filters import Filter
+    from anvil.beta.actors.components import EntityTrail, TrailPlacementCondition
+    from anvil.lib.config import CONFIG
+    from anvil.lib.jsonmodel import JsonContainer
+
+    trail = (
+        EntityTrail(
+            block_type="minecraft:snow_layer",
+            extent=2,
+            offset=(0, -1, 0),
+            place_only_on_block_position_change=True,
+            placement_checks="standard",
+            placement_filter=Filter.is_daytime(False),
+            shape="circle",
+        )
+        .add_placement_condition(block_types=["minecraft:air"])
+        .add_placement_condition(
+            block_types=["minecraft:grass_block", "minecraft:dirt"], y_offset=-1
+        )
+    )
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    with pytest.raises(ValueError, match="experimental"):
+        payload(trail)
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    exported = AnvilIO._normalize_json_like(trail)["minecraft:trail"]
+    assert exported["block_type"] == "minecraft:snow_layer"
+    assert exported["extent"] == 2
+    assert exported["offset"] == [0, -1, 0]
+    assert exported["place_only_on_block_position_change"] is True
+    assert exported["placement_checks"] == "standard"
+    assert exported["shape"] == "circle"
+    assert "placement_filter" in exported
+    assert exported["placement_conditions"] == [
+        {"block_types": ["minecraft:air"]},
+        {"block_types": ["minecraft:grass_block", "minecraft:dirt"], "y_offset": -1},
+    ]
+    with pytest.raises(ValueError, match="from 0 to 16"):
+        payload(EntityTrail(extent=17))
+    with pytest.raises(ValueError):
+        payload(EntityTrail(shape="ring"))
+    with pytest.raises(ValueError):
+        payload(EntityTrail(placement_checks="all"))
+    with pytest.raises(ValueError, match="from -16 to 16"):
+        payload(TrailPlacementCondition(block_types=["minecraft:air"], y_offset=17))
+    with pytest.raises(ValueError, match="at least 1 items"):
+        payload(TrailPlacementCondition(block_types=[]))
+    with pytest.raises(ValueError, match="at least 1 items"):
+        payload(EntityTrail(placement_conditions=[]))
+
+    components = JsonContainer(name="components").add(PublicEntityTrail(radius=1))
+    with pytest.raises(ValueError, match="clashes"):
+        components.add(EntityTrail(shape="square"))
+
+
+@pytest.mark.parametrize("experimental", [False, True])
+def test_place_feature_event_response_is_unavailable(monkeypatch, experimental):
+    from anvil.api.actors.entity import Entity
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", experimental, raising=False)
+    entity = Entity("place_feature_events")
+    spawned = entity.server.event("minecraft:entity_spawned")
+    sequence = spawned.add_sequence()
+    randomize = sequence.add_randomize()
+    for node in (spawned, sequence, randomize):
+        with pytest.raises(ValueError, match="place_feature is unavailable"):
+            node.set_place_feature(feature="testns:spike", target=FilterSubject.Self)
+        assert node.place_feature is None
+    spawned.add_component_groups(["adult"])
+    events = AnvilIO._normalize_json_like(entity.server._document)["minecraft:entity"][
+        "events"
+    ]
+    assert events["minecraft:entity_spawned"] == {
+        "add": {"component_groups": ["adult"]},
+        "sequence": [{"randomize": [{"weight": 1}]}],
+    }

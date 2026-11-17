@@ -18,7 +18,7 @@ from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.textures import ItemTexturesObject
 from anvil.lib.blockbench import _Blockbench, _BlockBenchSource
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.format_versions import ENTITY_CLIENT_VERSION
+from anvil.lib.format_versions import build_version
 from anvil.lib.jsonmodel import (
     Hex,
     Identifier,
@@ -705,7 +705,7 @@ class _ClientEntityFile(JsonObject):
         "minecraft:client_entity",
     )
 
-    format_version: str = json_field(default=ENTITY_CLIENT_VERSION, init=False)
+    format_version: str = json_field(default_factory=build_version, init=False)
     client_entity: _ClientEntity = json_field(
         default_factory=_ClientEntity, key="minecraft:client_entity"
     )
