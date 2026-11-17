@@ -81,6 +81,33 @@ def test_snow_bricks_live_in_beta():
         MinecraftBlockTypes.SnowBricks
 
 
+def test_calcite_blocks_live_in_beta():
+    assert BetaBlockTypes.PolishedCalcite() == "minecraft:polished_calcite"
+    assert BetaBlockTypes.ChiseledSoulshale() == "minecraft:chiseled_soulshale"
+    assert BetaBlockTypes.CalcitePillar(pillar_axis="x").states == {"pillar_axis": "x"}
+    assert BetaBlockTypes.CalciteSlab(minecraft_vertical_half="top").states == {
+        "minecraft:vertical_half": "top"
+    }
+    assert BetaBlockTypes.PolishedCalciteBrickStairs(
+        minecraft_corner="outer_right", weirdo_direction=1
+    ).states == {"minecraft:corner": "outer_right", "weirdo_direction": 1}
+    assert BetaBlockTypes.PolishedCalciteWall(wall_post_bit=True).states == {
+        "wall_post_bit": True
+    }
+    assert BetaItemTypes.CalciteWall() == "minecraft:calcite_wall"
+    assert BetaItemTypes.PolishedCalciteBricks() == "minecraft:polished_calcite_bricks"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.PolishedCalcite
+
+
+def test_music_disc_flurry_lives_in_beta():
+    from anvil.api.vanilla.items import MinecraftItemTypes
+
+    assert BetaItemTypes.MusicDiscFlurry() == "minecraft:music_disc_flurry"
+    with pytest.raises(AttributeError):
+        MinecraftItemTypes.MusicDiscFlurry
+
+
 def test_beta_tag_enums_hold_only_the_new_tags():
     from enum import StrEnum
 
