@@ -80,6 +80,7 @@ class ConfigOption(StrEnum):
     ENTRY_POINT = "entry_point"
     JS_BUNDLE_SCRIPT = "js_bundle_script"
     MINIFY = "minify"
+    BRARCHIVE = "brarchive"
     ADD_STAMP = "add_stamp"
     LOCAL_EXPORT = "local_export"
 
@@ -345,6 +346,7 @@ class AnvilConfig:
         script=True,
     )
     _MINIFY: bool = _option(ConfigSection.BUILD, ConfigOption.MINIFY, False)
+    _BRARCHIVE: bool = _option(ConfigSection.BUILD, ConfigOption.BRARCHIVE, False)
     _ADD_STAMP: bool = _option(ConfigSection.BUILD, ConfigOption.ADD_STAMP, True)
     _LOCAL_EXPORT: bool = _option(
         ConfigSection.BUILD,
@@ -493,6 +495,11 @@ def load_project() -> AnvilConfig:
             continue
         if name not in file._config.get(section, {}):
             file.add_option(section, name, getattr(config, option.name))
+
+    if config._BRARCHIVE or "--brarchive" in sys.argv:
+        config._BRARCHIVE = True
+        config._MINIFY = True
+        config._ADD_STAMP = False
 
     AnvilDisplay.copyright()
     AnvilDisplay.project_display(config.DISPLAY_NAME, config._TARGET, config._PREVIEW)

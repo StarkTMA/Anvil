@@ -1,8 +1,10 @@
+import io
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 from anvil.api.core.core import ANVIL
+from anvil.lib.brarchive import BrArchivePacker
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import Directory
 
@@ -101,9 +103,10 @@ class Fonts:
 
     def __export__(self):
         """Exports the font configuration."""
-        Directory.create(self._path)
         if self._font_image:
-            self._font_image.save(self._path / "default8.png")
+            image = io.BytesIO()
+            self._font_image.save(image, format="PNG")
+            BrArchivePacker.write_bytes(self._path / "default8.png", image.getvalue())
 
         if self._particles_image:
             self._particles_image.save(Path("assets", "particles", "numbers.png"))

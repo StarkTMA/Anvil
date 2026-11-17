@@ -1,6 +1,7 @@
 import base64
 from pathlib import Path
 
+from anvil.lib.brarchive import BrArchivePacker
 from anvil.lib.config import CONFIG
 
 
@@ -212,6 +213,6 @@ class _TexturesManager:
                     img = img.convert("RGB")
 
                 img.save(out_bytes, format=pil_format)
-                (path / f"{texture}.{ext}").write_bytes(out_bytes.getvalue())
+                BrArchivePacker.write_bytes(path / f"{texture}.{ext}", out_bytes.getvalue())
             else:
-                (path / f"{texture}.png").write_bytes(image_data)
+                BrArchivePacker.write_bytes(path / f"{texture}.png", image_data)

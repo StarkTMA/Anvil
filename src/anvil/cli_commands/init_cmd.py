@@ -80,6 +80,7 @@ def handle_configuration(
         ConfigSection.BUILD, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
     )
     config.add_option(ConfigSection.BUILD, ConfigOption.MINIFY, False)
+    config.add_option(ConfigSection.BUILD, ConfigOption.BRARCHIVE, False)
     config.add_option(ConfigSection.BUILD, ConfigOption.ADD_STAMP, True)
     config.add_option(
         ConfigSection.BUILD,

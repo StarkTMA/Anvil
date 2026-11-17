@@ -71,6 +71,13 @@ from anvil.lib.lib import process_subcommand
     help="Minify the project's JSON and JavaScript files.",
 )
 @click.option(
+    "--brarchive",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Bake the packs into .brarchive files, like Minecraft's own packs. Turns on --minify and leaves out the Anvil stamps.",
+)
+@click.option(
     "--clean",
     is_flag=True,
     default=False,
@@ -94,6 +101,7 @@ def build(
     tech_notes: bool,
     workflow: bool,
     minify: bool,
+    brarchive: bool,
     clean: bool,
     debug: bool,
 ) -> None:
@@ -134,8 +142,10 @@ def build(
         command.append("--tech-notes")
     if workflow:
         command.append("--workflow")
-    if minify:
+    if minify or brarchive:
         command.append("--minify")
+    if brarchive:
+        command.append("--brarchive")
     if clean:
         command.append("--clean")
     if debug:

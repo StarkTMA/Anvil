@@ -71,7 +71,7 @@ The following flags were previously available on the initialization CLI command 
 Builds or exports the configured project entry point from `anvilconfig.json` with the current Python interpreter. Use `anvil build` in examples.
 
 ```bash
-anvil build [--js-only] [--noarch] [--nocompile] [--mcaddon] [--mcworld] [--zip] [--tech-notes] [--workflow]
+anvil build [--js-only] [--noarch] [--nocompile] [--mcaddon] [--mcworld] [--zip] [--tech-notes] [--workflow] [--brarchive]
 ```
 
 ### Behavior
@@ -92,6 +92,7 @@ anvil build [--js-only] [--noarch] [--nocompile] [--mcaddon] [--mcworld] [--zip]
 | `--zip`        | Forward a request to build a ZIP archive.                                     |
 | `--tech-notes` | Forward a request to generate technical notes.                                |
 | `--workflow`   | Forward a request to refresh the GitHub workflow.                             |
+| `--brarchive`  | Bake the packs into `__brarchive/` archives, like Minecraft's own packs. Turns on `--minify` and leaves out the Anvil stamps. |
 
 ### Notes
 
