@@ -1056,3 +1056,27 @@ def test_beta_trail_writes_the_1_26_70_form(monkeypatch):
     components = JsonContainer(name="components").add(PublicEntityTrail(radius=1))
     with pytest.raises(ValueError, match="clashes"):
         components.add(EntityTrail(shape="square"))
+
+
+@pytest.mark.parametrize("experimental", [False, True])
+def test_place_feature_event_response_is_unavailable(monkeypatch, experimental):
+    from anvil.api.actors.entity import Entity
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", experimental, raising=False)
+    entity = Entity("place_feature_events")
+    spawned = entity.server.event("minecraft:entity_spawned")
+    sequence = spawned.add_sequence()
+    randomize = sequence.add_randomize()
+    for node in (spawned, sequence, randomize):
+        with pytest.raises(ValueError, match="place_feature is unavailable"):
+            node.set_place_feature(feature="testns:spike", target=FilterSubject.Self)
+        assert node.place_feature is None
+    spawned.add_component_groups(["adult"])
+    events = AnvilIO._normalize_json_like(entity.server._document)["minecraft:entity"][
+        "events"
+    ]
+    assert events["minecraft:entity_spawned"] == {
+        "add": {"component_groups": ["adult"]},
+        "sequence": [{"randomize": [{"weight": 1}]}],
+    }

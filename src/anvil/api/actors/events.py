@@ -1,12 +1,15 @@
 """The events of a server entity: what they add, remove, trigger and run, in sequences and
 random picks."""
 
-from typing import Annotated, Any, Self
+from typing import TYPE_CHECKING, Annotated, Any, Self
 
 from anvil.api.core.filters import Filter
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import JsonObject, JsonValue, Keyed, NonNegative, json_field
-from anvil.lib.jsonmodel.enums import Vibrations
+from anvil.lib.jsonmodel.enums import FilterSubject, Vibrations
+
+if TYPE_CHECKING:
+    from anvil.api.features.feature import Feature
 
 __all__ = ["_Event"]
 
@@ -50,6 +53,11 @@ class _Unleash(JsonObject):
     unleash_others: bool | None = None
 
 
+class _PlaceFeature(JsonObject):
+    feature: str = json_field()
+    target: FilterSubject | None = json_field(default=None)
+
+
 # endregion
 
 
@@ -69,6 +77,7 @@ class _EventNode(JsonObject, abstract=True):
     emit_particle: _EmitParticle | None = None
     execute_event_on_home_block: _HomeBlockEvent | None = None
     unleash: _Unleash | None = None
+    place_feature: _PlaceFeature | None = None
 
     def add_component_groups(self, component_groups: list[str]) -> Self:
         """Adds component groups to the entity.
@@ -185,6 +194,25 @@ class _EventNode(JsonObject, abstract=True):
             unleash_self=unleash_self or None,
             unleash_others=unleash_others or None,
         )
+        return self
+
+    def set_place_feature(
+        self, *, feature: "Feature | str", target: FilterSubject | None = None
+    ) -> Self:
+        """[UNAVAILABLE] Places a feature at an entity's position.
+
+        Minecraft keeps this event response internal: it is not available for creator content
+        yet, so this always raises ValueError, with or without `features.experimental`.
+
+        Args:
+            feature (Feature | str): The feature to place, or its identifier.
+            target (FilterSubject, optional): The entity whose position the feature is placed at.
+        """
+        raise ValueError(
+            "place_feature is unavailable: Minecraft keeps the place_feature event response internal and does not allow it in creator content yet."
+        )
+
+        self.place_feature = _PlaceFeature(feature=str(feature), target=target)
         return self
 
 
