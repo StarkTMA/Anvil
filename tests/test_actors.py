@@ -32,6 +32,31 @@ def test_entity_hide_held_items():
     assert scripts.hide_held_items == "q.is_sheared"
 
 
+def test_clear_behaviors_on_component_changes_is_experimental(monkeypatch):
+    from anvil.api.actors.entity import Entity
+    from anvil.lib.config import CONFIG
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
+    entity = Entity("clearing_entity")
+    assert "clear_behaviors_on_component_changes" not in (
+        entity.server.description.__json__()
+    )
+    entity.server.description.config(clear_behaviors_on_component_changes=True)
+    assert (
+        entity.server.description.__json__()["clear_behaviors_on_component_changes"]
+        is True
+    )
+
+    monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
+    entity = Entity("stable_entity")
+    with pytest.raises(ValueError, match="experimental"):
+        entity.server.description.config(clear_behaviors_on_component_changes=True)
+    entity.server.description.config(clear_behaviors_on_component_changes=False)
+    assert "clear_behaviors_on_component_changes" not in (
+        entity.server.description.__json__()
+    )
+
+
 def test_entity_ai_pickup_items():
     from anvil.api.actors.components import EntityAIPickupItems
 

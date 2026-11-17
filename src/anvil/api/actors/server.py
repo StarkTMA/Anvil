@@ -60,6 +60,9 @@ class _EntityServerDescription(JsonObject):
     is_spawnable: bool = json_field(default=True)
     is_summonable: bool = json_field(default=True)
     is_experimental: bool = json_field(default=False, omit_default=True)
+    clear_behaviors_on_component_changes: bool = json_field(
+        default=False, omit_default=True
+    )
     spawn_category: SpawnCategory | None = None
     runtime_identifier: str | None = None
     properties: Annotated[list[_EntityProperty], Keyed("name")] = json_field(
@@ -110,6 +113,7 @@ class _EntityServerDescription(JsonObject):
         is_spawnable: bool = True,
         is_experimental: bool = False,
         runtime_identifier: str | None = None,
+        clear_behaviors_on_component_changes: bool = False,
         spawn_category: (
             Literal[
                 "creature",
@@ -136,6 +140,7 @@ class _EntityServerDescription(JsonObject):
                 Defaults to False.
             runtime_identifier (str, optional): The vanilla entity
                 whose hard-coded behavior it takes.
+            clear_behaviors_on_component_changes (bool, optional): If the entity's AI components are cleared when its components change. Needs the experimental flag in anvilconfig.json. Defaults to False.
             spawn_category (str, optional): The mob cap it counts toward,
                 such as `creature` or `monster`. Left out when not given.
         """
@@ -148,6 +153,17 @@ class _EntityServerDescription(JsonObject):
         self.is_spawnable = is_spawnable
         self.is_experimental = is_experimental
         self.spawn_category = spawn_category
+
+        if clear_behaviors_on_component_changes:
+            if not CONFIG._EXPERIMENTAL:
+                raise ValueError(
+                    "clear_behaviors_on_component_changes is experimental: turn on "
+                    f"features.experimental in anvilconfig.json. Entity [{self.identifier}]"
+                )
+            self.clear_behaviors_on_component_changes = (
+                clear_behaviors_on_component_changes
+            )
+
         if runtime_identifier is not None:
             self.runtime_identifier = self._runtime_identifier(runtime_identifier)
         return self
