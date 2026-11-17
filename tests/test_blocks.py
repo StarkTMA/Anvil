@@ -874,6 +874,25 @@ def test_jukebox_playlist_source_is_experimental():
         }
 
 
+def test_climbable_is_experimental():
+    from anvil.beta.blocks.components import BlockClimbable
+    from anvil.lib import config
+
+    climbable = BlockClimbable(can_climb=False, can_hold_position_while_sneaking=True)
+    with pytest.raises(ValueError, match="experimental"):
+        _export(climbable)
+    with config.override(_PREVIEW=True, _EXPERIMENTAL=True):
+        assert _export(climbable) == {
+            "minecraft:climbable": {
+                "can_climb": False,
+                "can_hold_position_while_sneaking": True,
+            }
+        }
+        assert _export(BlockClimbable(can_climb=True)) == {
+            "minecraft:climbable": {"can_climb": True}
+        }
+
+
 def test_collision_box_min_max_is_experimental():
     from anvil.api.blocks.components import BlockCollisionBox
     from anvil.api.blocks.server import BlockServer

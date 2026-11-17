@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from anvil.api.blocks.server import BlockServer
 
 __all__ = [
+    "BlockClimbable",
     "BlockCollisionBox",
     "BlockEnchantmentPowerTransmitter",
     "BlockEntity",
@@ -294,6 +295,24 @@ class BlockJukeBoxPlaylistSource(JsonComponent):
 
     def __validate__(self) -> None:
         _require_experimental("BlockJukeBoxPlaylistSource")
+
+
+class BlockClimbable(JsonComponent):
+    """[EXPERIMENTAL] Defines the climbable properties of the block.
+    Experimental: needs `features.experimental` in anvilconfig.json.
+
+    Args:
+        can_climb (bool): Whether an entity can climb this block when its feet share the same position as the block.
+        can_hold_position_while_sneaking (bool, optional): Whether a player can stop descending and hold their position on this block by sneaking when their feet share the same position as the block. With `can_climb` false, the block cannot be climbed or descended, but a sneaking player can still stop their fall on it. Game default false.
+    """
+
+    identifier = "minecraft:climbable"
+
+    can_climb: bool = json_field()
+    can_hold_position_while_sneaking: bool | None = json_field(default=None)
+
+    def __validate__(self) -> None:
+        _require_experimental("BlockClimbable")
 
 
 class BlockDestructibleByMining(_Switchable):
