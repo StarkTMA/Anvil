@@ -184,13 +184,21 @@ def github_release_workflow(project_name: str) -> str:
     """The GitHub Actions workflow, `.github/workflows/release.yml`, that builds and
     releases the project when its version changes.
 
+    The workflow installs exactly the Anvil version recorded in `anvilconfig.json`
+    (`anvil.anvil_version`), so the release build uses the same Anvil as the last
+    local build. The version of Anvil that wrote the workflow is the fallback when the
+    option is missing.
+
     Args:
         project_name (str): The project name, shown in the workflow name.
     """
     return (
         f"name: Release {project_name}\n"
         + _WORKFLOW_SETUP
-        + f'          python -m pip install "mcanvil>={__version__}"\n'
+        + "          ANVIL_VERSION=$(python -c 'import json; "
+        + 'print(json.load(open("anvilconfig.json", encoding="utf-8"))'
+        + f'.get("anvil", {{}}).get("anvil_version") or "{__version__}")\')\n'
+        + '          python -m pip install "mcanvil==$ANVIL_VERSION"\n'
         + _WORKFLOW_RELEASE
     )
 

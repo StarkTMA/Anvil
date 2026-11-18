@@ -84,7 +84,9 @@ def test_text_files():
 def test_github_release_workflow():
     workflow = scaffold.github_release_workflow("test_project")
     assert workflow.startswith("name: Release test_project\n")
-    assert f'"mcanvil>={__version__}"' in workflow
+    assert '"mcanvil==$ANVIL_VERSION"' in workflow
+    assert '.get("anvil_version")' in workflow
+    assert f'or "{__version__}"' in workflow
     assert "${{ github.ref }}" in workflow
     assert "--tech-notes" in workflow
     assert ".pdf" in workflow
