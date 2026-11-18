@@ -231,11 +231,6 @@ class _BlockTraits(JsonObject):
                 "multi_block direction must be one of 'up', 'down', 'north', 'south', "
                 "'east', or 'west'."
             )
-        if direction in ("north", "south", "east", "west") and not CONFIG._EXPERIMENTAL:
-            raise ValueError(
-                "Horizontal multi_block directions (north, south, east, west) require the "
-                "experimental flag to be enabled in the config."
-            )
         if not 2 <= part_count <= 4:
             raise ValueError("multi_block part_count must be between 2 and 4.")
         self.multi_block = _MultiBlockTrait(parts=part_count, direction=direction)
