@@ -115,4 +115,8 @@ def _read(file_name: str) -> str:
 
 
 def _write(path: Path, content: str) -> None:
-    path.write_text(GENERATED_HEADER + content, encoding="utf-8", newline="\n")
+    """Writes with CRLF, and leaves the file untouched when it already holds the same text."""
+    data = (GENERATED_HEADER + content).replace("\r\n", "\n").replace("\n", "\r\n").encode("utf-8")
+    if path.is_file() and path.read_bytes() == data:
+        return
+    path.write_bytes(data)
