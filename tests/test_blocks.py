@@ -686,8 +686,13 @@ def test_block_traits_are_checked():
         door.set_placement_position([PlacementPositionTrait.VerticalHalf])
     with pytest.raises(ValueError, match="between 2 and 4"):
         _BlockTraits().set_multi_block("up", 5)
-    with pytest.raises(ValueError, match="experimental"):
-        _BlockTraits().set_multi_block("north")
+    assert _export(_BlockTraits().set_multi_block("north")) == {
+        "minecraft:multi_block": {
+            "enabled_states": ["minecraft:multi_block_part"],
+            "parts": 2,
+            "direction": "north",
+        }
+    }
 
 
 def test_block_state_limit():
