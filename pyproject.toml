@@ -1,3 +1,60 @@
 [build-system]
-requires = ["setuptools>=64.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcanvil"
+dynamic = ["version"]
+description = "A Minecraft bedrock content development framework."
+readme = "README.md"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "Yasser A. Benfoughal", email = "yasser@starktma.net" }]
+requires-python = ">=3.15"
+# https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "click",
+    "click_aliases",
+    "pillow",
+    "deep_translator",
+    "reportlab",
+    "packaging",
+    "orjson",
+    "requests",
+]
+
+[project.optional-dependencies]
+test = ["pytest", "jsonschema"]
+docs = ["zensical", "mkdocstrings[python]"]
+
+[project.urls]
+Homepage = "https://anvil.starktma.net/"
+Github = "https://github.com/StarkTMA/Anvil"
+Website = "https://anvil.starktma.net"
+Twitter = "https://twitter.com/StarkTMA_"
+
+[project.scripts]
+anvil = "anvil.cli:cli"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "anvil.__version__.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["docs*"]

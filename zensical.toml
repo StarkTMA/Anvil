@@ -128,9 +128,6 @@ nav = [
       { "Format Versions" = "api/core/format_versions.md" },
     ] },
   ] },
-  { "Kit" = [
-    { "Overview" = "kit/index.md" },
-  ] },
   { "Beta API Reference" = [
     { "Core" = [
       { "Filters" = "beta/core/filters.md" },
