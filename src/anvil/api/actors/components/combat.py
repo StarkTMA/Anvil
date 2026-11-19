@@ -36,6 +36,7 @@ from anvil.lib.jsonmodel.enums import (
     DamageCause,
     DamageSensor,
     Difficulty,
+    EntitySoundEvent,
     ExplosionParticleEffect,
     FilterSubject,
     LineOfSightObstructionType,
@@ -636,7 +637,7 @@ class EntityAmbientSoundInterval(JsonComponent):
 
     identifier = "minecraft:ambient_sound_interval"
 
-    event_name: str | None = json_field(default=None)
+    event_name: EntitySoundEvent | None = json_field(default=None)
     event_names: list[AmbientSoundEvent] = json_field(
         default_factory=list, omit_default=True
     )
@@ -644,12 +645,12 @@ class EntityAmbientSoundInterval(JsonComponent):
     value: Annotated[float, NonNegative] | None = json_field(default=None)
 
     def add_event_name(
-        self, *, event_name: str, condition: Molang | str
+        self, *, event_name: EntitySoundEvent, condition: Molang | str
     ) -> "EntityAmbientSoundInterval":
         """Adds a sound played when its condition is true.
 
         Args:
-            event_name (str): Level sound event to be played.
+            event_name (EntitySoundEvent): Level sound event to be played.
             condition (Molang | str): The condition that selects this sound.
         """
         self.event_names.append(

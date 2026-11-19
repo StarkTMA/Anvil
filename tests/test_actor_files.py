@@ -388,17 +388,6 @@ def test_item_client_has_no_entity_keys():
     }
 
 
-def test_kit_entity_outline_materials():
-    from anvil.kit.actors.materials import add_entity_outline
-
-    add_entity_outline(xray_mode=True).queue()
-    materials = _check(MaterialsObject())["materials"]
-    assert materials["testns.entity_outline_base:entity_alphatest"]["stencilRef"] == 3
-    outline = materials["testns.entity_outline:entity_alphatest"]
-    assert outline["depthFunc"] == "Always"
-    assert outline["frontFace"] == {"stencilFunc": "NotEqual"}
-
-
 def test_entity_references_accept_an_entity_or_a_vanilla_identifier():
     from anvil.api.actors.components.combat import EntityTransformation
     from anvil.api.vanilla.entities import MinecraftEntityTypes

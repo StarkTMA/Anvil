@@ -3,7 +3,7 @@
 Anvil’s API is grouped by domain. Start with the relevant guide page for examples, then use these module references when you need the exact classes or functions.
 
 !!! note "Stability"
-    `anvil.api` is Anvil's stable layer. Ready-made content built on top of it lives in the [Kit](../kit/index.md), which is opinionated and may change between minor versions.
+    `anvil.api` is Anvil's stable layer. Ready-made content built on top of it lives in [Anvil Kit](https://github.com/StarkTMA/anvil-kit), which is opinionated and may change between minor versions.
 
 ## Content APIs
 
