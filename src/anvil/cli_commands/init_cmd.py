@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 
+from anvil.__version__ import __version__
 from anvil.lib import scaffold
 from anvil.lib.config import (
     Config,
@@ -94,6 +95,7 @@ def handle_configuration(
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
     config.add_option(ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.ANVIL_VERSION, __version__)
 
     return config
 
