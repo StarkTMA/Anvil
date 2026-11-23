@@ -213,6 +213,8 @@ class _TexturesManager:
                     img = img.convert("RGB")
 
                 img.save(out_bytes, format=pil_format)
-                BrArchivePacker.write_bytes(path / f"{texture}.{ext}", out_bytes.getvalue())
+                BrArchivePacker.write_bytes(
+                    path / f"{texture}.{ext}", out_bytes.getvalue()
+                )
             else:
                 BrArchivePacker.write_bytes(path / f"{texture}.png", image_data)

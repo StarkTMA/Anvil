@@ -123,24 +123,12 @@ def code_workspace(
             is not the game's.
     """
     com_mojang = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
+    dev_res_path = Path(dev_res_path or com_mojang / "development_resource_packs")
+    dev_beh_path = Path(dev_beh_path or com_mojang / "development_behavior_packs")
     folders = [
         (name, path),
-        (
-            "Dev Resource Packs",
-            dev_res_path or com_mojang / "development_resource_packs",
-        ),
-        (
-            "Dev behavior Packs",
-            dev_beh_path or com_mojang / "development_behavior_packs",
-        ),
-        (
-            "Dev Preview Resource Packs",
-            PREVIEW_COM_MOJANG / "development_resource_packs",
-        ),
-        (
-            "Dev Preview behavior Packs",
-            PREVIEW_COM_MOJANG / "development_behavior_packs",
-        ),
+        ("Dev Resource Packs", dev_res_path / f"RP_{name}"),
+        ("Dev behavior Packs", dev_beh_path / f"BP_{name}"),
     ]
     return {
         "folders": [
@@ -150,11 +138,12 @@ def code_workspace(
     }
 
 
-def ts_constants(namespace: str, project_name: str) -> str:
+def ts_constants() -> str:
     """The `constants.ts` that gives the scripts the project's namespace and name."""
     return (
-        f'export const NAMESPACE = "{namespace}"\n'
-        f'export const PROJECT_NAME = "{project_name}"\n'
+        'import config from "../../anvilconfig.json";\n'
+        "export const NAMESPACE = config.package.namespace;\n"
+        "export const PROJECT_NAME = config.package.project_name;\n"
     )
 
 
@@ -164,8 +153,7 @@ def main_py() -> str:
         "from anvil import *\n"
         "\n"
         'if __name__ == "__main__":\n'
-        "    ANVIL.compile(extract_world=None)\n"
-        "    # ANVIL.package()\n"
+        "    ANVIL.compile()\n"
     )
 
 

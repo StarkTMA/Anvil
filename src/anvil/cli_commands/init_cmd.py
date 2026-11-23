@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 
+from anvil.__version__ import __version__
 from anvil.lib import scaffold
 from anvil.lib.config import (
     Config,
@@ -94,6 +95,7 @@ def handle_configuration(
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
     config.add_option(ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.ANVIL_VERSION, __version__)
 
     return config
 
@@ -183,7 +185,7 @@ def handle_script(
     )
     AnvilIO.file(
         "constants.ts",
-        scaffold.ts_constants(namespace, project_name),
+        scaffold.ts_constants(),
         Path("scripts", "javascript"),
         "w",
     )
@@ -282,7 +284,6 @@ def init(
         }
     )
     os.chdir(project_name)
-    config.save()
     WORKING_DIR = Path.cwd()
     local_export = (
         bool(config.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT))
@@ -306,6 +307,7 @@ def init(
         "w",
     )
     AnvilIO.file("CHANGELOG.md", "", "", "w")
+    config.save()
     if scriptapi:
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
     if vscode:
@@ -314,7 +316,7 @@ def init(
         AnvilIO.file(
             workspace_file,
             scaffold.code_workspace(
-                config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
+                project_name,
                 WORKING_DIR,
                 preview,
                 dev_res_path=DEV_RES_DIR,
@@ -339,4 +341,3 @@ def init(
                 f'xdg-open "{workspace_full_path}"',
                 "Unable to start the project vscode workspace",
             )
-    AnvilValidator.check_new_versions(preview)

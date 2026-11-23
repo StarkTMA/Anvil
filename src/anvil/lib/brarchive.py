@@ -305,7 +305,7 @@ class BrArchive:
             return False
         try:
             return sanitize_path(name) in self.entries
-        except (InvalidEntryError, SecurityError):
+        except InvalidEntryError, SecurityError:
             return False
 
     def __iter__(self) -> Iterator[str]:

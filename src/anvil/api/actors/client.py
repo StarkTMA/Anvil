@@ -274,30 +274,30 @@ class _ActorClientDescription(JsonObject, abstract=True):
 
     def add_geometry(
         self,
-        geometry_name: str | Geometry,
+        blockbench: str | Geometry,
         override_bounding_box: tuple[float, float] | None = None,
     ) -> "_ActorClientDescription":
         """Adds a geometry, by its short name.
 
         Args:
-            geometry_name (str | Geometry): The Blockbench model, or a Geometry built in code
+            blockbench (str | Geometry): The Blockbench model, or a Geometry built in code
                 (its name is the short name).
             override_bounding_box (tuple[float, float], optional): Replaces the model's
                 visible bounds.
         """
-        if isinstance(geometry_name, Geometry):
-            geometry = geometry_name
+        if isinstance(blockbench, Geometry):
+            geometry = blockbench
             if override_bounding_box:
                 geometry.set_visible_bounds(*override_bounding_box)
             geometry.queue(_BlockBenchSource.ACTOR)
             self.geometry[geometry.name] = geometry.geometry_identifier
             return self
 
-        bb = _Blockbench(geometry_name, _BlockBenchSource.ACTOR)
+        bb = _Blockbench(blockbench, _BlockBenchSource.ACTOR)
         if override_bounding_box:
             bb.override_bounding_box(override_bounding_box)
         bb.model.queue_model()
-        self.geometry[geometry_name] = f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"
+        self.geometry[blockbench] = f"geometry.{CONFIG.NAMESPACE}.{blockbench}"
         return self
 
     def set_dummy(self) -> "_ActorClientDescription":

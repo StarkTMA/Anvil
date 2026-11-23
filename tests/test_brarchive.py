@@ -126,7 +126,9 @@ def test_pack_and_unpack_nested_directory(tmp_path):
     BrArchive.unpack(archive_file, dest_dir)
 
     assert (dest_dir / "manifest.json").read_bytes() == b'{"format_version": 2}'
-    assert (dest_dir / "textures" / "items" / "diamond_sword.png").read_bytes() == b"SWORD_PNG"
+    assert (
+        dest_dir / "textures" / "items" / "diamond_sword.png"
+    ).read_bytes() == b"SWORD_PNG"
     assert (dest_dir / "textures" / "items" / "iron_axe.png").read_bytes() == b"AXE_PNG"
 
 
@@ -147,7 +149,10 @@ def test_extract_single_entry(tmp_path):
 
 
 def test_path_sanitization_and_security():
-    assert sanitize_path(r"models\entity\zombie.geo.json") == "models/entity/zombie.geo.json"
+    assert (
+        sanitize_path(r"models\entity\zombie.geo.json")
+        == "models/entity/zombie.geo.json"
+    )
     assert sanitize_path("/textures/blocks/stone.png/") == "textures/blocks/stone.png"
 
     with pytest.raises(InvalidEntryError):
@@ -241,7 +246,9 @@ def test_cli_integration(tmp_path):
     archive_file = tmp_path / "cli_pack.brarchive"
 
     # 1. pack
-    res_pack = runner.invoke(cli, ["brarchive", "pack", str(src_dir), "-o", str(archive_file)])
+    res_pack = runner.invoke(
+        cli, ["brarchive", "pack", str(src_dir), "-o", str(archive_file)]
+    )
     assert res_pack.exit_code == 0, res_pack.output
     assert archive_file.exists()
 
@@ -255,14 +262,25 @@ def test_cli_integration(tmp_path):
     # 3. extract single
     extract_target = tmp_path / "cli_single"
     res_extract = runner.invoke(
-        cli, ["bra", "extract", str(archive_file), "-e", "data1.json", "-o", str(extract_target)]
+        cli,
+        [
+            "bra",
+            "extract",
+            str(archive_file),
+            "-e",
+            "data1.json",
+            "-o",
+            str(extract_target),
+        ],
     )
     assert res_extract.exit_code == 0, res_extract.output
     assert (extract_target / "data1.json").read_bytes() == b'{"val": 1}'
 
     # 4. unpack
     unpack_target = tmp_path / "cli_unpacked"
-    res_unpack = runner.invoke(cli, ["brarch", "u", str(archive_file), "-o", str(unpack_target)])
+    res_unpack = runner.invoke(
+        cli, ["brarch", "u", str(archive_file), "-o", str(unpack_target)]
+    )
     assert res_unpack.exit_code == 0, res_unpack.output
     assert (unpack_target / "data1.json").read_bytes() == b'{"val": 1}'
     assert (unpack_target / "data2.json").read_bytes() == b'{"val": 1}'
@@ -338,7 +356,9 @@ def test_bake_pack_layout(tmp_path):
         ("terrain_texture.json", 7, 7),
     ]
     assert _descriptors(arc / "textures/starktma.brarchive") == []
-    assert _descriptors(arc / "textures/starktma/blocks.brarchive") == [("ruby_ore.png", 0, 4)]
+    assert _descriptors(arc / "textures/starktma/blocks.brarchive") == [
+        ("ruby_ore.png", 0, 4)
+    ]
     # Files that stay loose are listed as empty entries
     assert _descriptors(arc / "texts.brarchive") == [("en_US.lang", 0, 0)]
     # Sounds, materials and structures are stored with their data
@@ -359,7 +379,6 @@ def test_bake_pack_layout(tmp_path):
     assert (pack / "manifest.json").exists() and (pack / "pack_icon.png").exists()
     assert (pack / "scripts/main.js").exists()
     assert not (arc / "scripts.brarchive").exists()
-
 
 
 def test_bake_packs_loot_tables(tmp_path):
@@ -408,4 +427,6 @@ def test_brarchive_build_archives_from_memory(tmp_path, monkeypatch):
     assert _descriptors(arc / "sounds.brarchive") == []
     assert BrArchive(arc / "sounds/mob.brarchive").read("hit.ogg") == b"ogg"
     assert _descriptors(arc / "texts.brarchive") == [("en_US.lang", 0, 0)]
-    assert BrArchive(arc / "textures.brarchive").read("terrain_texture.json") == b'{"t":1}'
+    assert (
+        BrArchive(arc / "textures.brarchive").read("terrain_texture.json") == b'{"t":1}'
+    )
