@@ -792,7 +792,7 @@ class AnvilValidator:
             package_file = Path("node_modules", *name.split("/"), "package.json")
             try:
                 installed = str(orjson.loads(package_file.read_bytes())["version"])
-            except (OSError, orjson.JSONDecodeError, KeyError, TypeError):
+            except OSError, orjson.JSONDecodeError, KeyError, TypeError:
                 continue
             installed_key = cls._version_key(installed)
             supported_key = cls._version_key(supported)
@@ -861,7 +861,7 @@ class AnvilValidator:
                                     "latest": latest,
                                 }
                             )
-        except (OSError, subprocess.SubprocessError):
+        except OSError, subprocess.SubprocessError:
             pass
 
         try:
@@ -899,7 +899,7 @@ class AnvilValidator:
                                         "latest": parts[2],
                                     }
                                 )
-        except (OSError, subprocess.SubprocessError):
+        except OSError, subprocess.SubprocessError:
             pass
 
         if outdated_packages:
@@ -931,7 +931,7 @@ class AnvilValidator:
                 "https://raw.githubusercontent.com/Mojang/bedrock-samples/refs/heads/main/version.json"
             )
             vanilla_latest_build: str = orjson.loads(request.text)["latest"]["version"]
-        except (requests.RequestException, orjson.JSONDecodeError, KeyError, TypeError):
+        except requests.RequestException, orjson.JSONDecodeError, KeyError, TypeError:
             click.echo(
                 click.style(
                     "[WARN]: Could not fetch latest Minecraft version.", fg="yellow"
@@ -976,14 +976,10 @@ class AnvilValidator:
 class AnvilDisplay:
     @staticmethod
     def copyright():
-        click.clear()
         click.echo(
             "\n".join(
                 [
-                    f"{click.style('Anvil', 'cyan')} - by StarkTMA.",
-                    f"Version {click.style(__version__, 'cyan')}.",
-                    f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
-                    "All rights reserved.",
+                    f"{click.style('Anvil', 'cyan')} {click.style(__version__, 'cyan')} · © 2026 StarkTMA · MIT License"
                     "",
                 ]
             )
