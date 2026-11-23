@@ -284,7 +284,6 @@ def init(
         }
     )
     os.chdir(project_name)
-    config.save()
     WORKING_DIR = Path.cwd()
     local_export = (
         bool(config.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT))
@@ -308,6 +307,7 @@ def init(
         "w",
     )
     AnvilIO.file("CHANGELOG.md", "", "", "w")
+    config.save()
     if scriptapi:
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
     if vscode:
@@ -341,4 +341,3 @@ def init(
                 f'xdg-open "{workspace_full_path}"',
                 "Unable to start the project vscode workspace",
             )
-    AnvilValidator.check_new_versions(preview)

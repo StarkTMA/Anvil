@@ -164,8 +164,7 @@ def main_py() -> str:
         "from anvil import *\n"
         "\n"
         'if __name__ == "__main__":\n'
-        "    ANVIL.compile(extract_world=None)\n"
-        "    # ANVIL.package()\n"
+        "    ANVIL.compile()\n"
     )
 
 
