@@ -122,24 +122,15 @@ def code_workspace(
         dev_beh_path (str | Path, optional): The development behavior packs folder, when it
             is not the game's.
     """
-    com_mojang = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
     folders = [
         (name, path),
         (
             "Dev Resource Packs",
-            dev_res_path or com_mojang / "development_resource_packs",
+            dev_res_path / f"RP_{name}",
         ),
         (
             "Dev behavior Packs",
-            dev_beh_path or com_mojang / "development_behavior_packs",
-        ),
-        (
-            "Dev Preview Resource Packs",
-            PREVIEW_COM_MOJANG / "development_resource_packs",
-        ),
-        (
-            "Dev Preview behavior Packs",
-            PREVIEW_COM_MOJANG / "development_behavior_packs",
+            dev_beh_path / f"BP_{name}",
         ),
     ]
     return {
