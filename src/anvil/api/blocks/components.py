@@ -615,7 +615,7 @@ class BlockCollisionBox(_BlockBoxComponent):
                 "[WARN]: BlockCollisionBox origin and size are deprecated in the beta. Anvil "
                 "writes them as min and max; use anvil.beta.blocks.components."
                 "BlockCollisionBox instead.",
-                fg="yellow",
+                fg="red",
             )
         )
 
@@ -625,7 +625,7 @@ class BlockCollisionBox(_BlockBoxComponent):
         if not isinstance(box, dict):
             return payload
         boxes = [box, *(extra.__json__() for extra in self._boxes)]
-        if CONFIG._EXPERIMENTAL:
+        if CONFIG._PREVIEW:
             self._warn_deprecated()
             boxes = [self._to_min_max(b) for b in boxes]
         return {self.identifier: boxes}
