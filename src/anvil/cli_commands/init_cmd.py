@@ -316,7 +316,7 @@ def init(
         AnvilIO.file(
             workspace_file,
             scaffold.code_workspace(
-                config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
+                project_name,
                 WORKING_DIR,
                 preview,
                 dev_res_path=DEV_RES_DIR,
