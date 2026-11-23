@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 import click
+
 from anvil.lib.brarchive import (
     DESCRIPTOR_SIZE,
     HEADER_SIZE,

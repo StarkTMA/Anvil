@@ -290,7 +290,7 @@ def _union(arms: list[Node]) -> Node:
                 value = arm.decode(data)
                 arm.check("", value)
                 return value
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 pass
         raise TypeError(f"Expected {label}, got {data!r}.")
 

@@ -61,20 +61,29 @@ def test_tsconfig_and_vscode_paths_use_forward_slashes():
     assert configuration["sourceMapRoot"] == "out/scripts"
 
 
-def test_code_workspace_lists_preview_folders():
-    folders = scaffold.code_workspace("demo", "work/demo")["folders"]
-    assert [folder["name"] for folder in folders] == [
-        "demo",
-        "Dev Resource Packs",
-        "Dev behavior Packs",
-        "Dev Preview Resource Packs",
-        "Dev Preview behavior Packs",
+def test_code_workspace_lists_project_pack_folders():
+    folders = scaffold.code_workspace(
+        "demo", "work/demo", dev_res_path="dev/RP", dev_beh_path="dev/BP"
+    )["folders"]
+    assert folders == [
+        {"name": "demo", "path": "work/demo"},
+        {"name": "Dev Resource Packs", "path": "dev/RP/RP_demo"},
+        {"name": "Dev behavior Packs", "path": "dev/BP/BP_demo"},
     ]
-    assert all(folder["path"] for folder in folders)
+
+
+def test_code_workspace_defaults_to_game_folders():
+    folders = scaffold.code_workspace("demo", "work/demo")["folders"]
+    assert folders[1]["path"].endswith("development_resource_packs/RP_demo")
+    assert folders[2]["path"].endswith("development_behavior_packs/BP_demo")
 
 
 def test_text_files():
-    assert 'export const NAMESPACE = "ns"' in scaffold.ts_constants("ns", "demo")
+    constants = scaffold.ts_constants()
+    assert isinstance(constants, str)
+    assert 'import config from "../../anvilconfig.json";' in constants
+    assert "export const NAMESPACE = config.package.namespace;" in constants
+    assert "export const PROJECT_NAME = config.package.project_name;" in constants
     assert "ANVIL.compile(" in scaffold.main_py()
     assert "__pycache__/" in scaffold.gitignore()
     esbuild = scaffold.esbuild_js()

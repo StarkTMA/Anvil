@@ -238,8 +238,13 @@ class TestIsColorValue:
 
 class TestSupportedNpmVersions:
     def test_vanilla_data_preview(self):
+        from anvil.lib.format_versions import MODULE_MINECRAFT_VANILLA_DATA_PREVIEW
+
         supported = AnvilValidator.supported_npm_versions(preview=True)
-        assert supported["@minecraft/vanilla-data"] == "1.26.70-preview.24"
+        assert (
+            supported["@minecraft/vanilla-data"]
+            == MODULE_MINECRAFT_VANILLA_DATA_PREVIEW
+        )
 
     def test_vanilla_data_release(self):
         from anvil.lib.format_versions import MANIFEST_BUILD
