@@ -185,7 +185,7 @@ def handle_script(
     )
     AnvilIO.file(
         "constants.ts",
-        scaffold.ts_constants(namespace, project_name),
+        scaffold.ts_constants(),
         Path("scripts", "javascript"),
         "w",
     )

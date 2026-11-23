@@ -141,11 +141,12 @@ def code_workspace(
     }
 
 
-def ts_constants(namespace: str, project_name: str) -> str:
+def ts_constants() -> str:
     """The `constants.ts` that gives the scripts the project's namespace and name."""
     return (
-        f'export const NAMESPACE = "{namespace}"\n'
-        f'export const PROJECT_NAME = "{project_name}"\n'
+        'import config from "../../../anvilconfig.json"',
+        "export const NAMESPACE = config.package.namespace",
+        "export const PROJECT_NAME = config.package.project_name",
     )
 
 
