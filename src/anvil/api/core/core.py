@@ -377,7 +377,7 @@ def process_art(
                 )
             )
 
-        for i in range(999):
+        for i in range(9):
             if not (source / f"{i}.png").exists():
                 if i < 5:
                     raise FileNotFoundError(
