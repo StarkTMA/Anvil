@@ -645,6 +645,54 @@ def test_block_server_needs_geometry_and_material(no_write):
         block.server.__export__()
 
 
+def test_multi_block_needs_movable(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("tall_lamp")
+    block.server.description.traits.set_multi_block("up", 2)
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:tall_lamp")]),
+    )
+    with pytest.raises(ValueError, match="multi_block trait but has no BlockMovable"):
+        block.server.__export__()
+
+    # A movable component only in a permutation does not count.
+    block.server.permutation("q.block_state('minecraft:multi_block_part') == 0").add(
+        BlockMovable(movement_type="immovable")
+    )
+    with pytest.raises(ValueError, match="BlockMovable"):
+        block.server.__export__()
+
+
+def test_multi_block_with_movable_exports(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("tall_lamp_ok")
+    block.server.description.traits.set_multi_block("up", 2)
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:tall_lamp")]),
+        BlockMovable(movement_type="immovable"),
+    )
+    block.server.__export__()
+
+    body = _check_file(block.server)["minecraft:block"]
+    assert body["components"]["minecraft:movable"] == {"movement_type": "immovable"}
+    assert "minecraft:multi_block" in body["description"]["traits"]
+
+
+def test_movable_not_required_without_multi_block(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("plain_cube")
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:plain_cube")]),
+    )
+    block.server.__export__()
+
+
 def test_block_traits_are_checked():
     from anvil.api.blocks.server import _BlockTraits
     from anvil.lib.jsonmodel.enums import ConnectionTrait, PlacementPositionTrait

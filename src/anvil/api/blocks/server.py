@@ -8,6 +8,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockGeometry,
     BlockMaterialInstance,
+    BlockMovable,
 )
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import ComponentGroup, Permutation
@@ -440,6 +441,8 @@ class BlockServer(JsonFile[_BlockServerFile]):
 
         Raises:
             ValueError: When the root components have no geometry or no material instance.
+            ValueError: When the block has the multi_block trait but no movable component
+                in the root components.
             ValueError: A component is misplaced, misses one it requires, or clashes.
         """
         validate_components(self, self.components, self.permutations, is_block=True)
@@ -451,6 +454,15 @@ class BlockServer(JsonFile[_BlockServerFile]):
             raise ValueError(
                 f"Block {self.identifier} missing at least one material instance in the root "
                 "components."
+            )
+        if self.description.traits.multi_block is not None and not self.components.has(
+            BlockMovable
+        ):
+            raise ValueError(
+                f"Block {self.identifier} uses the multi_block trait but has no BlockMovable "
+                "in the root components. The game rejects multi_block blocks without "
+                "'minecraft:movable'; add one, for example "
+                "BlockMovable(movement_type=\"immovable\")."
             )
         self._before_export()
         return super().__export__()
