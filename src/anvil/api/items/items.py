@@ -28,8 +28,8 @@ class Item:
                 (`anvil.beta.vanilla`) without `features.experimental`.
         """
         from anvil.api.items.server import ItemServer
-        from anvil.api.vanilla.items import vanilla_items_ids
-        from anvil.beta.vanilla.items import vanilla_items_ids as beta_vanilla_items_ids
+        from anvil.api.vanilla import vanilla_items_ids
+        from anvil.beta.vanilla import vanilla_items_ids as beta_vanilla_items_ids
 
         self.identifier = Identifier.parse(
             name, vanilla=is_vanilla, object_type=self._object_type

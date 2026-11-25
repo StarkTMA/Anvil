@@ -20,7 +20,7 @@ from anvil.api.items.components import (
 )
 from anvil.api.items.items import Item
 from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 item = Item("iron_crown")
 item.server.description.set_menu_category(ItemCategory.Equipment, ItemGroups.Helmet)
@@ -105,7 +105,7 @@ from anvil.api.items.components import (
 )
 from anvil.api.items.items import Item
 from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 
 def iron_crown():

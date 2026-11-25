@@ -84,7 +84,7 @@ item.server.components.add(
 
 ```py title="crafting"
 from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 recipe = ShapedCraftingRecipe(item.name)
 recipe.result(item)
@@ -162,7 +162,7 @@ from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
 from anvil.api.items.items import Item
 from anvil.api.logic.molang import Query
 from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 
 def arcane_user_guide():

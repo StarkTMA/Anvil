@@ -8,7 +8,7 @@ from anvil.api.items.items import Item
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.textures import ItemTexturesObject
-from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.api.vanilla import MinecraftItemTags
 from anvil.lib.blockbench import _BlockBenchSource
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (

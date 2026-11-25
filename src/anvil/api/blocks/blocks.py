@@ -30,8 +30,8 @@ class Block:
         """
         from anvil.api.blocks.client import BlockClient
         from anvil.api.blocks.server import BlockServer
-        from anvil.api.vanilla.blocks import vanilla_block_ids
-        from anvil.beta.vanilla.blocks import (
+        from anvil.api.vanilla import vanilla_block_ids
+        from anvil.beta.vanilla import (
             vanilla_block_ids as beta_vanilla_block_ids,
         )
 

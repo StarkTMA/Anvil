@@ -18,8 +18,7 @@ from anvil.api.biomes.components import (
     BiomeSurfaceBuilder,
     BiomeTags,
 )
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBlockTypes
 
 biome = Biome("ember_fields")
 
@@ -57,7 +56,7 @@ biome.server.components.add(
 - The surface builder chooses the blocks; `BiomeSurfaceMaterialAdjustments` layers more blocks by height or noise.
 
 !!! warning "Addons"
-    A package of type `addon` cannot override a vanilla biome (`Biome("plains", is_vanilla=True)` raises). Custom biomes are fine.
+A package of type `addon` cannot override a vanilla biome (`Biome("plains", is_vanilla=True)` raises). Custom biomes are fine.
 
 ---
 
@@ -103,10 +102,10 @@ lights.queue()
 ```
 
 !!! note "Keyframes"
-    Any value that can change over the day takes a list of `(time, value)` tuples with `time` from 0 (midnight) to 1, or a single value for a constant.
+Any value that can change over the day takes a list of `(time, value)` tuples with `time` from 0 (midnight) to 1, or a single value for a constant.
 
 !!! note "Colors"
-    Colors are hex strings (`"#ff8040"`), `(r, g, b)` floats from 0 to 1 or `(r, g, b)` integers from 0 to 255, with an optional alpha. They are written as hex.
+Colors are hex strings (`"#ff8040"`), `(r, g, b)` floats from 0 to 1 or `(r, g, b)` integers from 0 to 255, with an optional alpha. They are written as hex.
 
 ---
 
@@ -153,7 +152,7 @@ biome.queue()
 - `ambient_sounds(addition=, loop=, mood=)` returns sound definitions to add `.ogg` files to, exactly like [sound definitions](particles_and_sounds.md).
 
 !!! tip "Only the sides you use"
-    `biome.queue()` exports the server file and the client file only when you touched them. A biome used for a feature filter alone needs neither.
+`biome.queue()` exports the server file and the client file only when you touched them. A biome used for a feature filter alone needs neither.
 
 ---
 
@@ -174,8 +173,7 @@ from anvil.api.pbr.atmosphere import AtmosphericSettings
 from anvil.api.pbr.fog import FogSettings
 from anvil.api.pbr.lighting import LightingSettings, LocalLighting
 from anvil.api.pbr.water import WaterSettings
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBlockTypes
 
 
 def ember_visuals():

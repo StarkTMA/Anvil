@@ -14,7 +14,7 @@ from anvil.api.core.filters import Filter
 from anvil.api.features.feature import CoordinateRange
 from anvil.api.features.feature_rule import FeatureRule
 from anvil.api.features.ore import OreFeature
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBlockTypes
 
 in_ember_fields = Filter.has_biome_tag("ember_fields")
 
@@ -102,10 +102,10 @@ FeatureRule(
 ```
 
 !!! note
-    `scatter_chance` is a percentage, a `(numerator, denominator)` fraction or a Molang string; `None` means always. `project_input_to_floor` drops the scatter's start position to the ground, so the lanterns land on the surface wherever `y=64` was.
+`scatter_chance` is a percentage, a `(numerator, denominator)` fraction or a Molang string; `None` means always. `project_input_to_floor` drops the scatter's start position to the ground, so the lanterns land on the surface wherever `y=64` was.
 
 !!! tip "Custom blocks in features"
-    A feature takes your blocks as `"namespace:name"` strings or as `block.descriptor(lit=True)` with state values.
+A feature takes your blocks as `"namespace:name"` strings or as `block.descriptor(lit=True)` with state values.
 
 ---
 
@@ -113,7 +113,7 @@ FeatureRule(
 
 ```py title="trees"
 from anvil.api.features.tree import TreeFeature
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
+from anvil.api.vanilla import MinecraftBiomeTags
 
 tree = TreeFeature("ashen_tree")
 tree.base_block(MinecraftBlockTypes.Dirt())
@@ -135,7 +135,7 @@ FeatureRule("ashen_trees", tree, FeatureRulePlacementPass.SurfacePass).biome_fil
 A tree is one trunk builder (`trunk`, `fancy_trunk`, `mega_trunk`, `cherry_trunk`, `mangrove_trunk`...) plus one canopy builder (`canopy`, `spruce_canopy`, `fancy_canopy`, `mega_pine_canopy`...), with optional `trunk_decoration`, `canopy_decoration` and `mangrove_roots`.
 
 !!! tip "Other features"
-    `anvil.api.features` also has `AggregateFeature` (several features at one spot), `SequenceFeature`, `WeightedRandomFeature`, `SearchFeature`, `GeodeFeature`, `VegetationPatchFeature`, `StructureTemplateFeature` and more; they combine the same way. Jigsaw structures are in [Using Jigsaw](using_jigsaw.md).
+`anvil.api.features` also has `AggregateFeature` (several features at one spot), `SequenceFeature`, `WeightedRandomFeature`, `SearchFeature`, `GeodeFeature`, `VegetationPatchFeature`, `StructureTemplateFeature` and more; they combine the same way. Jigsaw structures are in [Using Jigsaw](using_jigsaw.md).
 
 ---
 
@@ -150,8 +150,7 @@ from anvil.api.features.ore import OreFeature
 from anvil.api.features.scatter import ScatterFeature
 from anvil.api.features.single_block import SingleBlockFeature
 from anvil.api.features.tree import TreeFeature
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBlockTypes
 
 
 def ember_features():

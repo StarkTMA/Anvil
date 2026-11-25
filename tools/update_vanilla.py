@@ -503,7 +503,7 @@ def __getattr__(name: str):
     listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["blocks.py"] = (
         "from enum import StrEnum\n\n"
-        "from .factories import minecraft_blocks as MinecraftBlockTypes\n\n\n"
+        "\n"
         f"def vanilla_block_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftBlockTags", "Vanilla block tags.", BLOCK_TAGS)
     )
@@ -557,8 +557,7 @@ _NAMES""",
     )
     files["items.py"] = (
         "from enum import StrEnum\n\n"
-        "from .factories import minecraft_items as MinecraftItemTypes\n\n"
-        '__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_items_ids"]\n\n\n'
+        "\n"
         f"def vanilla_items_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftItemTags", "Vanilla item tags.", ITEM_TAGS)
     )
@@ -581,7 +580,6 @@ def entities(tag: str, files: dict[str, str]) -> None:
     )
     listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["entities.py"] = (
-        "from .factories import minecraft_entities as MinecraftEntityTypes\n\n\n"
         f"def vanilla_entities_ids() -> list[str]:\n    return [\n{listed}    ]\n"
     )
 
@@ -612,12 +610,52 @@ def write(files: dict[str, str]) -> None:
         print(f"Wrote {path}")
 
 
+INIT = '''"""Vanilla data from Mojang/bedrock-samples {tag}.
+
+Import everything vanilla from here, e.g. `from anvil.api.vanilla import MinecraftItemTypes`.
+"""
+
+from .biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from .blocks import MinecraftBlockTags, vanilla_block_ids
+from .effects import (
+    MinecraftEffects,
+    MinecraftPotionEffectTypes,
+    MinecraftPotionLiquidTypes,
+)
+from .enchantments import MinecraftEnchantments
+from .entities import vanilla_entities_ids
+from .factories import minecraft_blocks as MinecraftBlockTypes
+from .factories import minecraft_entities as MinecraftEntityTypes
+from .factories import minecraft_items as MinecraftItemTypes
+from .features import MinecraftStructureTypes
+from .items import MinecraftItemTags, vanilla_items_ids
+
+__all__ = [
+    "MinecraftBiomeTags",
+    "MinecraftBiomeTypes",
+    "MinecraftBlockTags",
+    "MinecraftBlockTypes",
+    "MinecraftEffects",
+    "MinecraftEnchantments",
+    "MinecraftEntityTypes",
+    "MinecraftItemTags",
+    "MinecraftItemTypes",
+    "MinecraftPotionEffectTypes",
+    "MinecraftPotionLiquidTypes",
+    "MinecraftStructureTypes",
+    "vanilla_block_ids",
+    "vanilla_entities_ids",
+    "vanilla_items_ids",
+]
+'''
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     tag = sys.argv[1]
     files = {
-        "__init__.py": f'"""Vanilla data from Mojang/bedrock-samples {tag}."""\n',
+        "__init__.py": INIT.format(tag=tag),
         "factories/__init__.py": "",
     }
     blocks(tag, files)

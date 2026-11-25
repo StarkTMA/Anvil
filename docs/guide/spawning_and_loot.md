@@ -41,7 +41,7 @@ server.components.add(
 ```
 
 !!! note
-    A flyer needs `has_gravity=False`, a flying speed, a fly navigation and a goal that moves it. `EntityDespawn` keeps the world from filling up with moths.
+A flyer needs `has_gravity=False`, a flying speed, a fly navigation and a goal that moves it. `EntityDespawn` keeps the world from filling up with moths.
 
 ---
 
@@ -49,7 +49,7 @@ server.components.add(
 
 ```py title="loot table"
 from anvil.api.actors.components import EntityLoot
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 from anvil.api.world.loot_tables import LootTable
 
 
@@ -72,24 +72,40 @@ server.components.add(EntityLoot(table=ember_moth_loot()))
 
 ```json
 {
-  "pools": [
-    {
-      "rolls": 1,
-      "entries": [
-        {"type": "item", "name": "tut:ember_dust", "count": 1, "weight": 4},
-        {"type": "item", "name": "minecraft:gunpowder", "count": 1, "weight": 1},
-        {"type": "empty", "count": 1, "weight": 2}
-      ]
-    },
-    {
-      "rolls": 1,
-      "conditions": [
-        {"condition": "killed_by_player"},
-        {"condition": "random_chance_with_looting", "chance": 0.05, "looting_multiplier": 0.02}
-      ],
-      "entries": [{"type": "item", "name": "minecraft:blaze_powder", "count": 1, "weight": 1}]
-    }
-  ]
+	"pools": [
+		{
+			"rolls": 1,
+			"entries": [
+				{ "type": "item", "name": "tut:ember_dust", "count": 1, "weight": 4 },
+				{
+					"type": "item",
+					"name": "minecraft:gunpowder",
+					"count": 1,
+					"weight": 1
+				},
+				{ "type": "empty", "count": 1, "weight": 2 }
+			]
+		},
+		{
+			"rolls": 1,
+			"conditions": [
+				{ "condition": "killed_by_player" },
+				{
+					"condition": "random_chance_with_looting",
+					"chance": 0.05,
+					"looting_multiplier": 0.02
+				}
+			],
+			"entries": [
+				{
+					"type": "item",
+					"name": "minecraft:blaze_powder",
+					"count": 1,
+					"weight": 1
+				}
+			]
+		}
+	]
 }
 ```
 
@@ -100,7 +116,7 @@ server.components.add(EntityLoot(table=ember_moth_loot()))
 - Blocks use the same tables: `BlockLootTable(value=table)`.
 
 !!! tip "Where the file goes"
-    The table exports to `loot_tables/<namespace>/ember_moth.loot_table.json`. `EntityLoot(table=...)` accepts the `LootTable` object or a path string.
+The table exports to `loot_tables/<namespace>/ember_moth.loot_table.json`. `EntityLoot(table=...)` accepts the `LootTable` object or a path string.
 
 ---
 
@@ -111,8 +127,7 @@ Every entity server has a spawn rule. Each `add_condition` starts a new conditio
 ```py title="spawn rules"
 from anvil.lib.jsonmodel.enums import Difficulty, Population
 from anvil.api.core.filters import Filter
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBlockTypes
 
 spawn = server.spawn_rule
 spawn.description.set_population_control(Population.Ambient)
@@ -155,7 +170,7 @@ entity.set_display_name("Ember Moth", "Ember Moth Egg").queue("ambient")
 ```
 
 !!! note
-    `biome_filter` takes a **list** of filters. The other builders are `height_filter`, `distance_filter`, `density_limit`, `delay_filter`, `spawns_on_block_filter`, `spawns_underwater`, `spawns_in_lava`, `permute_type`, `player_in_village_filter`, `world_age_filter` and `spawn_event`.
+`biome_filter` takes a **list** of filters. The other builders are `height_filter`, `distance_filter`, `density_limit`, `delay_filter`, `spawns_on_block_filter`, `spawns_underwater`, `spawns_in_lava`, `permute_type`, `player_in_village_filter`, `world_age_filter` and `spawn_event`.
 
 !!! tip "No natural spawning"
-    Skip `spawn_rule` and call `entity.server.description.config(is_spawnable=False)` for a mob that only appears through commands or scripts.
+Skip `spawn_rule` and call `entity.server.description.config(is_spawnable=False)` for a mob that only appears through commands or scripts.

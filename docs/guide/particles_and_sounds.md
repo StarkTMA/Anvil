@@ -45,7 +45,7 @@ sparks.add_state("hurt").particle("ember_burst", locator="root").transition(
 ```
 
 !!! tip "PBR particles"
-    `TextureComponents(color="ember_burst", mer="ember_burst_mer")` exports a texture set for the particle when PBR is enabled.
+`TextureComponents(color="ember_burst", mer="ember_burst_mer")` exports a texture set for the particle when PBR is enabled.
 
 ---
 
@@ -83,7 +83,7 @@ def ember_moth_sounds():
 ```
 
 !!! note
-    `add_sound("golem/idle_0")` reads `assets/sounds/golem/idle_0.ogg`. Several sounds under one reference are picked at random, weighted by `weight`. `SoundDefinition()` is a single shared file, so call it from anywhere.
+`add_sound("golem/idle_0")` reads `assets/sounds/golem/idle_0.ogg`. Several sounds under one reference are picked at random, weighted by `weight`. `SoundDefinition()` is a single shared file, so call it from anywhere.
 
 ---
 
@@ -115,10 +115,10 @@ server.components.add(
 ```
 
 !!! note
-    The `ambient` event only plays when the server component `EntityAmbientSoundInterval` is present; `value` is the seconds between sounds and `range` the random extra.
+The `ambient` event only plays when the server component `EntityAmbientSoundInterval` is present; `value` is the seconds between sounds and `range` the random extra.
 
 !!! tip "Sounds from controllers"
-    For a sound played by an animation controller state use `client.sound_effect(name)`, which registers the short name on the entity and returns its sound definition. See [Animating an entity](entity_animations.md).
+For a sound played by an animation controller state use `client.sound_effect(name)`, which registers the short name on the entity and returns its sound definition. See [Animating an entity](entity_animations.md).
 
 ---
 
@@ -182,9 +182,7 @@ from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Query
 from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.sounds.sound_definitions import SoundDefinition
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBlockTypes, MinecraftItemTypes
 from anvil.api.world.loot_tables import LootTable
 from anvil.api.world.particles import Particle
 

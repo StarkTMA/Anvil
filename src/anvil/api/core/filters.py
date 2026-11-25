@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel.enums import (
     Difficulty,

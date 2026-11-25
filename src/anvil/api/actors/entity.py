@@ -22,8 +22,8 @@ class Entity:
         """
         from anvil.api.actors.client import EntityClient
         from anvil.api.actors.server import EntityServer
-        from anvil.api.vanilla.entities import vanilla_entities_ids
-        from anvil.beta.vanilla.entities import (
+        from anvil.api.vanilla import vanilla_entities_ids
+        from anvil.beta.vanilla import (
             vanilla_entities_ids as beta_vanilla_entities_ids,
         )
 

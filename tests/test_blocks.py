@@ -33,7 +33,7 @@ from anvil.api.blocks.components import (
     MaterialParams,
     NWayVisualRotation,
 )
-from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla import MinecraftBlockTags
 from anvil.api.vanilla.factories.minecraft_blocks import (
     Cinnabar,
     CinnabarBrickSlab,
@@ -765,9 +765,11 @@ def test_block_client_is_not_a_file():
 
 
 def test_vanilla_factories_reject_unknown_names():
-    from anvil.api.vanilla.blocks import MinecraftBlockTypes
-    from anvil.api.vanilla.entities import MinecraftEntityTypes
-    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.api.vanilla import (
+        MinecraftBlockTypes,
+        MinecraftEntityTypes,
+        MinecraftItemTypes,
+    )
 
     assert MinecraftBlockTypes.Magma() == "minecraft:magma"
     assert MinecraftEntityTypes.VillagerV2() == "minecraft:villager_v2"
@@ -784,8 +786,7 @@ def test_vanilla_factories_reject_unknown_names():
 def test_vanilla_block_factories_and_descriptors():
     from anvil.api.blocks.blocks import Block
     from anvil.api.blocks.descriptor import BlockDescriptor
-    from anvil.api.vanilla.blocks import MinecraftBlockTypes
-    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.api.vanilla import MinecraftBlockTypes, MinecraftItemTypes
     from anvil.lib.jsonmodel import BlockId, Identifier
 
     stone = MinecraftBlockTypes.Stone()

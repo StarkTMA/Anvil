@@ -6,7 +6,7 @@ from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.filters import Filter
 from anvil.api.items.items import Item
-from anvil.api.vanilla.effects import MinecraftEffects
+from anvil.api.vanilla import MinecraftEffects
 from anvil.api.world.loot_tables import LootTable
 from anvil.api.world.trade_tables import TradeTable
 from anvil.lib.config import CONFIG

@@ -3,10 +3,8 @@ import pytest
 from anvil.api.actors.entity import Entity
 from anvil.api.blocks.blocks import Block
 from anvil.api.items.items import Item
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
-from anvil.beta.vanilla.blocks import MinecraftBlockTypes as BetaBlockTypes
-from anvil.beta.vanilla.entities import MinecraftEntityTypes as BetaEntityTypes
-from anvil.beta.vanilla.items import MinecraftItemTypes as BetaItemTypes
+from anvil.api.vanilla import MinecraftBlockTypes
+from anvil.beta.vanilla import MinecraftBlockTypes as BetaBlockTypes, MinecraftEntityTypes as BetaEntityTypes, MinecraftItemTypes as BetaItemTypes
 from anvil.lib import config
 from anvil.lib.jsonmodel import ItemId
 
@@ -104,7 +102,7 @@ def test_calcite_blocks_live_in_beta():
 
 
 def test_music_disc_flurry_lives_in_beta():
-    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.api.vanilla import MinecraftItemTypes
 
     assert BetaItemTypes.MusicDiscFlurry() == "minecraft:music_disc_flurry"
     with pytest.raises(AttributeError):
@@ -115,10 +113,8 @@ def test_beta_tag_enums_hold_only_the_new_tags():
     from enum import StrEnum
 
     from anvil.api.items.components import ItemTags
-    from anvil.api.vanilla.biomes import MinecraftBiomeTags
-    from anvil.api.vanilla.items import MinecraftItemTags
-    from anvil.beta.vanilla.biomes import MinecraftBiomeTypes as BetaBiomeTypes
-    from anvil.beta.vanilla.items import MinecraftItemTags as BetaItemTags
+    from anvil.api.vanilla import MinecraftItemTags
+    from anvil.beta.vanilla import MinecraftBiomeTypes as BetaBiomeTypes, MinecraftItemTags as BetaItemTags
 
     for enum in (BetaItemTags, BetaBiomeTypes):
         assert issubclass(enum, StrEnum)

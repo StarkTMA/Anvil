@@ -9,7 +9,7 @@ from anvil.api.pbr.cubemap import CubeMapSettings
 from anvil.api.pbr.fog import FogSettings
 from anvil.api.pbr.lighting import LightingSettings
 from anvil.api.pbr.water import WaterSettings
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.jsonmodel import (
     AsString,
     BlockId,

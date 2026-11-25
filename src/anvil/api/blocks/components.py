@@ -17,7 +17,7 @@ from anvil.api.models.geometry import (
 from anvil.api.models.voxel_shape import VoxelShape
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.textures import FlipBookTexturesObject, TerrainTexturesObject
-from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla import MinecraftBlockTags
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import (
     _Blockbench,

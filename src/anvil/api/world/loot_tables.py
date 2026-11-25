@@ -26,7 +26,7 @@ from anvil.lib.jsonmodel import (
 from anvil.lib.jsonmodel.enums import ExplorationMapDestinations, LootPoolType
 
 if TYPE_CHECKING:
-    from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
+    from anvil.api.vanilla import MinecraftPotionEffectTypes
     from anvil.api.world.structures import JigsawStructureSet
 
 __all__ = ["LootTable", "LootConditions"]

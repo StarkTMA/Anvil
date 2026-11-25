@@ -6,7 +6,7 @@
 
 ```python
 from anvil.api.world.loot_tables import LootTable
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 table = LootTable("my_loot")
 pool = table.pool(rolls=1)
