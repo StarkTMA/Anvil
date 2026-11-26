@@ -17,6 +17,10 @@ from .factories import minecraft_entities as MinecraftEntityTypes
 from .factories import minecraft_items as MinecraftItemTypes
 from .features import MinecraftStructureTypes
 from .items import MinecraftItemTags, vanilla_items_ids
+from .textures import (
+    MinecraftItemTextures,
+    MinecraftTerrainTextures,
+)
 
 __all__ = [
     "MinecraftBiomeTags",
@@ -27,10 +31,12 @@ __all__ = [
     "MinecraftEnchantments",
     "MinecraftEntityTypes",
     "MinecraftItemTags",
+    "MinecraftItemTextures",
     "MinecraftItemTypes",
     "MinecraftPotionEffectTypes",
     "MinecraftPotionLiquidTypes",
     "MinecraftStructureTypes",
+    "MinecraftTerrainTextures",
     "vanilla_block_ids",
     "vanilla_entities_ids",
     "vanilla_items_ids",
