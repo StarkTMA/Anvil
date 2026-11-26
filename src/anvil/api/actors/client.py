@@ -323,14 +323,33 @@ class _ActorClientDescription(JsonObject, abstract=True):
         return self
 
     def add_texture(
-        self, blockbench: str, component: TextureComponents
+        self,
+        *,
+        blockbench: str,
+        color: str,
+        normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
     ) -> "_ActorClientDescription":
-        """Adds a texture of a Blockbench model, by its color texture's name.
+        """Adds a texture of a Blockbench model, named after `color`, with its PBR maps.
+        Each map is the name of a texture in the same model, or a color.
+
+        ```python
+        description.add_texture(blockbench="lamp", color="body", mer="body_mer")
+        ```
 
         Args:
             blockbench (str): The Blockbench model.
-            component (TextureComponents): The texture and its PBR layers.
+            color (str): The texture's name in the model.
+            normal (optional): The normal map. Not with `height`.
+            height (optional): The height map. Not with `normal`.
+            mer (optional): The metalness, emissive and roughness map. Not with `mers`.
+            mers (optional): The MER map with subsurface scattering. Not with `mer`.
         """
+        component = TextureComponents(
+            color=color, normal=normal, height=height, mer=mer, mers=mers
+        )
         bb = _Blockbench(blockbench, _BlockBenchSource.ACTOR)
         bb.textures.queue_texture(component.color)
         path = PurePosixPath(
@@ -454,18 +473,37 @@ class _ActorClientDescription(JsonObject, abstract=True):
         return controller
 
     def particle_effect(
-        self, particle: str, component: TextureComponents
+        self,
+        particle: str,
+        *,
+        color: str,
+        normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
     ) -> "_ActorClientDescription":
-        """Adds a particle effect of the project, by its short name.
+        """Adds a particle effect of the project, by its short name, with its texture in
+        `assets/particles` and its PBR maps. Each map is the name of an image in the same
+        folder, or a color.
+
+        ```python
+        description.particle_effect("sparks", color="sparks", mer="sparks_mer")
+        ```
 
         Args:
             particle (str): The particle's name.
-            component (TextureComponents): The particle's texture.
+            color (str): The texture's file name, without `.png`.
+            normal (optional): The normal map. Not with `height`.
+            height (optional): The height map. Not with `normal`.
+            mer (optional): The metalness, emissive and roughness map. Not with `mers`.
+            mers (optional): The MER map with subsurface scattering. Not with `mer`.
         """
         from anvil.api.world.particles import Particle
 
         self.particle_effects[particle] = f"{CONFIG.NAMESPACE}:{particle}"
-        Particle(particle, component).queue()
+        Particle(
+            particle, color=color, normal=normal, height=height, mer=mer, mers=mers
+        ).queue()
         return self
 
     def sound_effect(
@@ -630,17 +668,33 @@ class _EntityClientDescription(_ActorClientDescription):
         return self
 
     def set_spawn_egg(
-        self, texture: TextureComponents, texture_index: int | None = None
+        self,
+        *,
+        color: str,
+        normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        texture_index: int | None = None,
     ) -> "_EntityClientDescription":
-        """Gives the spawn egg an item texture.
+        """Gives the spawn egg an image in `assets/textures/items`, with its PBR maps.
+        Each map is the name of an image in the same folder, or a color.
+
+        ```python
+        description.set_spawn_egg(color="lamp_egg", mer="lamp_egg_mer")
+        ```
 
         Args:
-            texture (TextureComponents): The texture.
+            color (str): The file name, without `.png`.
+            normal (optional): The normal map. Not with `height`.
+            height (optional): The height map. Not with `normal`.
+            mer (optional): The metalness, emissive and roughness map. Not with `mers`.
+            mers (optional): The MER map with subsurface scattering. Not with `mer`.
             texture_index (int, optional): The texture's index. Left out unless given.
         """
-        if texture is None:
-            raise ValueError("TextureComponents must be provided")
-
+        texture = TextureComponents(
+            color=color, normal=normal, height=height, mer=mer, mers=mers
+        )
         ItemTexturesObject().add_item(texture.color, [texture.color])
         texture_set = TextureSet(texture.color, _BlockBenchSource.ITEM)
         texture_set.set_item_textures(texture)
