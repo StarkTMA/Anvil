@@ -128,7 +128,7 @@ def code_workspace(
     folders = [
         (name, path),
         ("Dev Resource Packs", dev_res_path / f"RP_{name}"),
-        ("Dev behavior Packs", dev_beh_path / f"BP_{name}"),
+        ("Dev Behavior Packs", dev_beh_path / f"BP_{name}"),
     ]
     return {
         "folders": [
