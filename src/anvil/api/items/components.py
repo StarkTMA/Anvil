@@ -1,4 +1,3 @@
-from dataclasses import InitVar
 from typing import Annotated
 
 from anvil.api.actors.entity import Entity
@@ -6,10 +5,9 @@ from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.items import Item
 from anvil.api.logic.molang import Molang
-from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.textures import ItemTexturesObject
-from anvil.api.vanilla import MinecraftItemTags
-from anvil.lib.blockbench import _BlockBenchSource
+from anvil.api.pbr.texture_set import TextureComponents
+from anvil.api.vanilla import MinecraftItemTags, MinecraftItemTextures
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (
     BlockId,
@@ -584,31 +582,58 @@ class ItemHoverTextColor(JsonValueComponent):
 
 
 class ItemIcon(JsonComponent):
-    """Determines the icon that represents the item in the UI and elsewhere. The texture is added to the resource pack and to `item_texture.json`.
+    """Determines the icon that represents the item in the UI and elsewhere.
+
+    ```python
+    ItemIcon(color="gem", mer="gem_mer")
+    ItemIcon(blockbench="sword", color="blade")
+    ItemIcon(color=MinecraftItemTextures.Apple)
+    ```
+
+    The icon is added to `item_texture.json` as `<namespace>:<color>`, with its PBR maps.
+    Each map is the name of an image next to it, or a color.
 
     Args:
-        textures (TextureComponents): The icon texture and its PBR maps. Written as `{"default": "<namespace>:<color>"}`.
-        blockbench (str, optional): The Blockbench project to take the textures from. Not written to the JSON.
+        color (str | MinecraftItemTextures): The image's name in `assets/textures/items`, or the texture's name in `blockbench`, without `.png`. A `MinecraftItemTextures` member is only referenced by its short name, without a model or maps.
+        blockbench (str, optional): The Blockbench model to take the texture from.
+        normal (optional): The normal map. Not with `height`.
+        height (optional): The height map. Not with `normal`.
+        mer (optional): The metalness, emissive and roughness map. Not with `mers`.
+        mers (optional): The MER map with subsurface scattering. Not with `mer`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_icon)
     """
 
     identifier = "minecraft:icon"
 
-    textures: Annotated[TextureComponents, IconTexture] = json_field()
-    blockbench: InitVar[str | None] = None
+    color: Annotated[str | MinecraftItemTextures, IconTexture] = json_field(
+        key="textures"
+    )
+    blockbench: str | None = json_field(default=None, exclude=True)
+    normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = json_field(
+        default=None, exclude=True
+    )
+    height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = json_field(
+        default=None, exclude=True
+    )
+    mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = json_field(
+        default=None, exclude=True
+    )
+    mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = json_field(
+        default=None, exclude=True
+    )
 
-    def __post_init__(self, blockbench: str | None) -> None:
-        color = self.textures.color
-        ItemTexturesObject().add_item(
-            item_name=color, sprites=[color], blockbench=blockbench
+    def __post_init__(self) -> None:
+        maps = (self.normal, self.height, self.mer, self.mers)
+        if isinstance(self.color, MinecraftItemTextures):
+            if self.blockbench is not None or any(value is not None for value in maps):
+                raise ValueError(
+                    f"A vanilla icon takes no model or maps. Texture[{self.color}]"
+                )
+            return
+        ItemTexturesObject().add_icon(
+            TextureComponents(self.color, *maps), self.blockbench
         )
-        texture_set = TextureSet(color, _BlockBenchSource.ITEM)
-        if blockbench:
-            texture_set.set_blockbench_textures(blockbench, self.textures)
-        else:
-            texture_set.set_item_textures(self.textures)
-        texture_set.queue()
 
 
 class ItemInteractButton(JsonValueComponent):
