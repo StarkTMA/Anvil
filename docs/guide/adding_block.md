@@ -46,19 +46,19 @@ from anvil.api.blocks.components import (
     BlockGeometry,
     BlockMaterialInstance,
     BlockSelectionBox,
-    InstanceSpec,
-    InstanceVariant,
 )
+from anvil.api.textures import BlockTexture
+from anvil.lib.jsonmodel.enums import BlockFaceValues
 
 # Visuals (mandatory): geometry + at least one material instance
 block.server.components.add(
     BlockCollisionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
     BlockSelectionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
-    BlockMaterialInstance().add_instance(
-        spec=InstanceSpec(
-            blockbench="enchanting_plus_table",
-            variations=[InstanceVariant(color="enchanting_plus_table")],
-        )
+    BlockMaterialInstance().face(
+        BlockFaceValues.All,
+        BlockTexture(
+            blockbench="enchanting_plus_table", color="enchanting_plus_table"
+        ),
     ),
     BlockGeometry(blockbench="enchanting_plus_table"),
     BlockDestructibleByMining(seconds_to_destroy=1.5),
@@ -66,13 +66,13 @@ block.server.components.add(
 ```
 
 !!! info "Blockbench references"
-`BlockGeometry(blockbench=...)` and `InstanceSpec(blockbench=...)` name a **Blockbench file** under `assets/bbmodels`. Its model identifier must equal the file name, and the texture named in `InstanceVariant(color=...)` must exist inside that file. Mismatches raise an export error.
+`BlockGeometry(blockbench=...)` and `BlockTexture(blockbench=model, color=texture)` name a **Blockbench file** under `assets/bbmodels`. Its model identifier must equal the file name, and the texture must exist inside that file. Mismatches raise an export error. On export the face is registered in the terrain atlas as `<namespace>:<block>_<face>`, here `<namespace>:enchanting_plus_table_all`.
 
 !!! info "Blockbench collections"
 If your `.bbmodel` contains exported Blockbench collections, you can reference a specific part with `BlockGeometry(blockbench="my_model", collection="bottom")`. Anvil exports that collection as its own geometry and references it as `geometry.<namespace>.my_model.bottom`.
 
 !!! tip "PBR Support"
-`InstanceVariant` takes the same arguments as `TextureComponents`: `InstanceVariant(color="block", normal="block_normal", mer="block_mer")` enables normal maps and metalness/emissive/roughness channels. See the [PBR guide](pbr.md).
+`BlockTexture(blockbench="block", color="block", normal="block_normal", mer="block_mer")` adds normal maps and metalness/emissive/roughness channels. `.animated(...)` makes a flipbook, `BlockTexture.weighted(...)` picks between textures by weight, and `MinecraftTerrainTextures.Stone` references a vanilla texture by its short name. See the [PBR guide](pbr.md).
 
 !!! tip "Display name"
 Anvil adds a `BlockDisplayName` for you, keyed `tile.<namespace>:<name>.name` in `localization.csv`. Add `BlockDisplayName(value="Enchanting Plus Table")` yourself only to override the generated text.
@@ -132,13 +132,12 @@ Recipes are **optional**. If omitted, the block can still be obtained via creati
 ```py title="block item"
 from anvil.lib.jsonmodel.enums import ItemCategory
 from anvil.api.items.components import ItemIcon, ItemMaxStackSize
-from anvil.api.pbr.texture_set import TextureComponents
 
 item = block.item
 item.server.description.set_menu_category(ItemCategory.Construction)
 item.server.components.add(
     ItemMaxStackSize(value=64),
-    ItemIcon(textures=TextureComponents(color=item.name)),
+    ItemIcon(color=item.name),
 )
 ```
 
@@ -170,13 +169,11 @@ from anvil.api.blocks.components import (
     BlockGeometry,
     BlockMaterialInstance,
     BlockSelectionBox,
-    InstanceSpec,
-    InstanceVariant,
 )
-from anvil.lib.jsonmodel.enums import BlockSoundGroup, ItemCategory
+from anvil.lib.jsonmodel.enums import BlockFaceValues, BlockSoundGroup, ItemCategory
 from anvil.api.items.components import ItemIcon, ItemMaxStackSize
 from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
-from anvil.api.pbr.texture_set import TextureComponents
+from anvil.api.textures import BlockTexture
 from anvil.api.vanilla import MinecraftBlockTypes
 from anvil.api.vanilla import MinecraftItemTypes
 
@@ -191,11 +188,11 @@ def enchanting_plus_table():
     block.server.components.add(
         BlockCollisionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
         BlockSelectionBox(origin=(-8, 0, -8), size=(16, 12, 16)),
-        BlockMaterialInstance().add_instance(
-            spec=InstanceSpec(
-                blockbench="enchanting_plus_table",
-                variations=[InstanceVariant(color="enchanting_plus_table")],
-            )
+        BlockMaterialInstance().face(
+            BlockFaceValues.All,
+            BlockTexture(
+                blockbench="enchanting_plus_table", color="enchanting_plus_table"
+            ),
         ),
         BlockGeometry(blockbench="enchanting_plus_table"),
         BlockDestructibleByMining(seconds_to_destroy=1.5),
@@ -227,7 +224,7 @@ def enchanting_plus_table():
     item.server.description.set_menu_category(ItemCategory.Construction)
     item.server.components.add(
         ItemMaxStackSize(value=64),
-        ItemIcon(textures=TextureComponents(color=item.name)),
+        ItemIcon(color=item.name),
     )
 
     # Finalize (mandatory)

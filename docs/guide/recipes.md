@@ -12,14 +12,13 @@ Every snippet compiles as written.
 from anvil.lib.jsonmodel.enums import ItemCategory
 from anvil.api.items.components import ItemDisplayName, ItemIcon, ItemMaxStackSize
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
 
 
 def simple_item(name: str, display: str) -> Item:
     item = Item(name)
     item.server.description.set_menu_category(ItemCategory.Items)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color=name)),
+        ItemIcon(color=name),
         ItemDisplayName(value=display),
         ItemMaxStackSize(value=64),
     )
@@ -142,7 +141,6 @@ from anvil.api.items.crafting.furnace import SmeltingRecipe
 from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
 from anvil.api.items.crafting.shapeless import ShapelessRecipe, StoneCutterRecipe
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla import MinecraftBlockTypes
 from anvil.api.vanilla import MinecraftItemTypes
 
@@ -151,7 +149,7 @@ def simple_item(name: str, display: str) -> Item:
     item = Item(name)
     item.server.description.set_menu_category(ItemCategory.Items)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color=name)),
+        ItemIcon(color=name),
         ItemDisplayName(value=display),
         ItemMaxStackSize(value=64),
     )

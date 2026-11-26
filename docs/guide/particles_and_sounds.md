@@ -11,10 +11,9 @@ Every snippet compiles as written.
 Particles are JSON files you author in a particle editor and drop in `assets/particles/<name>.particle.json`, next to their texture `<name>.png`. Anvil reads the file into its typed particle format, checks that the identifier inside matches the file name, and exports the file and the texture. A key or component the format does not have stops the build with the file and key named. `Particle.__schema__()` returns the JSON Schema of the format, which an editor can use to check particle files.
 
 ```py title="particle"
-from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.world.particles import Particle
 
-Particle("ember_burst", TextureComponents(color="ember_burst")).queue()
+Particle("ember_burst", color="ember_burst").queue()
 ```
 
 A particle can then be referenced from an entity, an animation controller state or a `/particle` command as `<namespace>:ember_burst`.
@@ -23,7 +22,7 @@ A particle can then be referenced from an entity, an animation controller state 
 from anvil.api.logic.molang import Query
 
 client = entity.client.description
-client.particle_effect("ember_burst", TextureComponents(color="ember_burst"))
+client.particle_effect("ember_burst", color="ember_burst")
 sparks = client.animation_controller("sparks", animate=True)
 sparks.add_state("default").transition("hurt", Query.HurtTime() > 0)
 sparks.add_state("hurt").particle("ember_burst", locator="root").transition(
@@ -45,7 +44,7 @@ sparks.add_state("hurt").particle("ember_burst", locator="root").transition(
 ```
 
 !!! tip "PBR particles"
-`TextureComponents(color="ember_burst", mer="ember_burst_mer")` exports a texture set for the particle when PBR is enabled.
+`Particle("ember_burst", color="ember_burst", mer="ember_burst_mer")` exports a texture set for the particle when PBR is enabled.
 
 ---
 
@@ -180,7 +179,6 @@ from anvil.lib.jsonmodel.enums import (
 )
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Query
-from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.sounds.sound_definitions import SoundDefinition
 from anvil.api.vanilla import MinecraftBiomeTags, MinecraftBlockTypes, MinecraftItemTypes
 from anvil.api.world.loot_tables import LootTable
@@ -221,15 +219,15 @@ def ember_moth():
     server = entity.server
 
     client.add_geometry("ember_moth")
-    client.add_texture("ember_moth", TextureComponents(color="ember_moth"))
+    client.add_texture(blockbench="ember_moth", color="ember_moth")
     client.animation("ember_moth", "fly", animate=True)
     rc = client.render_controller("default")
     rc.set_geometry("ember_moth")
     rc.add_texture("ember_moth")
     rc.set_ignore_lighting()
 
-    Particle("ember_burst", TextureComponents(color="ember_burst")).queue()
-    client.particle_effect("ember_burst", TextureComponents(color="ember_burst"))
+    Particle("ember_burst", color="ember_burst").queue()
+    client.particle_effect("ember_burst", color="ember_burst")
     sparks = client.animation_controller("sparks", animate=True)
     sparks.add_state("default").transition("hurt", Query.HurtTime() > 0)
     sparks.add_state("hurt").particle("ember_burst", locator="root").transition(
