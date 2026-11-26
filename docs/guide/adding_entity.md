@@ -28,13 +28,10 @@ def redstone_golem():
 ## Client Description
 
 ```py title="client visuals"
-from anvil.api.pbr.texture_set import TextureComponents
-
 # Both names point to assets/bbmodels/redstone_golem.bbmodel and a texture inside it.
 entity.client.description.add_geometry("redstone_golem")
 entity.client.description.add_texture(
-    blockbench="redstone_golem",
-    component=TextureComponents(color="redstone_golem"),
+    blockbench="redstone_golem", color="redstone_golem"
 )
 ```
 
@@ -42,7 +39,7 @@ entity.client.description.add_texture(
     The first argument of `description.add_geometry`, `description.texture` and `description.animation` names a **Blockbench file** under `assets/bbmodels`. The model identifier, texture names and animation names **inside that file** must match what you reference, or Anvil raises an error at build time.
 
 !!! tip "PBR Support"
-    Add PBR maps that are also stored in the Blockbench file: `TextureComponents(color="redstone_golem", normal="redstone_golem_normal", mer="redstone_golem_mer")`. See the [PBR guide](pbr.md).
+    Add PBR maps that are also stored in the Blockbench file: `add_texture(blockbench="redstone_golem", color="redstone_golem", normal="redstone_golem_normal", mer="redstone_golem_mer")`. See the [PBR guide](pbr.md).
 
 !!! tip "Material defaults"
     Anvil adds a default material named `entity_alphatest`. Add others with `description.add_material(name, material)`.
@@ -154,7 +151,6 @@ from anvil.api.actors.components import (
     EntityTypeFamily,
 )
 from anvil.api.actors.entity import Entity
-from anvil.api.pbr.texture_set import TextureComponents
 
 
 def redstone_golem():
@@ -163,8 +159,7 @@ def redstone_golem():
     # Client visuals (mandatory)
     entity.client.description.add_geometry("redstone_golem")
     entity.client.description.add_texture(
-        blockbench="redstone_golem",
-        component=TextureComponents(color="redstone_golem"),
+        blockbench="redstone_golem", color="redstone_golem"
     )
 
     # Render (mandatory)

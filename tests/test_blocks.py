@@ -30,7 +30,6 @@ from anvil.api.blocks.components import (
     ItemDisplayTransform,
     ItemTagFilter,
     MaterialInstance,
-    MaterialParams,
     NWayVisualRotation,
 )
 from anvil.api.vanilla import MinecraftBlockTags
@@ -293,17 +292,19 @@ def test_embedded_visual_default():
     }
 
 
-def test_material_params_checks():
+def test_material_instance_checks():
     with pytest.raises(ValueError, match="needs a tint_method"):
-        MaterialParams(alpha_masked_tint=True).__json__()
+        MaterialInstance(texture="x", alpha_masked_tint=True).__json__()
     with pytest.raises(ValueError, match="opaque"):
-        MaterialParams(
+        MaterialInstance(
+            texture="x",
             alpha_masked_tint=True,
             tint_method="grass",
             render_method=BlockMaterial.Blend,
         ).__json__()
-    assert MaterialParams(ambient_occlusion=2.5).__json__() == {
-        "ambient_occlusion": 2.5
+    assert MaterialInstance(texture="x", ambient_occlusion=2.5).__json__() == {
+        "texture": "x",
+        "ambient_occlusion": 2.5,
     }
 
 

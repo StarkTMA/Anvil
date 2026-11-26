@@ -1,7 +1,7 @@
 """The resource pack's `textures/terrain_texture.json`: the block atlas."""
 
 from pathlib import PurePosixPath
-from typing import Annotated, ClassVar, Literal
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.jsonmodel import (
@@ -13,6 +13,14 @@ from anvil.lib.jsonmodel import (
     NonNegative,
     json_field,
 )
+
+if TYPE_CHECKING:
+    from anvil.api.textures.texture import (
+        AnimatedTexture,
+        BlockTexture,
+        WeightedTexture,
+    )
+    from anvil.api.vanilla.textures import MinecraftTerrainTextures
 
 
 class _TerrainVariation(JsonObject):
@@ -110,7 +118,82 @@ class TerrainTexturesObject(JsonFile[_TerrainTextureFile]):
         if not hasattr(self, "_initialized"):
             super().__init__("terrain_texture")
             self._document.set_resource_pack_name(CONFIG.PROJECT_NAME)
+            self._faces: dict[
+                str,
+                "BlockTexture | AnimatedTexture | WeightedTexture | MinecraftTerrainTextures",
+            ] = {}
             self._initialized = True
+
+    def add_face(
+        self,
+        block: str,
+        face: str,
+        texture: "BlockTexture | AnimatedTexture | WeightedTexture | MinecraftTerrainTextures",
+    ) -> str:
+        """Adds a block face texture as `<namespace>:<block>_<face>`, with its
+        flipbooks, and returns its short name. When that name already holds
+        another texture, as in a permutation, the next free `_2`, `_3`... is used.
+
+        A vanilla texture adds nothing, and its short name is returned.
+
+        Args:
+            block (str): The block's name.
+            face (str): The material instance's key, `*` for every face.
+            texture (BlockTexture | AnimatedTexture | WeightedTexture | MinecraftTerrainTextures): The texture.
+        """
+        from anvil.api.textures.flipbook import FlipBookTexturesObject
+        from anvil.api.textures.texture import AnimatedTexture, WeightedTexture
+        from anvil.api.vanilla.textures import MinecraftTerrainTextures
+
+        if isinstance(texture, MinecraftTerrainTextures):
+            return str(texture)
+
+        weighted = isinstance(texture, WeightedTexture)
+        members = list(texture.textures) if weighted else [(texture, None)]
+        images = [
+            m.texture if isinstance(m, AnimatedTexture) else m for m, _ in members
+        ]
+        paths = [
+            PurePosixPath(
+                "textures",
+                CONFIG.NAMESPACE,
+                CONFIG.PROJECT_NAME,
+                "blocks",
+                image.blockbench,
+                image.color,
+            ).as_posix()
+            for image in images
+        ]
+
+        name = f"{block}_{'all' if face == '*' else face}"
+        key, count = name, 1
+        while self._faces.get(key, texture) != texture:
+            count += 1
+            key = f"{name}_{count}"
+        if key in self._faces:
+            return f"{CONFIG.NAMESPACE}:{key}"
+        self._faces[key] = texture
+
+        if weighted:
+            self._document.add_variations(
+                f"{CONFIG.NAMESPACE}:{key}",
+                [(path, weight) for path, (_, weight) in zip(paths, members)],
+            )
+        else:
+            self._document.add_texture(f"{CONFIG.NAMESPACE}:{key}", paths)
+        for variant, (member, _) in enumerate(members):
+            if isinstance(member, AnimatedTexture):
+                FlipBookTexturesObject().add_block(
+                    block_name=key,
+                    directory=member.texture.blockbench,
+                    block_texture=member.texture.color,
+                    frames=member.frames,
+                    ticks_per_frame=member.ticks,
+                    atlas_tile_variant=variant if weighted else None,
+                    replicate=member.replicate,
+                    blend_frames=member.blend,
+                )
+        return f"{CONFIG.NAMESPACE}:{key}"
 
     @staticmethod
     def _name(block_name: str, force_vanilla: bool) -> str:

@@ -26,38 +26,48 @@ Here is a production-ready example demonstrating a **Mystic Crystal** block. It 
 
 ```python title="blocks/mystic_crystal.py"
 from anvil.api.blocks.blocks import Block
-from anvil.api.blocks.components import (
-    BlockGeometry,
-    BlockMaterialInstance,
-    InstanceSpec,
-    InstanceVariant,
-    MaterialParams,
-)
+from anvil.api.blocks.components import BlockGeometry, BlockMaterialInstance
+from anvil.api.textures import BlockTexture
 from anvil.lib.jsonmodel.enums import BlockFaceValues, BlockMaterial
+
+# These texture names must match what is inside 'mystic_crystal.bbmodel'
+crystal = BlockTexture(
+    blockbench="mystic_crystal",
+    color="mystic_crystal_texture",
+    mer="mystic_crystal_mer",
+    height="mystic_crystal_height",
+)
 
 block = Block("mystic_crystal")
 block.server.components.add(
     BlockGeometry(blockbench="mystic_crystal"),
-    BlockMaterialInstance().add_instance(
-        spec=InstanceSpec(
-            blockbench="mystic_crystal",
-            face=BlockFaceValues.All,
-            variations=[
-                InstanceVariant(
-                    # These texture names must match what is inside 'mystic_crystal.bbmodel'
-                    color="mystic_crystal_texture",
-                    mer="mystic_crystal_mer",
-                    height="mystic_crystal_height",
-                )
-            ],
-            params=MaterialParams(render_method=BlockMaterial.Blend),
-        )
+    BlockMaterialInstance().face(
+        BlockFaceValues.All, crystal, render_method=BlockMaterial.Blend
     ),
 )
 block.queue()
 ```
 
-A flipbook animates the texture: give `InstanceSpec` several `InstanceVariant`s (one per frame, all in the same Blockbench file) and `flipbooks=[FlipbookParams(frames=[0, 1, 2, 3], ticks_per_frame=20)]`.
+The same texture value carries animations and variations:
+
+```python
+glow = BlockTexture(
+    blockbench="mystic_crystal",
+    color="mystic_crystal_glow",
+    mer="mystic_crystal_glow_mer",
+    height="mystic_crystal_height",
+)
+
+BlockMaterialInstance().face(
+    BlockFaceValues.All,
+    BlockTexture.weighted(
+        (crystal, 3),
+        (glow.animated([0, 1, 2, 3], ticks=20), 1),
+    ),
+)
+```
+
+`.animated(frames, ticks=...)` turns a vertical strip of frames into a flipbook, and `BlockTexture.weighted` picks one texture per block position by weight. Every texture of a weighted set carries the same PBR maps.
 
 !!! warning "Do not use loose PNGs"
     Do not place block or entity textures in `assets/textures/`. They will be ignored. Usage of the Blockbench file is mandatory for these assets.
@@ -68,7 +78,6 @@ This example shows a **Mystic Wisp** entity using PBR textures defined in its cl
 
 ```python title="entities/mystic_wisp.py"
 from anvil.api.actors.entity import Entity
-from anvil.api.pbr.texture_set import TextureComponents
 
 def mystic_wisp():
     entity = Entity("mystic_wisp")
@@ -77,11 +86,9 @@ def mystic_wisp():
     entity.client.description.add_geometry("mystic_wisp")
     entity.client.description.add_texture(
         blockbench="mystic_wisp",
-        component=TextureComponents(
-            color="mystic_wisp",
-            mer="mystic_wisp_mer",
-            height="mystic_wisp_height"
-        ),
+        color="mystic_wisp",
+        mer="mystic_wisp_mer",
+        height="mystic_wisp_height",
     )
 
     # Render Controller
@@ -116,10 +123,9 @@ Unlike Blocks and Entities, **Items** typically use standalone texture files.
 
 ```python
 from anvil.api.items.components import ItemIcon
-from anvil.api.pbr.texture_set import TextureComponents
 
 # References 'assets/textures/items/my_item.png'
-ItemIcon(textures=TextureComponents(color="my_item"))
+ItemIcon(color="my_item")
 ```
 
 ---
