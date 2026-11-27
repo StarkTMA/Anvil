@@ -32,17 +32,15 @@ jobs:
                       echo "skip=false" >> "$GITHUB_OUTPUT"
                   fi
 
-            - name: Build release notes from the version commit
+            - name: Build release notes from the merge commit
               if: steps.exists.outputs.skip == 'false'
               run: |
-                  # The commit that last changed the version file is the version bump.
-                  COMMIT=$(git log -1 --format=%H -- src/anvil/__version__.py)
-                  # Drop the subject line (the version) and the blank lines after it.
-                  git log -1 --format=%b "$COMMIT" | sed -e '/./,$!d' > notes.md
+                  # The release pull request is merged with its description as the commit body.
+                  git log -1 --format=%b "$GITHUB_SHA" > notes.md
                   if [ ! -s notes.md ]; then
                       echo "Release $TAG" > notes.md
                   fi
-                  echo "Using commit $COMMIT:"
+                  echo "Using commit $GITHUB_SHA:"
                   cat notes.md
 
             - name: Create release
