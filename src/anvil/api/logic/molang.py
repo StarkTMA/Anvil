@@ -3955,20 +3955,3 @@ class Math(Molang):
     @classmethod
     def ease_in_out_elastic(cls, start, end, factor) -> Molang:
         return cls.__query__(cls, cls.handle, "ease_in_out_elastic", start, end, factor)
-
-
-@deprecated(
-    "arrow_operator is deprecated and will be removed in a future version. Use `Molang.arrow()` instead for better readability and maintainability."
-)
-def arrow_operator(left: Molang, right: Molang) -> Molang:
-    """Returns a Molang object representing the arrow operator for Molang."""
-    return Molang(f"({left}) -> ({right})")
-
-
-@deprecated(
-    "molang_conditions is deprecated and will be removed in a future version. Use `Molang.condition()` instead for better readability and maintainability."
-)
-def molang_conditions(
-    condition: Molang, expression: Molang, expression2: Molang | None = None
-) -> Molang:
-    return Molang.condition(condition, expression, expression2)
