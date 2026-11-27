@@ -2,8 +2,15 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Literal, overload
 from warnings import deprecated
 
-import orjson
-
+from anvil.api.logic.molang._helpers import _in_range, _list_of
+from anvil.api.logic.molang.core import Molang
+from anvil.api.logic.molang.structs import (
+    _AabbStruct,
+    _ColorStruct,
+    _TRSStruct,
+    _UVStruct,
+    _Vec3Struct,
+)
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_VERSION
 from anvil.lib.jsonmodel.enums import InputModes, Slots
@@ -11,359 +18,7 @@ from anvil.lib.jsonmodel.enums import InputModes, Slots
 if TYPE_CHECKING:
     from anvil.api.biomes.biomes import Biome
 
-__all__ = [
-    "Molang",
-    "Query",
-    "Context",
-    "Variable",
-    "TempVar",
-    "Math",
-    "molang_conditions",
-    "arrow_operator",
-]
-
-
-def _checked(name: str, value, low: int, high: int):
-    """`value`, after checking that a number is from `low` to `high`. Molang passes as is."""
-    if (
-        isinstance(value, (int, float))
-        and not isinstance(value, bool)
-        and not low <= value <= high
-    ):
-        raise ValueError(f"'{name}' must be from {low} to {high}, got {value}.")
-    return value
-
-
-def _list_of(query: str, what: str, values: list[str]) -> list[str]:
-    """`values`, after checking it is a list rather than a single string."""
-    if isinstance(values, str):
-        raise TypeError(
-            f"{query} takes a list of {what}, got the string {str(values)!r}. "
-            f"Use {query}([{str(values)!r}])."
-        )
-    return list(values)
-
-
-class _VarMeta(type):
-    def __getattr__(cls, name):
-        if name.startswith("_"):
-            raise AttributeError(name)
-        val = cls.__query__(cls, cls.handle, name)
-        setattr(cls, name, val)
-        return val
-
-
-class MolangProperty:
-    def __init__(self, func):
-        self.func = func
-
-    def __get__(self, _instance, _owner):
-        return self.func()
-
-
-class Molang(str):
-    prefixes = (
-        "q.",
-        "v.",
-        "c.",
-        "t.",
-        "query.",
-        "variable.",
-        "context.",
-        "temp.",
-        "math.",
-    )
-
-    @staticmethod
-    def arrow(left: "Molang", right: "Molang") -> "Molang":
-        """Returns a Molang object representing the arrow operator for Molang."""
-        return Molang(f"(({left}) -> ({right}))")
-
-    @staticmethod
-    def condition(
-        condition: "Molang",
-        expression: "Molang",
-        expression2: "Molang" | None = None,
-    ) -> "Molang":
-        """Returns a Molang object representing a conditional expression for Molang."""
-        if expression2 is not None:
-            return Molang(f"({condition} ? {expression} : {expression2})")
-        else:
-            return Molang(f"({condition} ? {expression})")
-
-    @staticmethod
-    def molang_return(molang: "Molang") -> "Molang":
-        return Molang(f"return {molang}")
-
-    @staticmethod
-    def molang_block(statements: list["Molang"]) -> "Molang":
-        body = "; ".join(str(s) for s in statements)
-        return Molang(f"{{ {body}; }}")
-
-    @staticmethod
-    def molang_loop(n: int, statements: list["Molang"]) -> "Molang":
-        return Molang(f"loop({n}, {Molang.molang_block(statements)})")
-
-    @staticmethod
-    def molang_for_each(
-        variable: "Molang", array: "Molang", statements: list["Molang"]
-    ) -> "Molang":
-        return Molang(
-            f"for_each({variable}, {array}, {Molang.molang_block(statements)})"
-        )
-
-    @MolangProperty
-    def this() -> "Molang":
-        return Molang("this")
-
-    @MolangProperty
-    def break_() -> "Molang":
-        return Molang("break")
-
-    @MolangProperty
-    def continue_() -> "Molang":
-        return Molang("continue")
-
-    __hash__ = str.__hash__
-
-    def __getitem__(self, molang: "Molang") -> "Molang":
-        return Molang(f"{self}[{molang}]")
-
-    def __parse_other__(self, other):
-        if isinstance(other, (str, StrEnum)) and not isinstance(other, Molang):
-            o = f"'{other}'"
-        elif isinstance(other, bool):
-            o = orjson.dumps(other).decode("utf-8")
-        else:
-            o = f"{other}"
-        return o
-
-    def __invert__(self) -> "Molang":
-        return Molang(f"!({self})")
-
-    def __eq__(self, other) -> "Molang":
-        o = self.__parse_other__(other)
-        return Molang(f"({self} == {o})")
-
-    def __ne__(self, other) -> "Molang":
-        o = self.__parse_other__(other)
-
-        return Molang(f"({self} != {o})")
-
-    def __lt__(self, other) -> "Molang":
-        o = self.__parse_other__(other)
-        return Molang(f"({self} < {o})")
-
-    def __gt__(self, other) -> "Molang":
-        o = self.__parse_other__(other)
-        return Molang(f"({self} > {o})")
-
-    def __le__(self, other) -> "Molang":
-        o = self.__parse_other__(other)
-        return Molang(f"({self} <= {o})")
-
-    def __ge__(self, other) -> "Molang":
-        o = self.__parse_other__(other)
-        return Molang(f"({self} >= {o})")
-
-    def __and__(self, other) -> "Molang":
-        return Molang(f"({self} && {other})")
-
-    def __or__(self, other) -> "Molang":
-        return Molang(f"({self} || {other})")
-
-    def __add__(self, other) -> "Molang":
-        return Molang(f"({self} + {other})")
-
-    def __sub__(self, other) -> "Molang":
-        return Molang(f"({self} - {other})")
-
-    def __mul__(self, other) -> "Molang":
-        return Molang(f"({self} * {other})")
-
-    def __neg__(self) -> "Molang":
-        return Molang(f"-{self}")
-
-    def __truediv__(self, other) -> "Molang":
-        return Molang(f"({self} / {other})")
-
-    def __floordiv__(self, other) -> "Molang":
-        return Math.floor(self / other)
-
-    def __mod__(self, other) -> "Molang":
-        return Math.mod(self, other)
-
-    def __pow__(self, other) -> "Molang":
-        return Math.pow(self, other)
-
-    def __radd__(self, other) -> "Molang":
-        return Molang(f"({other} + {self})")
-
-    def __rsub__(self, other) -> "Molang":
-        return Molang(f"({other} - {self})")
-
-    def __rmul__(self, other) -> "Molang":
-        return Molang(f"({other} * {self})")
-
-    def __rtruediv__(self, other) -> "Molang":
-        return Molang(f"({other} / {self})")
-
-    def __rfloordiv__(self, other) -> "Molang":
-        return Math.floor(other / self)
-
-    def __rmod__(self, other) -> "Molang":
-        return Math.mod(other, self)
-
-    def __rpow__(self, other) -> "Molang":
-        return Math.pow(other, self)
-
-    def __abs__(self) -> "Molang":
-        return Math.abs(self)
-
-    def __round__(self) -> "Molang":
-        return Math.round(self)
-
-    def __xor__(self, other) -> "Molang":
-        return Molang(f"({self} ?? {other})")
-
-    def __pos__(self) -> "Molang":
-        return self
-
-    def __rand__(self, other) -> "Molang":
-        return Molang(f"({other} && {self})")
-
-    def __ror__(self, other) -> "Molang":
-        return Molang(f"({other} || {self})")
-
-    def __rxor__(self, other) -> "Molang":
-        return Molang(f"({other} ?? {self})")
-
-    @staticmethod
-    def __power_of_two__(shift):
-        return 2 ** shift if isinstance(shift, int) else Math.pow(2, shift)
-
-    def __lshift__(self, other) -> "Molang":
-        return self * Molang.__power_of_two__(other)
-
-    def __rshift__(self, other) -> "Molang":
-        return self // Molang.__power_of_two__(other)
-
-    def __rlshift__(self, other) -> "Molang":
-        return other * Molang.__power_of_two__(self)
-
-    def __rrshift__(self, other) -> "Molang":
-        return Math.floor(other / Molang.__power_of_two__(self))
-
-    def __struct__(self, *Parameters) -> "Molang":
-        return Molang(f"{self}.{'.'.join(Parameters)}")
-
-    def __query__(self, qtype, query, *arguments) -> "Molang":
-        a = f"{qtype}.{query}"
-        if len(arguments):
-            Parameters = ", ".join(
-                (
-                    f"'{arg}'"
-                    if isinstance(arg, (str, StrEnum))
-                    and not isinstance(arg, Molang)
-                    and not any(arg.startswith(v) for v in Molang.prefixes)
-                    else f"{arg}"
-                )
-                for arg in arguments
-                if arg is not None
-            )
-            a += f"({Parameters})"
-        return Molang(a)
-
-
-class _Vec3Struct(Molang):
-    """Molang struct with x, y, z component access."""
-
-    def __new__(cls, molang: "Molang | str") -> "_Vec3Struct":
-        return super().__new__(cls, str(molang))
-
-    @property
-    def x(self) -> "Molang":
-        return Molang(self.__struct__("x"))
-
-    @property
-    def y(self) -> "Molang":
-        return Molang(self.__struct__("y"))
-
-    @property
-    def z(self) -> "Molang":
-        return Molang(self.__struct__("z"))
-
-
-class _AabbStruct(Molang):
-    """Molang struct for axis-aligned bounding boxes, with .min and .max each returning a Vec3Struct."""
-
-    def __new__(cls, molang: "Molang | str") -> "_AabbStruct":
-        return super().__new__(cls, str(molang))
-
-    @property
-    def min(self) -> "_Vec3Struct":
-        return _Vec3Struct(self.__struct__("min"))
-
-    @property
-    def max(self) -> "_Vec3Struct":
-        return _Vec3Struct(self.__struct__("max"))
-
-
-class _ColorStruct(Molang):
-    """Molang struct with r, g, b, a color component access, each 0.0 to 1.0."""
-
-    def __new__(cls, molang: "Molang | str") -> "_ColorStruct":
-        return super().__new__(cls, str(molang))
-
-    @property
-    def r(self) -> "Molang":
-        return Molang(self.__struct__("r"))
-
-    @property
-    def g(self) -> "Molang":
-        return Molang(self.__struct__("g"))
-
-    @property
-    def b(self) -> "Molang":
-        return Molang(self.__struct__("b"))
-
-    @property
-    def a(self) -> "Molang":
-        return Molang(self.__struct__("a"))
-
-
-class _UVStruct(Molang):
-    """Molang struct with u, v texture coordinate/size component access."""
-
-    def __new__(cls, molang: "Molang | str") -> "_UVStruct":
-        return super().__new__(cls, str(molang))
-
-    @property
-    def u(self) -> "Molang":
-        return Molang(self.__struct__("u"))
-
-    @property
-    def v(self) -> "Molang":
-        return Molang(self.__struct__("v"))
-
-
-class _TRSStruct(Molang):
-    """Molang struct with translation, rotation, and scale component access, each returning a Vec3Struct."""
-
-    def __new__(cls, molang: "Molang | str") -> "_TRSStruct":
-        return super().__new__(cls, str(molang))
-
-    @property
-    def translation(self) -> "_Vec3Struct":
-        return _Vec3Struct(self.__struct__("t"))
-
-    @property
-    def rotation(self) -> "_Vec3Struct":
-        return _Vec3Struct(self.__struct__("r"))
-
-    @property
-    def scale(self) -> "_Vec3Struct":
-        return _Vec3Struct(self.__struct__("s"))
+__all__ = ["Query", "Context"]
 
 
 class Query(Molang):
@@ -513,8 +168,8 @@ class Query(Molang):
             cls,
             cls.handle,
             "armor_color_slot",
-            _checked("index", index, 0, 3),
-            _checked("colorChannel", colorChannel, 0, 3),
+            _in_range("index", index, 0, 3),
+            _in_range("colorChannel", colorChannel, 0, 3),
         )
 
     @classmethod
@@ -559,7 +214,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "average_frame_time", _checked("frame", frame, 0, 30)
+            cls, cls.handle, "average_frame_time", _in_range("frame", frame, 0, 30)
         )
 
     @classmethod
@@ -701,7 +356,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "camera_rotation", _checked("axis", axis, 0, 1)
+            cls, cls.handle, "camera_rotation", _in_range("axis", axis, 0, 1)
         )
 
     @classmethod
@@ -973,7 +628,7 @@ class Query(Molang):
             cls,
             cls.handle,
             "equipped_item_is_attachable",
-            _checked("hand", hand, 0, 1),
+            _in_range("hand", hand, 0, 1),
         )
 
     @classmethod
@@ -1062,7 +717,7 @@ class Query(Molang):
             cls,
             cls.handle,
             "get_equipped_item_name",
-            _checked("hand_slot", hand_slot, 0, 1),
+            _in_range("hand_slot", hand_slot, 0, 1),
             index,
         )
 
@@ -1701,7 +1356,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "is_item_equipped", _checked("hand", hand, 0, 1)
+            cls, cls.handle, "is_item_equipped", _in_range("hand", hand, 0, 1)
         )
 
     @classmethod
@@ -2179,7 +1834,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "item_is_charged", _checked("hand", hand, 0, 1)
+            cls, cls.handle, "item_is_charged", _in_range("hand", hand, 0, 1)
         )
 
     @classmethod
@@ -2205,7 +1860,7 @@ class Query(Molang):
             cls,
             cls.handle,
             "item_remaining_use_duration",
-            _checked("hand", hand, 0, 1),
+            _in_range("hand", hand, 0, 1),
         )
 
     @classmethod
@@ -2242,7 +1897,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "last_frame_time", _checked("frame", frame, 0, 30)
+            cls, cls.handle, "last_frame_time", _in_range("frame", frame, 0, 30)
         )
 
     @classmethod
@@ -2372,7 +2027,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "maximum_frame_time", _checked("frame", frame, 0, 30)
+            cls, cls.handle, "maximum_frame_time", _in_range("frame", frame, 0, 30)
         )
 
     @classmethod
@@ -2390,7 +2045,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "minimum_frame_time", _checked("frame", frame, 0, 30)
+            cls, cls.handle, "minimum_frame_time", _in_range("frame", frame, 0, 30)
         )
 
     @classmethod
@@ -2539,7 +2194,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return cls.__query__(cls, cls.handle, "position", _checked("axis", axis, 0, 2))
+        return cls.__query__(cls, cls.handle, "position", _in_range("axis", axis, 0, 2))
 
     @classmethod
     def PositionDelta(cls, axis: int) -> Molang:
@@ -2549,7 +2204,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "position_delta", _checked("axis", axis, 0, 2)
+            cls, cls.handle, "position_delta", _in_range("axis", axis, 0, 2)
         )
 
     @classmethod
@@ -2587,7 +2242,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "rotation_to_camera", _checked("axis", axis, 0, 1)
+            cls, cls.handle, "rotation_to_camera", _in_range("axis", axis, 0, 1)
         )
 
     @classmethod
@@ -3235,7 +2890,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return cls.__query__(
-            cls, cls.handle, "armor_damage_slot", _checked("index", index, 0, 4)
+            cls, cls.handle, "armor_damage_slot", _in_range("index", index, 0, 4)
         )
 
     @classmethod
@@ -3668,290 +3323,3 @@ class Context(Query):
     @classmethod
     def ItemSlot(cls) -> Molang:
         return cls.__query__(cls, cls.handle, "item_slot")
-
-
-class Variable(Molang):
-    handle = "v"
-
-    @classmethod
-    def _set_var(cls, name) -> None:
-        setattr(cls, name, cls.__query__(cls, "v", name))
-        Context._set_var(name)
-
-    @classmethod
-    def IsFirstPerson(cls) -> Molang:
-        return cls.__query__(cls, "v", "is_first_person")
-
-    @classmethod
-    def IsPaperdoll(cls) -> Molang:
-        return cls.__query__(cls, "v", "is_paperdoll")
-
-    @classmethod
-    def AttackTime(cls) -> Molang:
-        return cls.__query__(cls, "v", "attack_time")
-
-
-class TempVar(Molang, metaclass=_VarMeta):
-    handle = "t"
-
-
-class Math(Molang):
-    handle = "math"
-
-    @classmethod
-    def abs(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "abs", value)
-
-    @classmethod
-    def acos(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "acos", value)
-
-    @classmethod
-    def asin(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "asin", value)
-
-    @classmethod
-    def atan(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "atan", value)
-
-    @classmethod
-    def atan2(cls, y: str, x) -> Molang:
-        return cls.__query__(cls, cls.handle, "atan2", y, x)
-
-    @classmethod
-    def ceil(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "ceil", value)
-
-    @classmethod
-    def clamp(cls, value, min, max) -> Molang:
-        return cls.__query__(cls, cls.handle, "clamp", value, min, max)
-
-    @classmethod
-    def copy_sign(cls, value, sign) -> Molang:
-        return cls.__query__(cls, cls.handle, "copy_sign", value, sign)
-
-    @classmethod
-    def cos(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "cos", value)
-
-    @classmethod
-    def die_roll(cls, num, low, high) -> Molang:
-        return cls.__query__(cls, cls.handle, "die_roll", num, low, high)
-
-    @classmethod
-    def die_roll_integer(cls, num, low, high) -> Molang:
-        return cls.__query__(cls, cls.handle, "die_roll_integer", num, low, high)
-
-    @classmethod
-    def exp(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "exp", value)
-
-    @classmethod
-    def floor(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "floor", value)
-
-    @classmethod
-    def hermite_blend(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "hermite_blend", value)
-
-    @classmethod
-    def lerp(cls, start, end, factor) -> Molang:
-        return cls.__query__(
-            cls,
-            cls.handle,
-            "lerp",
-            start,
-            end,
-            _checked("factor", factor, 0, 1),
-        )
-
-    @classmethod
-    def lerprotate(cls, start, end, factor) -> Molang:
-        return cls.__query__(
-            cls,
-            cls.handle,
-            "lerprotate",
-            start,
-            end,
-            _checked("factor", factor, 0, 1),
-        )
-
-    @classmethod
-    def ln(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "ln", value)
-
-    @classmethod
-    def max(cls, A, B) -> Molang:
-        return cls.__query__(cls, cls.handle, "max", A, B)
-
-    @classmethod
-    def min(cls, A, B) -> Molang:
-        return cls.__query__(cls, cls.handle, "min", A, B)
-
-    @classmethod
-    def min_angle(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "min_angle", value)
-
-    @classmethod
-    def mod(cls, value, denominator) -> Molang:
-        return cls.__query__(cls, cls.handle, "mod", value, denominator)
-
-    @classmethod
-    def pi(cls) -> Molang:
-        return cls.__query__(cls, cls.handle, "pi")
-
-    @classmethod
-    def pow(cls, base, exponent) -> Molang:
-        return cls.__query__(cls, cls.handle, "pow", base, exponent)
-
-    @classmethod
-    def random(cls, low, high) -> Molang:
-        return cls.__query__(cls, cls.handle, "random", low, high)
-
-    @classmethod
-    def random_integer(cls, low, high) -> Molang:
-        return cls.__query__(cls, cls.handle, "random_integer", low, high)
-
-    @classmethod
-    def round(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "round", value)
-
-    @classmethod
-    def sign(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "sign", value)
-
-    @classmethod
-    def sin(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "sin", value)
-
-    @classmethod
-    def sqrt(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "sqrt", value)
-
-    @classmethod
-    def trunc(cls, value) -> Molang:
-        return cls.__query__(cls, cls.handle, "trunc", value)
-
-    @classmethod
-    def inverse_lerp(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "inverse_lerp", start, end, factor)
-
-    @classmethod
-    def ease_in_quad(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_quad", start, end, factor)
-
-    @classmethod
-    def ease_out_quad(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_quad", start, end, factor)
-
-    @classmethod
-    def ease_in_out_quad(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_quad", start, end, factor)
-
-    @classmethod
-    def ease_in_cubic(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_cubic", start, end, factor)
-
-    @classmethod
-    def ease_out_cubic(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_cubic", start, end, factor)
-
-    @classmethod
-    def ease_in_out_cubic(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_cubic", start, end, factor)
-
-    @classmethod
-    def ease_in_quart(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_quart", start, end, factor)
-
-    @classmethod
-    def ease_out_quart(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_quart", start, end, factor)
-
-    @classmethod
-    def ease_in_out_quart(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_quart", start, end, factor)
-
-    @classmethod
-    def ease_in_quint(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_quint", start, end, factor)
-
-    @classmethod
-    def ease_out_quint(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_quint", start, end, factor)
-
-    @classmethod
-    def ease_in_out_quint(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_quint", start, end, factor)
-
-    @classmethod
-    def ease_in_sine(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_sine", start, end, factor)
-
-    @classmethod
-    def ease_out_sine(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_sine", start, end, factor)
-
-    @classmethod
-    def ease_in_out_sine(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_sine", start, end, factor)
-
-    @classmethod
-    def ease_in_expo(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_expo", start, end, factor)
-
-    @classmethod
-    def ease_out_expo(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_expo", start, end, factor)
-
-    @classmethod
-    def ease_in_out_expo(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_expo", start, end, factor)
-
-    @classmethod
-    def ease_in_circ(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_circ", start, end, factor)
-
-    @classmethod
-    def ease_out_circ(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_circ", start, end, factor)
-
-    @classmethod
-    def ease_in_out_circ(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_circ", start, end, factor)
-
-    @classmethod
-    def ease_in_bounce(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_bounce", start, end, factor)
-
-    @classmethod
-    def ease_out_bounce(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_bounce", start, end, factor)
-
-    @classmethod
-    def ease_in_out_bounce(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_bounce", start, end, factor)
-
-    @classmethod
-    def ease_in_back(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_back", start, end, factor)
-
-    @classmethod
-    def ease_out_back(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_back", start, end, factor)
-
-    @classmethod
-    def ease_in_out_back(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_back", start, end, factor)
-
-    @classmethod
-    def ease_in_elastic(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_elastic", start, end, factor)
-
-    @classmethod
-    def ease_out_elastic(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_out_elastic", start, end, factor)
-
-    @classmethod
-    def ease_in_out_elastic(cls, start, end, factor) -> Molang:
-        return cls.__query__(cls, cls.handle, "ease_in_out_elastic", start, end, factor)
