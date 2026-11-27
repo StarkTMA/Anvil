@@ -56,7 +56,13 @@ Name your branch `<type>/<short-description>`, in lowercase kebab case, with the
 
 Examples: `fix/142-pushable-by-block`, `format/1.26.60`, `docs/custom-biome-guide`.
 
-Each release is assembled on a `release/<version>` branch (for example `release/1.1.0`) created from `main`. Feature and format branches reach it through pull requests that are squash-merged, and the release branch reaches `main` through one pull request, merged with a merge commit, once the version is bumped.
+Each release is assembled on a `release/<version>` branch (for example `release/1.1.0`) created from `main`. Nobody pushes to a release branch directly either:
+
+1. Feature, fix and format branches reach it through pull requests.
+2. The maintainer bumps the version in `src/anvil/__version__.py` with a commit pushed directly to the release branch. It is the only change that skips a pull request.
+3. The release branch reaches `main` through one pull request titled `Release <version>`. Open it with the release template (add `?template=release.md` to the compare URL). Its description becomes the GitHub release notes, and a check makes sure the branch matches the version, the version is not released yet, and the notes are filled in.
+
+Every pull request is merged with a merge commit, never squashed or rebased.
 
 ## Commits
 
@@ -68,7 +74,7 @@ fix(actors): always write is_summonable and is_spawnable
 - The game treats a missing key as false, so leaving out the default made entities unsummonable.
 ```
 
-Pull requests into a `release/` branch are squash-merged, so the pull request title becomes the commit on that branch and must follow the same format. Your branch keeps its own commits, and they stay listed on the pull request.
+Pull requests are merged with a merge commit whose message is the pull request title and description, so the title follows the same format.
 
 ## Code Conventions
 
