@@ -11,6 +11,7 @@ import orjson
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.reports import ReportType
 
 # region Description
@@ -588,14 +589,31 @@ class Particle(JsonFile[_ParticleDocument]):
     def __init__(
         self,
         particle: str,
-        component: TextureComponents,
+        *,
+        color: str,
+        normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
     ) -> None:
-        """Create a particle with optional PBR texture set support.
+        """A particle of the project, with its texture in `assets/particles` and its PBR
+        maps. Each map is the name of an image in the same folder, or a color.
+
+        ```python
+        Particle("sparks", color="sparks", mer="sparks_mer").queue()
+        ```
 
         Args:
             particle (str): Name of the particle.
-            component (TextureComponents): Texture components configuration for PBR.
+            color (str): The texture's file name, without `.png`.
+            normal (optional): The normal map. Not with `height`.
+            height (optional): The height map. Not with `normal`.
+            mer (optional): The metalness, emissive and roughness map. Not with `mers`.
+            mers (optional): The MER map with subsurface scattering. Not with `mer`.
         """
+        component = TextureComponents(
+            color=color, normal=normal, height=height, mer=mer, mers=mers
+        )
         source_path = _source_path(particle)
         self._check_file_exists(source_path, particle)
 

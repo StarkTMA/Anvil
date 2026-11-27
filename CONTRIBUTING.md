@@ -56,7 +56,7 @@ Name your branch `<type>/<short-description>`, in lowercase kebab case, with the
 
 Examples: `fix/142-pushable-by-block`, `format/1.26.60`, `docs/custom-biome-guide`.
 
-Each release is assembled on a `release/<version>` branch (for example `release/1.1.0`) created from `main`. Feature and format branches merge into it with `git merge --no-ff`, and the release branch reaches `main` through one pull request, merged with a merge commit, once the version is bumped.
+Each release is assembled on a `release/<version>` branch (for example `release/1.1.0`) created from `main`. Feature and format branches reach it through pull requests that are squash-merged, and the release branch reaches `main` through one pull request, merged with a merge commit, once the version is bumped.
 
 ## Commits
 
@@ -68,7 +68,7 @@ fix(actors): always write is_summonable and is_spawnable
 - The game treats a missing key as false, so leaving out the default made entities unsummonable.
 ```
 
-Pull requests are squash-merged, so the pull request title becomes the commit on `main` and must follow the same format.
+Pull requests into a `release/` branch are squash-merged, so the pull request title becomes the commit on that branch and must follow the same format. Your branch keeps its own commits, and they stay listed on the pull request.
 
 ## Code Conventions
 

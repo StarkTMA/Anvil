@@ -19,13 +19,12 @@ from anvil.api.items.components import (
     ItemWearable,
 )
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 item = Item("iron_crown")
 item.server.description.set_menu_category(ItemCategory.Equipment, ItemGroups.Helmet)
 item.server.components.add(
-    ItemIcon(textures=TextureComponents(color="iron_crown")),
+    ItemIcon(color="iron_crown"),
     ItemWearable(slot=Slots.Head, protection=2),
     ItemDurability(max_durability=180),
     ItemEnchantable(slot=EnchantsSlots.ArmorHead, value=10),
@@ -60,7 +59,7 @@ item.server.components.add(
 ```py title="attachable"
 client = item.client.description
 client.add_geometry("iron_crown")
-client.add_texture("iron_crown", TextureComponents(color="iron_crown"))
+client.add_texture(blockbench="iron_crown", color="iron_crown")
 client.animation("iron_crown", "offset", animate=True)
 client.render_controller("default").set_geometry("iron_crown").add_texture(
     "iron_crown"
@@ -104,15 +103,14 @@ from anvil.api.items.components import (
     ItemWearable,
 )
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 
 def iron_crown():
     item = Item("iron_crown")
     item.server.description.set_menu_category(ItemCategory.Equipment, ItemGroups.Helmet)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color="iron_crown")),
+        ItemIcon(color="iron_crown"),
         ItemWearable(slot=Slots.Head, protection=2),
         ItemDurability(max_durability=180),
         ItemEnchantable(slot=EnchantsSlots.ArmorHead, value=10),
@@ -125,7 +123,7 @@ def iron_crown():
 
     client = item.client.description
     client.add_geometry("iron_crown")
-    client.add_texture("iron_crown", TextureComponents(color="iron_crown"))
+    client.add_texture(blockbench="iron_crown", color="iron_crown")
     client.animation("iron_crown", "offset", animate=True)
     client.render_controller("default").set_geometry("iron_crown").add_texture(
         "iron_crown"

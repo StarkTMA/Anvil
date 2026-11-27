@@ -76,8 +76,6 @@ def particles(tmp_path, monkeypatch):
 
 
 def test_particle_reads_its_file_and_renames_references(particles):
-    from anvil.api.pbr.texture_set import TextureComponents
-
     spark = orjson.loads(orjson.dumps(_SMOKE))
     spark["particle_effect"]["description"]["identifier"] = "spark"
     del spark["particle_effect"]["events"]
@@ -85,7 +83,7 @@ def test_particle_reads_its_file_and_renames_references(particles):
     particles("spark", spark)
 
     with config.override(NAMESPACE="testns"):
-        smoke = Particle("smoke", TextureComponents(color="smoke"))
+        smoke = Particle("smoke", color="smoke")
         exported = AnvilIO._normalize_json_like(smoke._document)
     effect = exported["particle_effect"]
     assert effect["description"]["identifier"] == "testns:smoke"
@@ -98,10 +96,8 @@ def test_particle_reads_its_file_and_renames_references(particles):
 
 
 def test_particle_refuses_an_unknown_component(particles):
-    from anvil.api.pbr.texture_set import TextureComponents
-
     broken = orjson.loads(orjson.dumps(_SMOKE))
     broken["particle_effect"]["components"]["minecraft:emitter_rate_magic"] = {}
     particles("smoke", broken)
     with pytest.raises(ValueError, match="minecraft:emitter_rate_magic"):
-        Particle("smoke", TextureComponents(color="smoke"))
+        Particle("smoke", color="smoke")

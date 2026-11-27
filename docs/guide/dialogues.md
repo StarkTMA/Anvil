@@ -75,14 +75,13 @@ from anvil.api.actors.components import (
     EntityTypeFamily,
 )
 from anvil.api.actors.entity import Entity
-from anvil.api.pbr.texture_set import TextureComponents
 
 
 def tinker():
     entity = Entity("tinker")
     client = entity.client.description
     client.add_geometry("tinker")
-    client.add_texture("tinker", TextureComponents(color="tinker"))
+    client.add_texture(blockbench="tinker", color="tinker")
     client.render_controller("default").set_geometry("tinker").add_texture("tinker")
 
     entity.server.components.add(

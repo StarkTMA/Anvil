@@ -19,7 +19,7 @@ def structures(tmp_path, monkeypatch):
 
 def test_processor_list():
     from anvil.api.blocks.descriptor import BlockDescriptor
-    from anvil.api.vanilla.blocks import MinecraftBlockTypes as Blocks
+    from anvil.api.vanilla import MinecraftBlockTypes as Blocks
     from anvil.api.world.structures import _JigsawStructureProcess
     from anvil.lib.jsonmodel import Identifier
 

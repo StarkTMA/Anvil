@@ -390,7 +390,7 @@ def test_item_client_has_no_entity_keys():
 
 def test_entity_references_accept_an_entity_or_a_vanilla_identifier():
     from anvil.api.actors.components.combat import EntityTransformation
-    from anvil.api.vanilla.entities import MinecraftEntityTypes
+    from anvil.api.vanilla import MinecraftEntityTypes
 
     entity = Entity("crab")
     assert entity.identifier == "testns:crab"
@@ -404,7 +404,7 @@ def test_entity_references_accept_an_entity_or_a_vanilla_identifier():
 
 
 def test_runtime_identifier_must_be_vanilla():
-    from anvil.api.vanilla.entities import MinecraftEntityTypes
+    from anvil.api.vanilla import MinecraftEntityTypes
 
     entity = Entity("crab")
     entity.server.description.config(runtime_identifier=MinecraftEntityTypes.Arrow())

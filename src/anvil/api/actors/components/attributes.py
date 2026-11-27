@@ -5,7 +5,7 @@ from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Molang
-from anvil.api.vanilla.effects import MinecraftEffects
+from anvil.api.vanilla import MinecraftEffects
 from anvil.lib.jsonmodel import (
     BlockId,
     Chance,

@@ -26,7 +26,7 @@ from anvil.api.biomes.components import (
     OverworldSurface,
     Surface,
 )
-from anvil.api.vanilla.biomes import MinecraftBiomeTypes
+from anvil.api.vanilla import MinecraftBiomeTypes
 from anvil.lib.jsonmodel import ComponentPlacement, Identifier, JsonComponent
 from anvil.lib.jsonmodel.enums import Dimension
 from anvil.lib.lib import AnvilIO

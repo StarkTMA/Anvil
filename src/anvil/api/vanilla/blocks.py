@@ -1,7 +1,5 @@
 from enum import StrEnum
 
-from .factories import minecraft_blocks as MinecraftBlockTypes
-
 
 def vanilla_block_ids() -> list[str]:
     return [

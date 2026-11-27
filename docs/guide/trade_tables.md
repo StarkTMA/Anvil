@@ -10,7 +10,7 @@ The `TradeTable` API uses a fluent interface, allowing you to chain methods to b
 
 ```python title="trading/my_trader.py"
 from anvil.api.world.trade_tables import TradeTable
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 # 1. Create the table
 table = TradeTable("my_trader")
@@ -56,7 +56,7 @@ For complex traders with many tiers and options, defining trades in a dictionary
 
 ```python title="trading/harbour_folk_trades.py"
 from anvil.api.world.trade_tables import TradeTable
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 def create_trades():
     # Define your data structure

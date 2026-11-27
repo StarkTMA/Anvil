@@ -40,20 +40,19 @@ item.server.description.set_menu_category(ItemCategory.Items)
 
 ```py title="components: visuals & basics"
 from anvil.api.items.components import ItemDisplayName, ItemIcon, ItemMaxStackSize
-from anvil.api.pbr.texture_set import TextureComponents
 
 item.server.components.add(
-    ItemIcon(textures=TextureComponents(color=item.name)),
+    ItemIcon(color=item.name),
     ItemDisplayName(value="Arcane User Guide"),
     ItemMaxStackSize(value=1),
 )
 ```
 
 !!! info "Textures"
-    `ItemIcon(textures=TextureComponents(color=<name>))` reads `assets/textures/items/<name>.png` (here `arcane_user_guide.png`). If the texture doesn't exist, export fails.
+    `ItemIcon(color=<name>)` reads `assets/textures/items/<name>.png` (here `arcane_user_guide.png`). If the texture doesn't exist, export fails.
 
 !!! tip "PBR Support"
-    Add PBR maps the same way: `TextureComponents(color=item.name, normal="texture_normal", mer="texture_mer")`.
+    Add PBR maps with `ItemIcon(color=item.name, normal="texture_normal", mer="texture_mer")`. A texture of a Blockbench model works too, `ItemIcon(blockbench=model, color=texture)`, and so does a vanilla icon, `ItemIcon(color=MinecraftItemTextures.Apple)`, which is only referenced by its short name. The icon is registered in the item atlas as `<namespace>:<color>`.
 
 !!! tip "Localization"
     `ItemDisplayName` is optional: Anvil adds one keyed `item.<namespace>:<name>.name` when you leave it out. Every plain string passed to a display name becomes a localization key tracked in `localization.csv`. See [Localization](localization.md).
@@ -84,7 +83,7 @@ item.server.components.add(
 
 ```py title="crafting"
 from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 recipe = ShapedCraftingRecipe(item.name)
 recipe.result(item)
@@ -106,13 +105,11 @@ recipe.queue()
 
 ```py title="item client"
 from anvil.api.logic.molang import Query
-from anvil.api.pbr.texture_set import TextureComponents
 
 client = item.client
 client.description.add_geometry("arcane_user_guide")
 client.description.add_texture(
-    blockbench="arcane_user_guide",
-    component=TextureComponents(color="arcane_user_guide"),
+    blockbench="arcane_user_guide", color="arcane_user_guide"
 )
 client.description.animation(
     "arcane_user_guide", "first_person", condition=Query.IsFirstPerson()
@@ -161,8 +158,7 @@ from anvil.api.items.components import (
 from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
 from anvil.api.items.items import Item
 from anvil.api.logic.molang import Query
-from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 
 def arcane_user_guide():
@@ -172,7 +168,7 @@ def arcane_user_guide():
 
     # Visuals & basics (mandatory)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color=item.name)),
+        ItemIcon(color=item.name),
         ItemDisplayName(value="Arcane User Guide"),
         ItemMaxStackSize(value=1),
     )
@@ -199,8 +195,7 @@ def arcane_user_guide():
     client = item.client
     client.description.add_geometry("arcane_user_guide")
     client.description.add_texture(
-        blockbench="arcane_user_guide",
-        component=TextureComponents(color="arcane_user_guide"),
+        blockbench="arcane_user_guide", color="arcane_user_guide"
     )
     client.description.animation(
         "arcane_user_guide", "first_person", condition=Query.IsFirstPerson()
@@ -229,7 +224,6 @@ from anvil.lib.jsonmodel.enums import ItemCategory
 from anvil.api.items.components import ItemDisplayName, ItemIcon, ItemMaxStackSize
 from anvil.api.items.crafting.catalog import CraftingItemCatalog
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
 
 
 def enchanted_tomes():
@@ -239,7 +233,7 @@ def enchanted_tomes():
         tome = Item(key)
         tome.server.description.set_menu_category(ItemCategory.Items)
         tome.server.components.add(
-            ItemIcon(textures=TextureComponents(color=key)),
+            ItemIcon(color=key),
             ItemDisplayName(value=display),
             ItemMaxStackSize(value=1),
         )

@@ -10,15 +10,14 @@ The whole example compiles as written. Every name passed to `client.animation(..
 
 ```py title="entities/clockwork_golem.py"
 from anvil.api.actors.entity import Entity
-from anvil.api.pbr.texture_set import TextureComponents
 
 entity = Entity("clockwork_golem")
 client = entity.client.description
 server = entity.server
 
 client.add_geometry("clockwork_golem")
-client.add_texture("clockwork_golem", TextureComponents(color="clockwork_golem"))
-client.add_texture("clockwork_golem", TextureComponents(color="clockwork_golem_rusted"))
+client.add_texture(blockbench="clockwork_golem", color="clockwork_golem")
+client.add_texture(blockbench="clockwork_golem", color="clockwork_golem_rusted")
 
 client.animation("clockwork_golem", "idle")
 client.animation("clockwork_golem", "walk")
@@ -223,7 +222,6 @@ from anvil.api.actors.components.ai_goals import GoalEntityType
 from anvil.api.actors.entity import Entity
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Query
-from anvil.api.pbr.texture_set import TextureComponents
 
 
 def clockwork_golem():
@@ -232,8 +230,8 @@ def clockwork_golem():
     server = entity.server
 
     client.add_geometry("clockwork_golem")
-    client.add_texture("clockwork_golem", TextureComponents(color="clockwork_golem"))
-    client.add_texture("clockwork_golem", TextureComponents(color="clockwork_golem_rusted"))
+    client.add_texture(blockbench="clockwork_golem", color="clockwork_golem")
+    client.add_texture(blockbench="clockwork_golem", color="clockwork_golem_rusted")
 
     client.animation("clockwork_golem", "idle")
     client.animation("clockwork_golem", "walk")

@@ -17,6 +17,7 @@ The ready-made instances at the end (`MinMax`, `NonNegative`, `Hex`...) are read
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
 from functools import cache
 from typing import Any, Literal
 
@@ -396,21 +397,21 @@ class IndexInto(JsonType):
 def _vanilla_ids(kind: str, experimental: bool) -> frozenset[str]:
     """The vanilla ids of a kind, with the experimental ones when `experimental`."""
     if kind == "item":
-        from anvil.api.vanilla.items import vanilla_items_ids
-        from anvil.beta.vanilla.items import vanilla_items_ids as beta_items_ids
+        from anvil.api.vanilla import vanilla_items_ids
+        from anvil.beta.vanilla import vanilla_items_ids as beta_items_ids
 
         return frozenset(
             [*vanilla_items_ids(), *(beta_items_ids() if experimental else ())]
         )
     if kind == "block":
-        from anvil.api.vanilla.blocks import vanilla_block_ids
-        from anvil.beta.vanilla.blocks import vanilla_block_ids as beta_block_ids
+        from anvil.api.vanilla import vanilla_block_ids
+        from anvil.beta.vanilla import vanilla_block_ids as beta_block_ids
 
         return frozenset(
             [*vanilla_block_ids(), *(beta_block_ids() if experimental else ())]
         )
-    from anvil.api.vanilla.entities import vanilla_entities_ids
-    from anvil.beta.vanilla.entities import vanilla_entities_ids as beta_entities_ids
+    from anvil.api.vanilla import vanilla_entities_ids
+    from anvil.beta.vanilla import vanilla_entities_ids as beta_entities_ids
 
     return frozenset(
         [*vanilla_entities_ids(), *(beta_entities_ids() if experimental else ())]
@@ -568,7 +569,9 @@ def _faces(value: Any) -> list[str]:
 def _icon_texture(value: Any) -> dict[str, str]:
     from anvil.lib.config import CONFIG
 
-    return {"default": f"{CONFIG.NAMESPACE}:{value.color}"}
+    if isinstance(value, Enum):
+        return {"default": value.value}
+    return {"default": f"{CONFIG.NAMESPACE}:{value}"}
 
 
 _TIME = InRange(0.0, 1.0)
@@ -804,7 +807,8 @@ ExpandFaces = Encoded(_faces)
 """Block faces with `side` and `all` written as the faces they stand for."""
 
 IconTexture = Encoded(_icon_texture, _object_schema({"default": STRING}))
-"""An item's textures as `{"default": "<namespace>:<color texture>"}`."""
+"""An item's textures as `{"default": "<namespace>:<color texture>"}`, or a vanilla short
+name as `{"default": "<short name>"}`."""
 
 FitToFrame = Encoded(
     lambda value: {} if value else False,

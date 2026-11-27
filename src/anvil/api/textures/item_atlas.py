@@ -1,12 +1,15 @@
 """The resource pack's `textures/item_texture.json`: the item atlas."""
 
 from pathlib import Path, PurePosixPath
-from typing import Annotated, ClassVar, Literal, overload
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal, overload
 
 from anvil.lib.blockbench import _Blockbench, _BlockBenchSource
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, json_field
 from anvil.lib.lib import Directory
+
+if TYPE_CHECKING:
+    from anvil.api.pbr.texture_set import TextureComponents
 
 
 class _ItemTexture(JsonObject):
@@ -150,6 +153,25 @@ class ItemTexturesObject(JsonFile[_ItemTextureFile]):
 
         self._document.add_texture(f"{CONFIG.NAMESPACE}:{item_name}", paths)
         return self
+
+    def add_icon(
+        self, texture: "TextureComponents", blockbench: str | None = None
+    ) -> None:
+        """Adds an item icon texture as `<namespace>:<color>`, with its texture set.
+
+        Args:
+            texture (TextureComponents): The texture and its maps.
+            blockbench (str, optional): The Blockbench model the texture comes from.
+        """
+        from anvil.api.pbr.texture_set import TextureSet
+
+        texture_set = TextureSet(texture.color, _BlockBenchSource.ITEM)
+        if blockbench:
+            texture_set.set_blockbench_textures(blockbench, texture)
+        else:
+            texture_set.set_item_textures(texture)
+        texture_set.queue()
+        self.add_item(texture.color, blockbench=blockbench, sprites=[texture.color])
 
     def queue(self) -> "ItemTexturesObject":
         """Queues the item atlas for export."""

@@ -1,6 +1,6 @@
 import pytest
 
-from anvil.api.vanilla.entities import vanilla_entities_ids
+from anvil.api.vanilla import vanilla_entities_ids
 from anvil.api.vanilla.factories.minecraft_entities import SulfurCube
 from anvil.lib.jsonmodel import JsonComponent
 from anvil.lib.jsonmodel.enums import FilterSubject
@@ -538,7 +538,7 @@ def test_entity_inside_block_notifier_block_object():
 
 def test_entity_spell_effects_names():
     from anvil.api.actors.components import EntitySpellEffects
-    from anvil.api.vanilla.effects import MinecraftEffects
+    from anvil.api.vanilla import MinecraftEffects
 
     spell = EntitySpellEffects(remove_effects=[MinecraftEffects.Poison]).add_effect(
         effect=MinecraftEffects.Regeneration, duration=5

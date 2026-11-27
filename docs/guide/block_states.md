@@ -47,19 +47,16 @@ from anvil.api.blocks.components import (
     BlockPlacementFilter,
     BlockSelectionBox,
     BlockTick,
-    InstanceSpec,
-    InstanceVariant,
 )
 from anvil.lib.jsonmodel.enums import BlockFaceValues
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.textures import BlockTexture
+from anvil.api.vanilla import MinecraftBlockTypes
 
 block.server.components.add(
     BlockGeometry(blockbench="brass_lantern"),
-    BlockMaterialInstance().add_instance(
-        spec=InstanceSpec(
-            blockbench="brass_lantern",
-            variations=[InstanceVariant(color="brass_lantern")],
-        )
+    BlockMaterialInstance().face(
+        BlockFaceValues.All,
+        BlockTexture(blockbench="brass_lantern", color="brass_lantern"),
     ),
     BlockCollisionBox(origin=(-4, 0, -4), size=(8, 10, 8)),
     BlockSelectionBox(origin=(-4, 0, -4), size=(8, 10, 8)),
@@ -73,7 +70,7 @@ block.server.components.add(
 ```
 
 !!! note
-    `BlockPlacementFilter` limits where the block can be placed: here only on the top face of stone or cobblestone. `BlockTick` calls the `onTick` hook of the block's custom components every 40 to 80 ticks.
+`BlockPlacementFilter` limits where the block can be placed: here only on the top face of stone or cobblestone. `BlockTick` calls the `onTick` hook of the block's custom components every 40 to 80 ticks.
 
 ---
 
@@ -87,11 +84,9 @@ from anvil.api.logic.molang import Query
 
 block.server.permutation(Query.BlockState("lit")).add(
     BlockLightEmission(value=12),
-    BlockMaterialInstance().add_instance(
-        spec=InstanceSpec(
-            blockbench="brass_lantern",
-            variations=[InstanceVariant(color="brass_lantern_lit")],
-        )
+    BlockMaterialInstance().face(
+        BlockFaceValues.All,
+        BlockTexture(blockbench="brass_lantern", color="brass_lantern_lit"),
     ),
 )
 block.server.permutation(
@@ -118,10 +113,10 @@ block.server.permutation(
 ```
 
 !!! tip "State names in Molang"
-    `Query.BlockState("lit")` resolves the bare name to the block's own state. Pass a trait enum member for the game's states.
+`Query.BlockState("lit")` resolves the bare name to the block's own state. Pass a trait enum member for the game's states.
 
 !!! tip "Rotation without permutations"
-    `BlockGeometry(...).set_n_way_visual_rotation(y="q.block_state('minecraft:cardinal_direction') == 'north' ? 180 : 0")` rotates the model from Molang, so one geometry component can replace four permutations.
+`BlockGeometry(...).set_n_way_visual_rotation(y="q.block_state('minecraft:cardinal_direction') == 'north' ? 180 : 0")` rotates the model from Molang, so one geometry component can replace four permutations.
 
 ---
 
@@ -158,14 +153,13 @@ The TypeScript side reads `params.cooldown_ticks` in `onPlayerInteract` and sets
 ```py title="sounds and item"
 from anvil.lib.jsonmodel.enums import BlockSoundGroup
 from anvil.api.items.components import ItemBlockPlacer, ItemIcon
-from anvil.api.pbr.texture_set import TextureComponents
 
 block.client.sound_group(BlockSoundGroup.Chain)
 
 item = block.item
 item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Copper)
 item.server.components.add(
-    ItemIcon(textures=TextureComponents(color="brass_lantern")),
+    ItemIcon(color="brass_lantern"),
     ItemBlockPlacer(block=block, replace_block_item=True),
 )
 
@@ -173,7 +167,7 @@ block.queue()
 ```
 
 !!! note
-    `ItemBlockPlacer(block=block, replace_block_item=True)` makes the item the block's own item, so the icon from `assets/textures/items/brass_lantern.png` is what shows in the inventory.
+`ItemBlockPlacer(block=block, replace_block_item=True)` makes the item the block's own item, so the icon from `assets/textures/items/brass_lantern.png` is what shows in the inventory.
 
 ---
 
@@ -193,8 +187,6 @@ from anvil.api.blocks.components import (
     BlockPlacementFilter,
     BlockSelectionBox,
     BlockTick,
-    InstanceSpec,
-    InstanceVariant,
 )
 from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
@@ -205,8 +197,8 @@ from anvil.lib.jsonmodel.enums import (
 )
 from anvil.api.items.components import ItemBlockPlacer, ItemIcon
 from anvil.api.logic.molang import Query
-from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.textures import BlockTexture
+from anvil.api.vanilla import MinecraftBlockTypes
 from anvil.lib.jsonmodel import InRange, json_field
 
 
@@ -228,18 +220,19 @@ def brass_lantern():
 
     block.server.components.add(
         BlockGeometry(blockbench="brass_lantern"),
-        BlockMaterialInstance().add_instance(
-            spec=InstanceSpec(
-                blockbench="brass_lantern",
-                variations=[InstanceVariant(color="brass_lantern")],
-            )
+        BlockMaterialInstance().face(
+            BlockFaceValues.All,
+            BlockTexture(blockbench="brass_lantern", color="brass_lantern"),
         ),
         BlockCollisionBox(origin=(-4, 0, -4), size=(8, 10, 8)),
         BlockSelectionBox(origin=(-4, 0, -4), size=(8, 10, 8)),
         BlockDestructibleByMining(seconds_to_destroy=0.5),
         BlockPlacementFilter().add_condition(
             allowed_faces=[BlockFaceValues.Up],
-            block_filter=[MinecraftBlockTypes.Stone(), MinecraftBlockTypes.Cobblestone()],
+            block_filter=[
+                MinecraftBlockTypes.Stone(),
+                MinecraftBlockTypes.Cobblestone(),
+            ],
         ),
         BlockTick(interval_range=(40, 80), looping=True),
         LanternToggle(cooldown_ticks=20),
@@ -247,11 +240,9 @@ def brass_lantern():
 
     block.server.permutation(Query.BlockState("lit")).add(
         BlockLightEmission(value=12),
-        BlockMaterialInstance().add_instance(
-            spec=InstanceSpec(
-                blockbench="brass_lantern",
-                variations=[InstanceVariant(color="brass_lantern_lit")],
-            )
+        BlockMaterialInstance().face(
+            BlockFaceValues.All,
+            BlockTexture(blockbench="brass_lantern", color="brass_lantern_lit"),
         ),
     )
     block.server.permutation(
@@ -263,7 +254,7 @@ def brass_lantern():
     item = block.item
     item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Copper)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color="brass_lantern")),
+        ItemIcon(color="brass_lantern"),
         ItemBlockPlacer(block=block, replace_block_item=True),
     )
 
@@ -275,4 +266,4 @@ BrassLantern = brass_lantern()
 ```
 
 !!! tip "Blocks in other APIs"
-    `block.descriptor(lit=True)` returns a `BlockDescriptor` with state values, accepted anywhere a vanilla `MinecraftBlockTypes.X()` is: loot tables, features, filters and recipes. To match blocks by tags only, write `BlockDescriptor(tags=Query.AllTags(["stone"]))`.
+`block.descriptor(lit=True)` returns a `BlockDescriptor` with state values, accepted anywhere a vanilla `MinecraftBlockTypes.X()` is: loot tables, features, filters and recipes. To match blocks by tags only, write `BlockDescriptor(tags=Query.AllTags(["stone"]))`.

@@ -12,14 +12,13 @@ Every snippet compiles as written.
 from anvil.lib.jsonmodel.enums import ItemCategory
 from anvil.api.items.components import ItemDisplayName, ItemIcon, ItemMaxStackSize
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
 
 
 def simple_item(name: str, display: str) -> Item:
     item = Item(name)
     item.server.description.set_menu_category(ItemCategory.Items)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color=name)),
+        ItemIcon(color=name),
         ItemDisplayName(value=display),
         ItemMaxStackSize(value=64),
     )
@@ -31,7 +30,7 @@ crystal = simple_item("ember_crystal", "Ember Crystal")
 ```
 
 !!! tip
-    `queue()` returns the object, so a helper can create, queue and return an item in one expression. Items, blocks, vanilla `MinecraftItemTypes.X()` and `MinecraftBlockTypes.X()` descriptors and plain `"namespace:name"` strings are all accepted wherever a recipe wants an item.
+`queue()` returns the object, so a helper can create, queue and return an item in one expression. Items, blocks, vanilla `MinecraftItemTypes.X()` and `MinecraftBlockTypes.X()` descriptors and plain `"namespace:name"` strings are all accepted wherever a recipe wants an item.
 
 ---
 
@@ -39,7 +38,7 @@ crystal = simple_item("ember_crystal", "Ember Crystal")
 
 ```py title="shapeless"
 from anvil.api.items.crafting.shapeless import ShapelessRecipe
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 ShapelessRecipe("ember_dust").ingredients(
     [MinecraftItemTypes.BlazePowder(), (MinecraftItemTypes.Gunpowder(), 2)]
@@ -86,7 +85,7 @@ The grid is a list of rows; `None` is an empty slot. Anvil assigns the pattern k
 from anvil.lib.jsonmodel.enums import SmeltingTags
 from anvil.api.items.crafting.furnace import SmeltingRecipe
 from anvil.api.items.crafting.shapeless import StoneCutterRecipe
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBlockTypes
 
 SmeltingRecipe(
     "ember_dust_from_crystal", [SmeltingTags.FURNACE, SmeltingTags.BLAST_FURNACE]
@@ -98,7 +97,7 @@ StoneCutterRecipe("ember_crystal_from_block").ingredient(
 ```
 
 !!! note
-    Smelting recipes list the blocks they work in: `FURNACE`, `BLAST_FURNACE`, `SMOKER`, `CAMPFIRE` and `SOUL_CAMPFIRE`. Smithing recipes live in `anvil.api.items.crafting.smithing_transform` and `smithing_trim`, brewing in `brewing`.
+Smelting recipes list the blocks they work in: `FURNACE`, `BLAST_FURNACE`, `SMOKER`, `CAMPFIRE` and `SOUL_CAMPFIRE`. Smithing recipes live in `anvil.api.items.crafting.smithing_transform` and `smithing_trim`, brewing in `brewing`.
 
 ---
 
@@ -128,7 +127,7 @@ catalog.queue()
 - `CraftingItemCatalog()` is a single shared file, so groups can be added from several modules.
 
 !!! tip "Menu category versus catalog"
-    `set_menu_category(ItemCategory.Items, ItemGroups.Copper)` on the item or block description puts it in a **vanilla** group. The catalog is for **your own** groups. You can also pass the catalog's `tag.<namespace>:<name>` string as the group of `set_menu_category`.
+`set_menu_category(ItemCategory.Items, ItemGroups.Copper)` on the item or block description puts it in a **vanilla** group. The catalog is for **your own** groups. You can also pass the catalog's `tag.<namespace>:<name>` string as the group of `set_menu_category`.
 
 ---
 
@@ -142,16 +141,15 @@ from anvil.api.items.crafting.furnace import SmeltingRecipe
 from anvil.api.items.crafting.shaped import ShapedCraftingRecipe
 from anvil.api.items.crafting.shapeless import ShapelessRecipe, StoneCutterRecipe
 from anvil.api.items.items import Item
-from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftItemTypes
 
 
 def simple_item(name: str, display: str) -> Item:
     item = Item(name)
     item.server.description.set_menu_category(ItemCategory.Items)
     item.server.components.add(
-        ItemIcon(textures=TextureComponents(color=name)),
+        ItemIcon(color=name),
         ItemDisplayName(value=display),
         ItemMaxStackSize(value=64),
     )

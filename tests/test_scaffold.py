@@ -68,7 +68,7 @@ def test_code_workspace_lists_project_pack_folders():
     assert folders == [
         {"name": "demo", "path": "work/demo"},
         {"name": "Dev Resource Packs", "path": "dev/RP/RP_demo"},
-        {"name": "Dev behavior Packs", "path": "dev/BP/BP_demo"},
+        {"name": "Dev Behavior Packs", "path": "dev/BP/BP_demo"},
     ]
 
 

@@ -19,6 +19,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 METADATA_URL = "https://raw.githubusercontent.com/Mojang/bedrock-samples/{tag}/metadata/vanilladata_modules/mojang-{name}.json"
+ATLAS_URL = "https://raw.githubusercontent.com/Mojang/bedrock-samples/{tag}/resource_pack/textures/{name}.json"
 VANILLA = Path(__file__).resolve().parent.parent / "src" / "anvil" / "api" / "vanilla"
 
 ITEM_TAGS = [
@@ -503,7 +504,7 @@ def __getattr__(name: str):
     listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["blocks.py"] = (
         "from enum import StrEnum\n\n"
-        "from .factories import minecraft_blocks as MinecraftBlockTypes\n\n\n"
+        "\n"
         f"def vanilla_block_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftBlockTags", "Vanilla block tags.", BLOCK_TAGS)
     )
@@ -557,8 +558,7 @@ _NAMES""",
     )
     files["items.py"] = (
         "from enum import StrEnum\n\n"
-        "from .factories import minecraft_items as MinecraftItemTypes\n\n"
-        '__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_items_ids"]\n\n\n'
+        "\n"
         f"def vanilla_items_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftItemTags", "Vanilla item tags.", ITEM_TAGS)
     )
@@ -581,8 +581,54 @@ def entities(tag: str, files: dict[str, str]) -> None:
     )
     listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["entities.py"] = (
-        "from .factories import minecraft_entities as MinecraftEntityTypes\n\n\n"
         f"def vanilla_entities_ids() -> list[str]:\n    return [\n{listed}    ]\n"
+    )
+
+
+def fetch_atlas(tag: str, name: str) -> dict[str, dict]:
+    """The `texture_data` of a vanilla atlas. The files start with `//` comment lines,
+    which JSON doesn't allow."""
+    with urlopen(ATLAS_URL.format(tag=tag, name=name)) as response:
+        text = response.read().decode("utf-8-sig")
+    return json.loads(re.sub(r"^\s*//.*$", "", text, flags=re.MULTILINE))[
+        "texture_data"
+    ]
+
+
+def unique_members(names: dict[str, str]) -> dict[str, str]:
+    """Checks that each enum member is a valid name that no other value takes."""
+    seen: dict[str, str] = {}
+    for value, member in names.items():
+        if not member.isidentifier() or member in seen:
+            raise ValueError(
+                f"'{value}' gives the member '{member}', which is not a valid name or "
+                f"is taken by '{seen.get(member)}'."
+            )
+        seen[member] = value
+    return names
+
+
+def atlas_enum(name: str, doc: str, atlas: dict[str, dict]) -> str:
+    """An enum of the atlas's short names."""
+    members = unique_members({short: pascal(short) for short in sorted(atlas)})
+    lines = [f'    {member} = "{short}"' for short, member in members.items()]
+    return f'class {name}(StrEnum):\n    """{doc}"""\n\n' + "\n".join(lines) + "\n"
+
+
+def textures(tag: str, files: dict[str, str]) -> None:
+    files["textures.py"] = (
+        "from enum import StrEnum\n\n\n"
+        + atlas_enum(
+            "MinecraftTerrainTextures",
+            "Vanilla terrain atlas short names, for block faces.",
+            fetch_atlas(tag, "terrain_texture"),
+        )
+        + "\n\n"
+        + atlas_enum(
+            "MinecraftItemTextures",
+            "Vanilla item atlas short names, for item icons.",
+            fetch_atlas(tag, "item_texture"),
+        )
     )
 
 
@@ -612,12 +658,58 @@ def write(files: dict[str, str]) -> None:
         print(f"Wrote {path}")
 
 
+INIT = '''"""Vanilla data from Mojang/bedrock-samples {tag}.
+
+Import everything vanilla from here, e.g. `from anvil.api.vanilla import MinecraftItemTypes`.
+"""
+
+from .biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from .blocks import MinecraftBlockTags, vanilla_block_ids
+from .effects import (
+    MinecraftEffects,
+    MinecraftPotionEffectTypes,
+    MinecraftPotionLiquidTypes,
+)
+from .enchantments import MinecraftEnchantments
+from .entities import vanilla_entities_ids
+from .factories import minecraft_blocks as MinecraftBlockTypes
+from .factories import minecraft_entities as MinecraftEntityTypes
+from .factories import minecraft_items as MinecraftItemTypes
+from .features import MinecraftStructureTypes
+from .items import MinecraftItemTags, vanilla_items_ids
+from .textures import (
+    MinecraftItemTextures,
+    MinecraftTerrainTextures,
+)
+
+__all__ = [
+    "MinecraftBiomeTags",
+    "MinecraftBiomeTypes",
+    "MinecraftBlockTags",
+    "MinecraftBlockTypes",
+    "MinecraftEffects",
+    "MinecraftEnchantments",
+    "MinecraftEntityTypes",
+    "MinecraftItemTags",
+    "MinecraftItemTextures",
+    "MinecraftItemTypes",
+    "MinecraftPotionEffectTypes",
+    "MinecraftPotionLiquidTypes",
+    "MinecraftStructureTypes",
+    "MinecraftTerrainTextures",
+    "vanilla_block_ids",
+    "vanilla_entities_ids",
+    "vanilla_items_ids",
+]
+'''
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     tag = sys.argv[1]
     files = {
-        "__init__.py": f'"""Vanilla data from Mojang/bedrock-samples {tag}."""\n',
+        "__init__.py": INIT.format(tag=tag),
         "factories/__init__.py": "",
     }
     blocks(tag, files)
@@ -657,6 +749,7 @@ def main() -> None:
         "Vanilla structure identifiers.",
         members(tag, "features"),
     )
+    textures(tag, files)
     write(files)
 
 

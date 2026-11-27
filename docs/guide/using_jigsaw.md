@@ -16,7 +16,7 @@ Processors allow you to modify blocks as they are placed. For example, you might
 
 ```python title="world/structures.py"
 from anvil.api.world.structures import _JigsawStructureProcess
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.api.vanilla import MinecraftBlockTypes
 
 # Create a processor that prevents structure air from overwriting world blocks
 # and ensures paths replace dirt correctly.
@@ -77,7 +77,7 @@ The **Structure Set** ties everything together. It defines the generation rules 
 
 ```python
 from anvil.api.world.structures import JigsawStructureSet
-from anvil.api.vanilla.biomes import MinecraftBiomeTags
+from anvil.api.vanilla import MinecraftBiomeTags
 from anvil.api.core.filters import Filter
 
 def generate_dungeon():
@@ -126,7 +126,4 @@ def generate_dungeon():
 3.  **Run**: Anvil will export the structure set, which the game uses to generate your dungeon.
 
 !!! tip "Linking Pools"
-    In your Jigsaw Block inside Minecraft:
-    - **Target Pool**: `my_namespace:dungeon_rooms` (matches `JigsawStructureTemplatePool("dungeon_rooms")` + implicit namespace)
-    - **Name**: `connector_a` (matches the name you connect to)
-    - **Target Name**: `connector_a` (connection point on the other piece)
+In your Jigsaw Block inside Minecraft: - **Target Pool**: `my_namespace:dungeon_rooms` (matches `JigsawStructureTemplatePool("dungeon_rooms")` + implicit namespace) - **Name**: `connector_a` (matches the name you connect to) - **Target Name**: `connector_a` (connection point on the other piece)

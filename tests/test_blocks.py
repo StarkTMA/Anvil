@@ -30,10 +30,9 @@ from anvil.api.blocks.components import (
     ItemDisplayTransform,
     ItemTagFilter,
     MaterialInstance,
-    MaterialParams,
     NWayVisualRotation,
 )
-from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla import MinecraftBlockTags
 from anvil.api.vanilla.factories.minecraft_blocks import (
     Cinnabar,
     CinnabarBrickSlab,
@@ -293,17 +292,19 @@ def test_embedded_visual_default():
     }
 
 
-def test_material_params_checks():
+def test_material_instance_checks():
     with pytest.raises(ValueError, match="needs a tint_method"):
-        MaterialParams(alpha_masked_tint=True).__json__()
+        MaterialInstance(texture="x", alpha_masked_tint=True).__json__()
     with pytest.raises(ValueError, match="opaque"):
-        MaterialParams(
+        MaterialInstance(
+            texture="x",
             alpha_masked_tint=True,
             tint_method="grass",
             render_method=BlockMaterial.Blend,
         ).__json__()
-    assert MaterialParams(ambient_occlusion=2.5).__json__() == {
-        "ambient_occlusion": 2.5
+    assert MaterialInstance(texture="x", ambient_occlusion=2.5).__json__() == {
+        "texture": "x",
+        "ambient_occlusion": 2.5,
     }
 
 
@@ -645,6 +646,54 @@ def test_block_server_needs_geometry_and_material(no_write):
         block.server.__export__()
 
 
+def test_multi_block_needs_movable(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("tall_lamp")
+    block.server.description.traits.set_multi_block("up", 2)
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:tall_lamp")]),
+    )
+    with pytest.raises(ValueError, match="multi_block trait but has no BlockMovable"):
+        block.server.__export__()
+
+    # A movable component only in a permutation does not count.
+    block.server.permutation("q.block_state('minecraft:multi_block_part') == 0").add(
+        BlockMovable(movement_type="immovable")
+    )
+    with pytest.raises(ValueError, match="BlockMovable"):
+        block.server.__export__()
+
+
+def test_multi_block_with_movable_exports(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("tall_lamp_ok")
+    block.server.description.traits.set_multi_block("up", 2)
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:tall_lamp")]),
+        BlockMovable(movement_type="immovable"),
+    )
+    block.server.__export__()
+
+    body = _check_file(block.server)["minecraft:block"]
+    assert body["components"]["minecraft:movable"] == {"movement_type": "immovable"}
+    assert "minecraft:multi_block" in body["description"]["traits"]
+
+
+def test_movable_not_required_without_multi_block(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("plain_cube")
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:plain_cube")]),
+    )
+    block.server.__export__()
+
+
 def test_block_traits_are_checked():
     from anvil.api.blocks.server import _BlockTraits
     from anvil.lib.jsonmodel.enums import ConnectionTrait, PlacementPositionTrait
@@ -717,9 +766,11 @@ def test_block_client_is_not_a_file():
 
 
 def test_vanilla_factories_reject_unknown_names():
-    from anvil.api.vanilla.blocks import MinecraftBlockTypes
-    from anvil.api.vanilla.entities import MinecraftEntityTypes
-    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.api.vanilla import (
+        MinecraftBlockTypes,
+        MinecraftEntityTypes,
+        MinecraftItemTypes,
+    )
 
     assert MinecraftBlockTypes.Magma() == "minecraft:magma"
     assert MinecraftEntityTypes.VillagerV2() == "minecraft:villager_v2"
@@ -736,8 +787,7 @@ def test_vanilla_factories_reject_unknown_names():
 def test_vanilla_block_factories_and_descriptors():
     from anvil.api.blocks.blocks import Block
     from anvil.api.blocks.descriptor import BlockDescriptor
-    from anvil.api.vanilla.blocks import MinecraftBlockTypes
-    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.api.vanilla import MinecraftBlockTypes, MinecraftItemTypes
     from anvil.lib.jsonmodel import BlockId, Identifier
 
     stone = MinecraftBlockTypes.Stone()

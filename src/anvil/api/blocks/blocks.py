@@ -4,6 +4,7 @@ from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import VANILLA_NAMESPACE, Identifier
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.reports import ReportType
 from anvil.lib.translator import AnvilTranslator
 
@@ -30,8 +31,8 @@ class Block:
         """
         from anvil.api.blocks.client import BlockClient
         from anvil.api.blocks.server import BlockServer
-        from anvil.api.vanilla.blocks import vanilla_block_ids
-        from anvil.beta.vanilla.blocks import (
+        from anvil.api.vanilla import vanilla_block_ids
+        from anvil.beta.vanilla import (
             vanilla_block_ids as beta_vanilla_block_ids,
         )
 
@@ -126,7 +127,15 @@ class Block:
         return self._item
 
     def override_vanilla_texture(
-        self, blockbench: str, component: TextureComponents, subfolder: str = ""
+        self,
+        *,
+        blockbench: str,
+        color: str,
+        normal: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        height: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mer: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        mers: str | HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | None = None,
+        subfolder: str = "",
     ) -> None:
         """Extracts textures from a Blockbench model and exports them as the block's texture layout,
         bypassing the generation of block configuration files (server/client JSON files).
@@ -134,10 +143,17 @@ class Block:
 
         Args:
             blockbench (str): The name of the Blockbench model (without extension).
-            component (TextureComponents): A TextureComponents object containing color/normal/height/MER/MERS map names.
+            color (str): The texture's name in the model.
+            normal (optional): The normal map. Not with `height`.
+            height (optional): The height map. Not with `normal`.
+            mer (optional): The metalness, emissive and roughness map. Not with `mers`.
+            mers (optional): The MER map with subsurface scattering. Not with `mer`.
             subfolder (str, optional): Subfolder under RP_PATH/textures/blocks. Defaults to "".
         """
         self._texture_only = True
+        component = TextureComponents(
+            color=color, normal=normal, height=height, mer=mer, mers=mers
+        )
         texture_set = TextureSet(self.name, "blocks", overriding_vanilla=True)
         texture_set.set_vanilla_texture(blockbench, component, subfolder)
         texture_set.queue(subfolder)

@@ -1,4 +1,3 @@
-import dataclasses
 from dataclasses import InitVar
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, get_args
 
@@ -15,9 +14,10 @@ from anvil.api.models.geometry import (
     ItemDisplayTransforms,
 )
 from anvil.api.models.voxel_shape import VoxelShape
-from anvil.api.pbr.texture_set import TextureComponents, TextureSet
-from anvil.api.textures import FlipBookTexturesObject, TerrainTexturesObject
-from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.pbr.texture_set import TextureSet
+from anvil.api.textures import TerrainTexturesObject
+from anvil.api.textures.texture import AnimatedTexture, BlockTexture, WeightedTexture
+from anvil.api.vanilla import MinecraftBlockTags, MinecraftTerrainTextures
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import (
     _Blockbench,
@@ -82,56 +82,13 @@ if TYPE_CHECKING:
 # region Parts: objects nested inside components
 
 
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class FlipbookParams:
-    """A flipbook animation of a material instance's texture, added to `flipbook_textures.json`.
+class MaterialInstance(JsonObject):
+    """A material instance: a texture and how it renders. Unset options are left out, so
+    the game defaults apply. `BlockMaterialInstance.face` makes them.
 
     Args:
-        frames (list[int]): The atlas frames to play, in order.
-        ticks_per_frame (int, optional): How long each frame shows. Defaults to 20.
-        atlas_index (int, optional): The atlas index. Defaults to 0.
-        atlas_tile_variant (int, optional): The variation the animation uses. Defaults to 0.
-        replicate (int, optional): A power of two. Defaults to 1.
-        blend_frames (bool, optional): Whether frames blend into each other. Defaults to True.
-    """
-
-    frames: list[int]
-    ticks_per_frame: int = 20
-    atlas_index: int = 0
-    atlas_tile_variant: int = 0
-    replicate: int = 1
-    blend_frames: bool = True
-
-    def validate(self, variant_count: int) -> None:
-        if not self.frames:
-            raise ValueError("FlipbookParams.frames cannot be empty.")
-        if self.ticks_per_frame <= 0:
-            raise ValueError("FlipbookParams.ticks_per_frame must be positive.")
-        if self.replicate <= 0 or (self.replicate & (self.replicate - 1)) != 0:
-            raise ValueError(
-                "FlipbookParams.replicate must be a power of two (1,2,4,8,...)"
-            )
-        if not 0 <= self.atlas_tile_variant < variant_count:
-            raise ValueError(
-                "FlipbookParams.atlas_tile_variant out of range for variations."
-            )
-
-
-@dataclasses.dataclass(frozen=True)
-class InstanceVariant(TextureComponents):
-    """One texture of a material instance, with its PBR maps, and its weight when the
-    instance picks one of several textures at random."""
-
-    weight: int = 1
-
-    def has_aux(self) -> bool:
-        return bool(self.normal or self.height or self.mer or self.mers)
-
-
-class MaterialParams(JsonObject):
-    """How a material instance renders. Unset options are left out, so the game defaults apply.
-
-    Args:
+        face (BlockFaceValues | str, optional): The face, or the name of a material instance in the geometry. Written as the instance's key. Defaults to every face.
+        texture (str | BlockTexture | AnimatedTexture | WeightedTexture | MinecraftTerrainTextures): The texture's short name in `terrain_texture.json`, or a texture, added on export as `<namespace>:<block>_<face>`.
         render_method (BlockMaterial, optional): The render method. Game default opaque.
         ambient_occlusion (float, optional): Exponent applied to ambient occlusion after lighting, from 0 to 10. Game default 1.
         face_dimming (bool, optional): Whether faces are dimmed by their direction. Game default true.
@@ -143,6 +100,14 @@ class MaterialParams(JsonObject):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_material_instances)
     """
 
+    face: BlockFaceValues | str = json_field(default=BlockFaceValues.All, exclude=True)
+    texture: (
+        str
+        | BlockTexture
+        | AnimatedTexture
+        | WeightedTexture
+        | MinecraftTerrainTextures
+    ) = json_field()
     render_method: BlockMaterial | None = json_field(default=None)
     ambient_occlusion: Annotated[float, InRange(0.0, 10.0)] | None = json_field(
         default=None
@@ -157,81 +122,21 @@ class MaterialParams(JsonObject):
         if self.alpha_masked_tint:
             if self.tint_method in (None, "none"):
                 raise ValueError(
-                    f"{type(self).__name__}.alpha_masked_tint needs a tint_method."
+                    "MaterialInstance.alpha_masked_tint needs a tint_method."
                 )
             if self.render_method not in (None, BlockMaterial.Opaque):
                 raise ValueError(
-                    f"{type(self).__name__}.alpha_masked_tint needs the opaque render method."
+                    "MaterialInstance.alpha_masked_tint needs the opaque render method."
                 )
 
-
-class MaterialInstance(MaterialParams):
-    """A material instance: a texture and how it renders. It also takes every option of
-    `MaterialParams`.
-
-    Args:
-        face (BlockFaceValues | str, optional): The face, or the name of a material instance in the geometry. Written as the instance's key. Defaults to every face.
-        texture (str): The texture's short name in `terrain_texture.json`.
-    """
-
-    face: BlockFaceValues | str = json_field(default=BlockFaceValues.All, exclude=True)
-    texture: str = json_field()
+    def set_texture(self, texture: str) -> None:
+        """Points the instance at a short name of the terrain atlas."""
+        self.texture = texture
 
     @property
     def key(self) -> str:
         """The instance's key in `material_instances`: `*` for every face."""
         return "*" if self.face == BlockFaceValues.All else str(self.face)
-
-
-@dataclasses.dataclass(kw_only=True)
-class InstanceSpec:
-    """A material instance to add with `BlockMaterialInstance.add_instance`, and the textures
-    to take from a Blockbench model for it.
-
-    Args:
-        blockbench (str): The Blockbench model the textures come from.
-        face (BlockFaceValues | str, optional): The face, or the name of a material instance in the geometry. Defaults to every face.
-        variations (list[InstanceVariant]): The textures. With more than one, the game picks one at random, by weight.
-        params (MaterialParams, optional): How the material renders.
-        flipbooks (list[FlipbookParams], optional): Flipbook animations of the texture.
-    """
-
-    blockbench: str
-    face: BlockFaceValues | str = BlockFaceValues.All
-    variations: list[InstanceVariant] = dataclasses.field(default_factory=list)
-    params: MaterialParams = dataclasses.field(default_factory=MaterialParams)
-    flipbooks: list[FlipbookParams] = dataclasses.field(default_factory=list)
-
-    def validate(self) -> None:
-        if self.face == BlockFaceValues.Side:
-            raise ValueError(
-                "BlockFaceValues.Side is not supported; use All or explicit faces."
-            )
-        if not self.variations:
-            raise ValueError("InstanceSpec needs at least one variation.")
-        if any(v.weight <= 0 for v in self.variations):
-            raise ValueError("InstanceVariant.weight must be positive.")
-
-        def maps(v: InstanceVariant) -> tuple[bool, bool, bool, bool]:
-            return (
-                v.normal is not None,
-                v.height is not None,
-                v.mer is not None,
-                v.mers is not None,
-            )
-
-        if any(maps(v) != maps(self.variations[0]) for v in self.variations[1:]):
-            raise ValueError(
-                "All variations must provide the same set of PBR maps (present/absent)."
-            )
-        for flipbook in self.flipbooks:
-            flipbook.validate(len(self.variations))
-
-    def any_aux(self) -> bool:
-        return any(vp.has_aux() for vp in self.variations)
-
-    def color_texture(self, index: int = 0) -> str:
-        return self.variations[index].color
 
 
 class BlockBox(JsonObject):
@@ -1240,7 +1145,7 @@ class BlockMaterialInstance(JsonValueComponent):
     of each material instance named in the geometry. The block also needs `BlockGeometry`.
 
     Args:
-        instances (list[MaterialInstance], optional): The instances, one per face or name. Add them with `add_instance`, which also adds the textures to the resource pack.
+        instances (list[MaterialInstance], optional): The instances, one per face or name. Add them with `face`, which adds their textures to the resource pack on export.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_material_instances)
     """
@@ -1251,66 +1156,84 @@ class BlockMaterialInstance(JsonValueComponent):
         json_field(default_factory=list)
     )
 
-    def add_instance(
-        self, *, spec: InstanceSpec, force_vanilla: bool = False
+    def face(
+        self,
+        face: BlockFaceValues | str,
+        texture: (
+            BlockTexture | AnimatedTexture | WeightedTexture | MinecraftTerrainTextures
+        ),
+        *,
+        render_method: BlockMaterial | None = None,
+        ambient_occlusion: float | None = None,
+        face_dimming: bool | None = None,
+        isotropic: bool | None = None,
+        tint_method: TintMethod | None = None,
+        alpha_masked_tint: bool | None = None,
+        emissive: bool | None = None,
     ) -> "BlockMaterialInstance":
-        """Adds a material instance, and its textures to the resource pack.
+        """Shows a texture on a face, or on a material instance named in the geometry, and
+        queues its images and texture sets.
+
+        ```python
+        BlockMaterialInstance().face(BlockFaceValues.All, BlockTexture(blockbench="lamp", color="body"))
+        BlockMaterialInstance().face(BlockFaceValues.Up, MinecraftTerrainTextures.Stone)
+        ```
+
+        A `BlockTexture` goes in the terrain atlas on export as `<namespace>:<block>_<face>`. A
+        vanilla texture is only referenced by its short name.
 
         Args:
-            spec (InstanceSpec): The instance and its textures.
-            force_vanilla (bool, optional): Registers the textures as vanilla textures. Defaults to False.
+            face (BlockFaceValues | str): The face, or the name of a material instance in the geometry.
+            texture (BlockTexture | AnimatedTexture | WeightedTexture | MinecraftTerrainTextures): A `BlockTexture`, `.animated()` or not, a `BlockTexture.weighted()`, or a `MinecraftTerrainTextures` member.
+            render_method (BlockMaterial, optional): The render method. Game default opaque.
+            ambient_occlusion (float, optional): Exponent applied to ambient occlusion after lighting, from 0 to 10. Game default 1.
+            face_dimming (bool, optional): Whether faces are dimmed by their direction. Game default true.
+            isotropic (bool, optional): Whether the texture is randomly rotated per face.
+            tint_method (TintMethod, optional): Tint multiplied to the texture by the biome.
+            alpha_masked_tint (bool, optional): Tints only where the texture's alpha is not 0.
+            emissive (bool, optional): Whether the texture glows.
         """
-        spec.validate()
-
-        if len(spec.variations) > 1:
-            TerrainTexturesObject().add_block_variations(
-                block_name=spec.color_texture(),
-                directory=spec.blockbench,
-                block_variant=[(vp.color, vp.weight) for vp in spec.variations],
-                force_vanilla=force_vanilla,
+        if face == BlockFaceValues.Side:
+            raise ValueError(
+                "BlockFaceValues.Side is not supported; use All or explicit faces."
             )
-        else:
-            TerrainTexturesObject().add_block(
-                block_name=spec.color_texture(),
-                directory=spec.blockbench,
-                block_textures=[spec.color_texture()],
-                force_vanilla=force_vanilla,
+        if not isinstance(texture, MinecraftTerrainTextures):
+            members = (
+                texture.textures
+                if isinstance(texture, WeightedTexture)
+                else ((texture, 1),)
             )
-
-        params = spec.params
+            for member, _ in members:
+                image = (
+                    member.texture if isinstance(member, AnimatedTexture) else member
+                )
+                TextureSet(
+                    image.color, _BlockBenchSource.BLOCK
+                ).set_blockbench_textures(image.blockbench, image.components).queue()
         self.instances.append(
             MaterialInstance(
-                face=spec.face,
-                texture=f"{CONFIG.NAMESPACE}:{spec.color_texture()}",
-                render_method=params.render_method,
-                ambient_occlusion=params.ambient_occlusion,
-                face_dimming=params.face_dimming,
-                isotropic=params.isotropic,
-                tint_method=params.tint_method,
-                alpha_masked_tint=params.alpha_masked_tint,
-                emissive=params.emissive,
+                face=face,
+                texture=texture,
+                render_method=render_method,
+                ambient_occlusion=ambient_occlusion,
+                face_dimming=face_dimming,
+                isotropic=isotropic,
+                tint_method=tint_method,
+                alpha_masked_tint=alpha_masked_tint,
+                emissive=emissive,
             )
         )
-
-        for vp in spec.variations:
-            texture_set = TextureSet(vp.color, _BlockBenchSource.BLOCK)
-            texture_set.set_blockbench_textures(spec.blockbench, vp)
-            texture_set.queue()
-
-        for fb in spec.flipbooks:
-            FlipBookTexturesObject().add_block(
-                block_name=spec.color_texture(),
-                directory=spec.blockbench,
-                block_texture=spec.color_texture(fb.atlas_tile_variant),
-                frames=fb.frames,
-                ticks_per_frame=fb.ticks_per_frame,
-                atlas_index=fb.atlas_index,
-                atlas_tile_variant=fb.atlas_tile_variant,
-                replicate=fb.replicate,
-                blend_frames=fb.blend_frames,
-            )
-
         return self
+
+    def __prepare_export__(self, owner: Any, *, root: bool = True) -> None:
+        """Adds the textures given to `face` to the terrain atlas."""
+        for instance in self.instances:
+            if not isinstance(instance.texture, str):
+                instance.set_texture(
+                    TerrainTexturesObject().add_face(
+                        owner.name, instance.key, instance.texture
+                    )
+                )
 
 
 class BlockMovable(JsonComponent):

@@ -1,9 +1,5 @@
 from enum import StrEnum
 
-from .factories import minecraft_items as MinecraftItemTypes
-
-__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_items_ids"]
-
 
 def vanilla_items_ids() -> list[str]:
     return [

@@ -302,7 +302,7 @@ class AnvilConfig:
     )
     _TARGET: str = _option(ConfigSection.PACKAGE, ConfigOption.TARGET, "world")
 
-    _RELEASE: str = _option(ConfigSection.MANIFEST, ConfigOption.RELEASE, "1.0.0")
+    _RELEASE: str = _option(ConfigSection.MANIFEST, ConfigOption.RELEASE, "0.1.0")
     _RP_UUID: list[str] = _option(
         ConfigSection.MANIFEST, ConfigOption.RP_UUID, factory=lambda: [_new_uuid()]
     )

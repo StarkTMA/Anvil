@@ -38,7 +38,7 @@ from anvil.api.vanilla.factories.minecraft_items import (
     Potion,
     SulfurSpike,
 )
-from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.api.vanilla import MinecraftItemTags
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import Identifier, json_field
 from anvil.lib.jsonmodel.enums import DamageCause, Slots
@@ -360,8 +360,7 @@ def test_vanilla_item_must_exist():
 
 def test_item_references_check_vanilla_identifiers():
     from anvil.api.actors.components.ai_goals import EntityAIBeg
-    from anvil.api.vanilla.entities import MinecraftEntityTypes
-    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.api.vanilla import MinecraftEntityTypes, MinecraftItemTypes
     from anvil.lib.jsonmodel import EntityId, ItemId
 
     ItemId.validate("item", MinecraftItemTypes.Apple())
