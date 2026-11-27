@@ -1,0 +1,49 @@
+name: Release Notes
+
+# Separate from pr.yml so that editing the description re-runs this check
+# without re-running the test suite.
+on:
+    pull_request:
+        branches:
+            - main
+        types: [opened, synchronize, reopened, edited]
+
+jobs:
+    release-notes:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+            - name: Check the release branch, version and notes
+              env:
+                  HEAD_REF: ${{ github.event.pull_request.head.ref }}
+                  PR_BODY: ${{ github.event.pull_request.body }}
+              run: |
+                  VERSION=$(sed -nE 's/^__version__ *= *"([^"]+)".*/\1/p' src/anvil/__version__.py)
+                  printf '%s' "$PR_BODY" > notes.md
+                  echo "Release notes for $VERSION:"
+                  cat notes.md
+
+                  FAILED=0
+                  if [ "$HEAD_REF" != "release/$VERSION" ]; then
+                      echo "::error::Only release/$VERSION can merge into main. This pull request comes from $HEAD_REF; check the branch and src/anvil/__version__.py."
+                      FAILED=1
+                  fi
+                  if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+                      echo "::error::v$VERSION is already released. Bump src/anvil/__version__.py on the release branch."
+                      FAILED=1
+                  fi
+                  if [ ! -s notes.md ]; then
+                      echo "::error::The pull request description is empty. It becomes the release notes."
+                      FAILED=1
+                  fi
+                  if grep -nE '^#+[^# ]' notes.md; then
+                      echo "::error::Headings need a space after the #, for example '## Fixes'."
+                      FAILED=1
+                  fi
+                  if grep -nE '^\s*-\s*$' notes.md; then
+                      echo "::error::The notes have empty bullets left from the template."
+                      FAILED=1
+                  fi
+                  exit $FAILED
